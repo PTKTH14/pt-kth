@@ -751,7 +751,7 @@ async function init(){
   updatePTDropdown();
   buildChecklist();
   startClock();
-  loadDashboard();
+  // loadDashboard จะถูกเรียกเมื่อเปิดหน้า dashboard
   updateHistoryFilters();
   updateDashFilter();
   // sync mobile/desktop inputs
@@ -1177,6 +1177,15 @@ function loadDashboard() {
         </tr>`;
       }).join('')}</tbody></table>`;
     }
+  }
+
+  // restore scroll หลัง render เสร็จ
+  if(mainEl && isDashVisible) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        mainEl.scrollTop = savedTop;
+      });
+    });
   }
 }
 
