@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Checklist PT">
+<link rel="apple-touch-icon" href="icon-512.svg">
+<meta name="theme-color" content="#0F4C81">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -251,6 +257,18 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<!-- PWA Install Banner -->
+<div id="installBanner" style="display:none;background:#1A6BAA;color:#fff;padding:10px 16px;align-items:center;justify-content:space-between;gap:10px;font-size:13px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:22px">📱</span>
+    <span><strong>ติดตั้งแอป Checklist PT</strong> บนหน้าจอโฮมได้เลย!</span>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="installApp()" style="background:#fff;color:var(--bd);border:none;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit;font-size:12.5px;cursor:pointer">ติดตั้ง</button>
+    <button onclick="document.getElementById('installBanner').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-family:inherit;cursor:pointer">✕</button>
+  </div>
+</div>
+
 <div class="app">
 <div class="sidebar">
   <div class="sb-sec">
@@ -449,6 +467,24 @@ tr:hover td{background:var(--g1)}
 <div class="view" id="view-supervisor">
   <div class="ph"><h1>👔 หัวหน้างาน — ภาพรวมการทำงาน</h1><p>ติดตามการทำงานของผู้ช่วยรายวัน และประเมินรายบุคคล</p></div>
 
+  <!-- PIN LOGIN -->
+  <div id="supLoginSec" class="card" style="max-width:360px;margin:30px auto;text-align:center;padding:28px 20px">
+    <div style="font-size:40px;margin-bottom:10px">🔐</div>
+    <h3 style="margin-bottom:6px;font-size:16px">เข้าสู่หน้าหัวหน้างาน</h3>
+    <p style="font-size:12.5px;color:var(--g6);margin-bottom:18px">กรุณาใส่รหัส PIN</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
+      <input type="password" id="supPin" maxlength="4" placeholder="• • • •"
+        style="width:120px;padding:12px;text-align:center;font-size:22px;letter-spacing:8px;border:2px solid var(--g2);border-radius:var(--r8);font-family:inherit;outline:none"
+        onkeydown="if(event.key==='Enter')checkSupPin()"
+        oninput="this.style.borderColor=this.value?'var(--bm)':'var(--g2)'">
+    </div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="checkSupPin()">เข้าสู่ระบบ</button>
+    <div id="supPinError" style="color:var(--r);font-size:12.5px;margin-top:10px;display:none">❌ รหัส PIN ไม่ถูกต้อง</div>
+  </div>
+
+  <!-- MAIN CONTENT (hidden until PIN) -->
+  <div id="supMainSec" style="display:none">
+
   <!-- ตัวกรอง -->
   <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center;margin-bottom:0">
     <span style="font-size:13px;font-weight:700">กรองข้อมูล:</span>
@@ -483,6 +519,8 @@ tr:hover td{background:var(--g1)}
 </div>
 
 <!-- ADMIN -->
+</div><!-- /supMainSec -->
+
 <div class="view" id="view-admin">
   <div class="ph"><h1>🛡️ ระบบจัดการหลังบ้าน (Admin)</h1></div>
   <div id="adminLoginSec" class="card" style="max-width:400px;margin:40px auto;text-align:center;padding:30px 20px">
@@ -698,7 +736,15 @@ function switchView(v,el){
   if(v==='history')loadHistory();
   if(v==='dashboard')loadDashboard();
   if(v==='settings')renderSettings();
-  if(v==='supervisor'){updateSupFilter();loadSupervisor();}
+  if(v==='supervisor'){
+    if(!isSupLoggedIn){
+      document.getElementById('supLoginSec').style.display='block';
+      document.getElementById('supMainSec').style.display='none';
+      setTimeout(()=>document.getElementById('supPin')?.focus(),100);
+    } else {
+      updateSupFilter();loadSupervisor();
+    }
+  }
   if(v==='admin')checkAdminAuth();
 }
 
@@ -813,7 +859,7 @@ function openReview(idx){
   updatePTDropdown();
   document.getElementById('ptReviewerSel').value='';document.getElementById('ptComment').value='';document.getElementById('ptVerdict').value='';
   document.getElementById('reviewFormWrap').style.display='block';
-  document.getElementById('reviewFormWrap').scrollIntoView({behavior:'smooth'});
+  // scroll removed to prevent dashboard jump
 }
 function setEval(key,val,el){reviewEvals[key]=val;el.closest('.ri').querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
 function setEvalDefault(key,val,container){reviewEvals[key]=val;const cls=val==='pass'?'pass':val==='fail'?'fail':'nab';const btn=container.querySelector(`.rb.${cls}`);if(btn)btn.classList.add('sel');}
@@ -954,6 +1000,25 @@ function shareToLine() {
 
 // ══ SUPERVISOR ══
 let currentSupTab = 'daily';
+let isSupLoggedIn = false;
+const SUP_PIN = '1234';
+
+function checkSupPin() {
+  const pin = document.getElementById('supPin').value;
+  const errEl = document.getElementById('supPinError');
+  if (pin === SUP_PIN) {
+    isSupLoggedIn = true;
+    document.getElementById('supLoginSec').style.display = 'none';
+    document.getElementById('supMainSec').style.display = 'block';
+    updateSupFilter();
+    loadSupervisor();
+    errEl.style.display = 'none';
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('supPin').value = '';
+    document.getElementById('supPin').style.borderColor = 'var(--r)';
+  }
+}
 
 function setSupTab(tab) {
   currentSupTab = tab;
@@ -1129,6 +1194,38 @@ function loadSupPerson(data) {
   }).join('');
 }
 
+</script>
+<script>
+// PWA Service Worker
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+
+// แสดง install prompt (Android Chrome)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // แสดง banner
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'none';
+  deferredPrompt = null;
+});
+
+function installApp() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  }
+}
 </script>
 </body>
 </html>
