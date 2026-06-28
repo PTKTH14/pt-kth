@@ -177,8 +177,9 @@ body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-hei
 .kc.g .kn{color:var(--g)}.kc.y .kn{color:#856404}.kc.r .kn{color:var(--r)}
 .kl{font-size:12px;color:var(--g6);margin-top:2px}
 .card{background:#fff;border-radius:var(--r12);padding:18px;box-shadow:var(--sh1);margin-bottom:16px}
+.card canvas{max-width:100%;display:block}
 .card h3{font-size:14.5px;font-weight:800;margin-bottom:14px;color:var(--g8)}
-.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;overflow:hidden}
 .tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow:hidden}
 table{width:100%;border-collapse:collapse}
 th{background:var(--bd);color:#fff;font-size:12px;font-weight:700;padding:10px 13px;text-align:left}
@@ -933,6 +934,9 @@ function resetDashFilter(){document.getElementById('dashStartDate').value='';doc
 function updateDashFilter(){const sel=document.getElementById('dashFilter');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="all">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');}
 
 function loadDashboard(){
+  // บันทึก scroll position ก่อน เพื่อป้องกัน chart ทำให้กระโดด
+  const mainEl = document.getElementById('mainArea');
+  const savedScroll = mainEl ? mainEl.scrollTop : 0;
   const fStart=document.getElementById('dashStartDate')?.value;const fEnd=document.getElementById('dashEndDate')?.value;const f=document.getElementById('dashFilter')?.value||'all';
   let data=submissions.filter(s=>isDateInRange(s.date,fStart,fEnd));if(f!=='all')data=data.filter(s=>s.staffName===f);
   document.getElementById('kpiTotal').textContent=data.length;
@@ -940,13 +944,19 @@ function loadDashboard(){
   document.getElementById('kpiPend').textContent=data.filter(s=>s.status==='pending').length;
   document.getElementById('kpiFail').textContent=data.filter(s=>s.status==='fail').length;
   const recent=[...data].slice(-14);
-  try{const ctx=document.getElementById('lineChart')?.getContext('2d');if(ctx&&typeof Chart!=='undefined'){if(chartInst)chartInst.destroy();chartInst=new Chart(ctx,{type:'line',data:{labels:recent.map(s=>s.date.slice(5)),datasets:[{label:'ความสมบูรณ์%',data:recent.map(s=>{const t=Object.keys(s.snap).length;const d=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;return t>0?Math.round(d/t*100):0;}),fill:true,borderColor:'#0F4C81',backgroundColor:'rgba(15,76,129,.08)',tension:.4,pointBackgroundColor:'#0F4C81',pointRadius:4}]},options:{animation:false,responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});}}catch(e){}
+  // เช็คว่า view-dashboard active อยู่ก่อน render chart
+  const isDashActive = document.getElementById('view-dashboard')?.classList.contains('active');
+  try{const ctx=document.getElementById('lineChart')?.getContext('2d');if(ctx&&typeof Chart!=='undefined'&&isDashActive){if(chartInst)chartInst.destroy();chartInst=new Chart(ctx,{type:'line',data:{labels:recent.map(s=>s.date.slice(5)),datasets:[{label:'ความสมบูรณ์%',data:recent.map(s=>{const t=Object.keys(s.snap).length;const d=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;return t>0?Math.round(d/t*100):0;}),fill:true,borderColor:'#0F4C81',backgroundColor:'rgba(15,76,129,.08)',tension:.4,pointBackgroundColor:'#0F4C81',pointRadius:4}]},options:{animation:false,responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});}}catch(e){}
   const issueCounts={};data.forEach(s=>{Object.keys(s.snap).forEach(k=>{const st=s.snap[k].status;const pt=s.ptEvals&&s.ptEvals[k]?s.ptEvals[k]:null;if(pt==='fail'||st==='na'||st!=='done'){const parts=k.split('-');const g=parts[0];const i=parts[1];if(CL[g]&&CL[g].items[i]){let text=CL[g].items[i].split(',')[0].replace(/\([^)]+\)/g,'').trim();if(text.length>25)text=text.substring(0,25)+'...';issueCounts[text]=(issueCounts[text]||0)+1;}}});});
   const sortedIssues=Object.entries(issueCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   try{const pCtx=document.getElementById('pieChart')?.getContext('2d');if(pCtx&&typeof Chart!=='undefined'){if(pieInst)pieInst.destroy();if(sortedIssues.length===0){pieInst=new Chart(pCtx,{type:'doughnut',data:{labels:['ไม่มีปัญหา'],datasets:[{data:[1],backgroundColor:['#E9ECEF']}]},options:{animation:false,responsive:true,plugins:{tooltip:{enabled:false},legend:{display:false}}}});}else{pieInst=new Chart(pCtx,{type:'doughnut',data:{labels:sortedIssues.map(i=>i[0]),datasets:[{data:sortedIssues.map(i=>i[1]),backgroundColor:['#DC3545','#FD7E14','#FFC107','#1A6BAA','#9CA3AF'],borderWidth:2,borderColor:'#fff'}]},options:{animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11,family:"'Sarabun', sans-serif"}}}}}});}}}catch(e){}
   const byStaff={};data.filter(s=>s.status!=='pending').forEach(s=>{if(!byStaff[s.staffName])byStaff[s.staffName]={total:0,pass:0};byStaff[s.staffName].total++;if(s.status==='pass'||s.status==='partial')byStaff[s.staffName].pass++;});
   const ranked=Object.entries(byStaff).sort((a,b)=>(b[1].pass/b[1].total)-(a[1].pass/a[1].total));
   const rt=document.getElementById('rankTable');if(rt)rt.innerHTML=ranked.length===0?'<p style="color:var(--g4);font-size:13.5px">ยังไม่มีข้อมูล</p>':`<table><thead><tr><th>#</th><th>ชื่อ</th><th>ผ่าน/ทั้งหมด</th><th>อัตราผ่าน</th></tr></thead><tbody>${ranked.map(([n,d],i)=>`<tr><td><strong style="color:${i===0?'#F59E0B':i===1?'#9CA3AF':i===2?'#CD7F32':'var(--g6)'}">${['🥇','🥈','🥉'][i]||i+1}</strong></td><td>${n}</td><td>${d.pass}/${d.total}</td><td><span class="tag ${d.pass/d.total>=.8?'tp':d.pass/d.total>=.6?'tw2':'tf'}">${Math.round(d.pass/d.total*100)}%</span></td></tr>`).join('')}</tbody></table>`;
+  // คืน scroll position
+  requestAnimationFrame(() => {
+    if(mainEl) mainEl.scrollTop = savedScroll;
+  });
 }
 
 function exportDashboardPDF(){const element=document.getElementById('view-dashboard');if(!element)return;showToast('⏳ กำลังเตรียมไฟล์ PDF...','warning');const opt={margin:10,filename:`Dashboard_PT_${fmtDate(new Date())}.pdf`,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};html2pdf().set(opt).from(element).save().then(()=>showToast('✅ ดาวน์โหลด PDF เรียบร้อย','success')).catch(()=>showToast('❌ เกิดข้อผิดพลาด','error'));}
