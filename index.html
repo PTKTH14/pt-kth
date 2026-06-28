@@ -11,7 +11,6 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
 <script type="module">
@@ -382,34 +381,84 @@ tr:hover td{background:var(--g1)}
 <!-- DASHBOARD -->
 <div class="view" id="view-dashboard">
   <div class="ph">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-      <div><h1>📊 Dashboard ภาพรวม</h1><p>ข้อมูลวิเคราะห์จาก Checklist ทั้งหมด</p></div>
-      <button class="btn btn-pri" onclick="exportDashboardPDF()">📄 Export PDF</button>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+      <div><h1>📊 Dashboard ภาพรวม</h1><p>วิเคราะห์ข้อมูลจาก Checklist ทั้งหมด</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-out" style="padding:7px 14px;font-size:13px" onclick="refreshDashboard()">🔄 Refresh</button>
+        <button class="btn btn-pri" style="padding:7px 14px;font-size:13px" onclick="exportDashboardPDF()">📄 Export PDF</button>
+      </div>
     </div>
   </div>
-  <div class="card" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:12px 18px;align-items:center">
-    <span style="font-size:13px;font-weight:700">กรองข้อมูล:</span>
-    <input type="date" id="dashStartDate" class="sb-input" style="width:auto;padding:5px 9px">
-    <span style="font-size:13px;color:var(--g6)">ถึง</span>
-    <input type="date" id="dashEndDate" class="sb-input" style="width:auto;padding:5px 9px">
-    <select id="dashFilter" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
-    <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ค้นหา</button>
-    <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetDashFilter()">ล้าง</button>
+
+  <!-- FILTER -->
+  <div class="card" style="padding:12px 16px;margin-bottom:16px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:13px;font-weight:700;color:var(--g8)">🗓 ช่วงเวลา:</span>
+      <input type="date" id="dashStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <span style="font-size:13px;color:var(--g6)">ถึง</span>
+      <input type="date" id="dashEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <select id="dashFilter" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
+      <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ดู</button>
+      <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetDashFilter()">ล้าง</button>
+    </div>
   </div>
-  <div class="kpi-grid">
-    <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">Checklist ทั้งหมด</div></div>
-    <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">ผ่านการประเมิน</div></div>
-    <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">รอประเมิน</div></div>
-    <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">ไม่ผ่าน</div></div>
+
+  <!-- KPI ROW 1: ภาพรวม -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
+    <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
+    <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">✅ ผ่านการประเมิน</div></div>
+    <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอประเมิน</div></div>
+    <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">❌ ไม่ผ่าน</div></div>
+    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 เฉลี่ยสมบูรณ์</div></div>
+    <div class="kc" style="border-left-color:#00BCD4"><div class="kn" style="color:#00BCD4" id="kpiPassRate">0%</div><div class="kl">🏆 อัตราผ่านรวม</div></div>
   </div>
-  <div class="chart-grid">
-    <div class="card" style="margin-bottom:0"><h3>📈 อัตราความสมบูรณ์รายวัน</h3><canvas id="lineChart" style="width:100%;height:220px;max-height:220px"></canvas>
-    <div class="card" style="margin-bottom:0">
-      <h3>⚠️ 5 อันดับรายการที่มีปัญหาบ่อย</h3>
-      <p style="font-size:11.5px;color:var(--g6);margin-top:-8px;margin-bottom:12px">(N/A, ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน)</p>
-      <canvas id="pieChart" style="width:100%;height:220px;max-height:220px"></canvas>
+
+  <!-- ROW: เวรเช้า vs บ่าย -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="card" style="margin-bottom:0;border-left:4px solid #FF9800">
+      <h3 style="font-size:13px;margin-bottom:10px">🌅 เวรเช้า</h3>
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#E65100" id="shiftMorningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMorningPass">0%</div><div style="font-size:11px;color:var(--g6)">ผ่าน</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMorningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-left:4px solid #2196F3">
+      <h3 style="font-size:13px;margin-bottom:10px">🌙 เวรบ่าย</h3>
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#1565C0" id="shiftEveningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftEveningPass">0%</div><div style="font-size:11px;color:var(--g6)">ผ่าน</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftEveningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
+      </div>
+    </div>
   </div>
-  <div class="card"><h3 style="margin-bottom:14px">🏆 Ranking ผู้ช่วยนักกายภาพ</h3><div id="rankTable"></div></div>
+
+  <!-- CHART: อัตราความสมบูรณ์รายวัน (แบบ bar ง่ายๆ ไม่ใช้ Chart.js) -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📈 อัตราความสมบูรณ์ 14 วันล่าสุด</h3>
+    <div id="barChart" style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px"></div>
+    <div id="barChartLabels" style="display:flex;gap:4px;padding:4px 4px 0;margin-top:4px"></div>
+  </div>
+
+  <!-- ตารางรายการปัญหาบ่อย -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>⚠️ 5 อันดับรายการที่ทำไม่ครบบ่อย</h3>
+    <p style="font-size:12px;color:var(--g6);margin-top:-8px;margin-bottom:12px">นับจากรายการที่ N/A, ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน</p>
+    <div id="issueTable"></div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ</h3>
+    <div id="rankTable"></div>
+  </div>
+
+  <!-- สถิติรายเดือน -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📅 สรุปรายเดือน</h3>
+    <div id="monthlyTable"></div>
+  </div>
+
 </div>
 
 <!-- HISTORY -->
@@ -663,7 +712,6 @@ const CL = {
 // ══ STATE ══
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[];
 let activeRevIdx=null, reviewEvals={}, isAdminLoggedIn=false;
-let chartInst=null, pieInst=null;
 
 function setSyncBadge(state,text){const b=document.getElementById('syncBadge');if(!b)return;b.className='sync-badge '+state;b.textContent=text;}
 function setLoadingDetail(t){const el=document.getElementById('loadingDetail');if(el)el.textContent=t;}
@@ -929,31 +977,207 @@ function exportCSV(){
 }
 
 // ══ DASHBOARD ══
-function resetDashFilter(){document.getElementById('dashStartDate').value='';document.getElementById('dashEndDate').value='';document.getElementById('dashFilter').value='all';loadDashboard();}
-function updateDashFilter(){const sel=document.getElementById('dashFilter');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="all">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');}
+function resetDashFilter() {
+  document.getElementById('dashStartDate').value = '';
+  document.getElementById('dashEndDate').value = '';
+  document.getElementById('dashFilter').value = 'all';
+  loadDashboard();
+}
 
-function loadDashboard(){
-  // บันทึก scroll position ก่อน เพื่อป้องกัน chart ทำให้กระโดด
-  const mainEl = document.getElementById('mainArea');
-  const savedScroll = mainEl ? mainEl.scrollTop : 0;
-  const fStart=document.getElementById('dashStartDate')?.value;const fEnd=document.getElementById('dashEndDate')?.value;const f=document.getElementById('dashFilter')?.value||'all';
-  let data=submissions.filter(s=>isDateInRange(s.date,fStart,fEnd));if(f!=='all')data=data.filter(s=>s.staffName===f);
-  document.getElementById('kpiTotal').textContent=data.length;
-  document.getElementById('kpiPass').textContent=data.filter(s=>s.status==='pass'||s.status==='partial').length;
-  document.getElementById('kpiPend').textContent=data.filter(s=>s.status==='pending').length;
-  document.getElementById('kpiFail').textContent=data.filter(s=>s.status==='fail').length;
-  const recent=[...data].slice(-14);
-  try{const ctx=document.getElementById('lineChart')?.getContext('2d');if(ctx&&typeof Chart!=='undefined'){if(chartInst)chartInst.destroy();chartInst=new Chart(ctx,{type:'line',data:{labels:recent.map(s=>s.date.slice(5)),datasets:[{label:'ความสมบูรณ์%',data:recent.map(s=>{const t=Object.keys(s.snap).length;const d=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;return t>0?Math.round(d/t*100):0;}),fill:true,borderColor:'#0F4C81',backgroundColor:'rgba(15,76,129,.08)',tension:.4,pointBackgroundColor:'#0F4C81',pointRadius:4}]},options:{animation:false,responsive:false,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});}}catch(e){}
-  const issueCounts={};data.forEach(s=>{Object.keys(s.snap).forEach(k=>{const st=s.snap[k].status;const pt=s.ptEvals&&s.ptEvals[k]?s.ptEvals[k]:null;if(pt==='fail'||st==='na'||st!=='done'){const parts=k.split('-');const g=parts[0];const i=parts[1];if(CL[g]&&CL[g].items[i]){let text=CL[g].items[i].split(',')[0].replace(/\([^)]+\)/g,'').trim();if(text.length>25)text=text.substring(0,25)+'...';issueCounts[text]=(issueCounts[text]||0)+1;}}});});
-  const sortedIssues=Object.entries(issueCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  try{const pCtx=document.getElementById('pieChart')?.getContext('2d');if(pCtx&&typeof Chart!=='undefined'){if(pieInst)pieInst.destroy();if(sortedIssues.length===0){pieInst=new Chart(pCtx,{type:'doughnut',data:{labels:['ไม่มีปัญหา'],datasets:[{data:[1],backgroundColor:['#E9ECEF']}]},options:{animation:false,responsive:false,maintainAspectRatio:false,plugins:{tooltip:{enabled:false},legend:{display:false}}}});}else{pieInst=new Chart(pCtx,{type:'doughnut',data:{labels:sortedIssues.map(i=>i[0]),datasets:[{data:sortedIssues.map(i=>i[1]),backgroundColor:['#DC3545','#FD7E14','#FFC107','#1A6BAA','#9CA3AF'],borderWidth:2,borderColor:'#fff'}]},options:{animation:false,responsive:false,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11,family:"'Sarabun', sans-serif"}}}}}});}}}catch(e){}
-  const byStaff={};data.filter(s=>s.status!=='pending').forEach(s=>{if(!byStaff[s.staffName])byStaff[s.staffName]={total:0,pass:0};byStaff[s.staffName].total++;if(s.status==='pass'||s.status==='partial')byStaff[s.staffName].pass++;});
-  const ranked=Object.entries(byStaff).sort((a,b)=>(b[1].pass/b[1].total)-(a[1].pass/a[1].total));
-  const rt=document.getElementById('rankTable');if(rt)rt.innerHTML=ranked.length===0?'<p style="color:var(--g4);font-size:13.5px">ยังไม่มีข้อมูล</p>':`<table><thead><tr><th>#</th><th>ชื่อ</th><th>ผ่าน/ทั้งหมด</th><th>อัตราผ่าน</th></tr></thead><tbody>${ranked.map(([n,d],i)=>`<tr><td><strong style="color:${i===0?'#F59E0B':i===1?'#9CA3AF':i===2?'#CD7F32':'var(--g6)'}">${['🥇','🥈','🥉'][i]||i+1}</strong></td><td>${n}</td><td>${d.pass}/${d.total}</td><td><span class="tag ${d.pass/d.total>=.8?'tp':d.pass/d.total>=.6?'tw2':'tf'}">${Math.round(d.pass/d.total*100)}%</span></td></tr>`).join('')}</tbody></table>`;
-  // คืน scroll position
-  requestAnimationFrame(() => {
-    if(mainEl) mainEl.scrollTop = savedScroll;
+function updateDashFilter() {
+  const sel = document.getElementById('dashFilter');
+  if(!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(submissions.map(s => s.staffName))];
+  sel.innerHTML = '<option value="all">👥 ผู้ช่วยทั้งหมด</option>' +
+    names.map(n => `<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');
+}
+
+function refreshDashboard() {
+  setSyncBadge('syncing','⏳ Loading...');
+  window.FB.fbGetSubmissions().then(subs => {
+    submissions = Array.isArray(subs) ? subs : [];
+    setSyncBadge('synced','🔥 Firebase');
+    loadDashboard();
+    showToast('🔄 โหลดข้อมูลใหม่แล้ว','success');
+  }).catch(e => {
+    setSyncBadge('error','⚠️ Error');
+    showToast('❌ โหลดไม่สำเร็จ: '+e.message,'error');
   });
+}
+
+function calcCompletion(s) {
+  const tot = Object.keys(s.snap).length;
+  const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
+  return tot > 0 ? Math.round(dn/tot*100) : 0;
+}
+
+function loadDashboard() {
+  updateDashFilter();
+  const fStart = document.getElementById('dashStartDate')?.value;
+  const fEnd   = document.getElementById('dashEndDate')?.value;
+  const f      = document.getElementById('dashFilter')?.value || 'all';
+
+  let data = submissions.filter(s => isDateInRange(s.date, fStart, fEnd));
+  if(f !== 'all') data = data.filter(s => s.staffName === f);
+
+  // ══ KPI ══
+  const reviewed = data.filter(s => s.status !== 'pending');
+  const passed   = data.filter(s => s.status === 'pass' || s.status === 'partial');
+  const failed   = data.filter(s => s.status === 'fail');
+  const pending  = data.filter(s => s.status === 'pending');
+  const avgComp  = data.length > 0 ? Math.round(data.reduce((sum,s) => sum + calcCompletion(s), 0) / data.length) : 0;
+  const passRate = reviewed.length > 0 ? Math.round(passed.length / reviewed.length * 100) : 0;
+
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('kpiTotal',    data.length);
+  set('kpiPass',     passed.length);
+  set('kpiPend',     pending.length);
+  set('kpiFail',     failed.length);
+  set('kpiAvg',      avgComp + '%');
+  set('kpiPassRate', passRate + '%');
+
+  // ══ เวรเช้า vs บ่าย ══
+  const morning = data.filter(s => s.shift === 'morning');
+  const evening = data.filter(s => s.shift !== 'morning');
+  const mReviewed = morning.filter(s => s.status !== 'pending');
+  const ePassed   = evening.filter(s => s.status === 'pass' || s.status === 'partial');
+  const mPassed   = morning.filter(s => s.status === 'pass' || s.status === 'partial');
+  const eReviewed = evening.filter(s => s.status !== 'pending');
+  const mAvg = morning.length > 0 ? Math.round(morning.reduce((sum,s) => sum+calcCompletion(s),0)/morning.length) : 0;
+  const eAvg = evening.length > 0 ? Math.round(evening.reduce((sum,s) => sum+calcCompletion(s),0)/evening.length) : 0;
+  const mPass = mReviewed.length > 0 ? Math.round(mPassed.length/mReviewed.length*100) : 0;
+  const ePass = eReviewed.length > 0 ? Math.round(ePassed.length/eReviewed.length*100) : 0;
+
+  set('shiftMorningCount', morning.length);
+  set('shiftMorningPass',  mPass + '%');
+  set('shiftMorningAvg',   mAvg + '%');
+  set('shiftEveningCount', evening.length);
+  set('shiftEveningPass',  ePass + '%');
+  set('shiftEveningAvg',   eAvg + '%');
+
+  // ══ BAR CHART รายวัน (CSS-based ไม่ใช้ Chart.js) ══
+  const recent = [...data].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
+  const barWrap = document.getElementById('barChart');
+  const labelWrap = document.getElementById('barChartLabels');
+  if(barWrap && recent.length > 0) {
+    const barW = Math.floor(100 / recent.length);
+    barWrap.innerHTML = recent.map(s => {
+      const pct = calcCompletion(s);
+      const color = pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px">
+        <span style="font-size:9px;color:var(--g6);font-weight:700">${pct}%</span>
+        <div style="width:100%;background:${color};border-radius:4px 4px 0 0;height:${Math.max(pct*1.4,4)}px;transition:height .3s"></div>
+      </div>`;
+    }).join('');
+    labelWrap.innerHTML = recent.map(s =>
+      `<div style="flex:1;text-align:center;font-size:9px;color:var(--g6);overflow:hidden">${s.date.slice(5)}</div>`
+    ).join('');
+  } else if(barWrap) {
+    barWrap.innerHTML = '<div style="width:100%;text-align:center;color:var(--g4);font-size:13px;padding:40px 0">ยังไม่มีข้อมูล</div>';
+    if(labelWrap) labelWrap.innerHTML = '';
+  }
+
+  // ══ ISSUE TABLE ══
+  const issueCounts = {};
+  data.forEach(s => {
+    Object.keys(s.snap).forEach(k => {
+      const st = s.snap[k].status;
+      const pt = s.ptEvals && s.ptEvals[k];
+      if(pt === 'fail' || st === 'na' || st !== 'done') {
+        const parts = k.split('-'); const g = parts[0]; const i = parts[1];
+        if(CL[g] && CL[g].items[i]) {
+          let text = CL[g].items[i].replace(/\([^)]+\)/g,'').trim();
+          issueCounts[text] = (issueCounts[text]||0) + 1;
+        }
+      }
+    });
+  });
+  const top5 = Object.entries(issueCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const issueEl = document.getElementById('issueTable');
+  if(issueEl) {
+    if(top5.length === 0) {
+      issueEl.innerHTML = '<div style="text-align:center;color:var(--g);padding:16px;font-size:13.5px">✅ ยอดเยี่ยม! ไม่พบรายการที่มีปัญหา</div>';
+    } else {
+      const maxCount = top5[0][1];
+      issueEl.innerHTML = top5.map(([text, count], i) => {
+        const pct = Math.round(count/maxCount*100);
+        const colors = ['var(--r)','var(--o)','var(--y)','#1A6BAA','var(--g4)'];
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:13px;font-weight:${i===0?'700':'400'}">${i+1}. ${text}</span>
+            <span style="background:${colors[i]}20;color:${colors[i]};padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700;flex-shrink:0;margin-left:8px">${count} ครั้ง</span>
+          </div>
+          <div style="height:6px;background:var(--g2);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${colors[i]};border-radius:3px;transition:width .5s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ══ RANKING ══
+  const byStaff = {};
+  data.filter(s => s.status !== 'pending').forEach(s => {
+    if(!byStaff[s.staffName]) byStaff[s.staffName] = { total:0, pass:0, compSum:0 };
+    byStaff[s.staffName].total++;
+    if(s.status==='pass'||s.status==='partial') byStaff[s.staffName].pass++;
+    byStaff[s.staffName].compSum += calcCompletion(s);
+  });
+  const ranked = Object.entries(byStaff)
+    .map(([n,d]) => ({ name:n, ...d, rate: Math.round(d.pass/d.total*100), avg: Math.round(d.compSum/d.total) }))
+    .sort((a,b) => b.rate - a.rate || b.avg - a.avg);
+  const rt = document.getElementById('rankTable');
+  if(rt) {
+    if(ranked.length === 0) {
+      rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
+    } else {
+      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ผ่าน/ทั้งหมด</th><th>อัตราผ่าน</th><th>เฉลี่ยสมบูรณ์</th></tr></thead><tbody>
+      ${ranked.map((d,i) => `<tr>
+        <td><strong style="font-size:18px">${['🥇','🥈','🥉'][i]||'#'+(i+1)}</strong></td>
+        <td style="font-weight:600">${d.name}</td>
+        <td>${d.pass}/${d.total}</td>
+        <td><span class="tag ${d.rate>=80?'tp':d.rate>=60?'tw2':'tf'}">${d.rate}%</span></td>
+        <td><span style="font-size:13px;font-weight:700;color:${d.avg>=80?'var(--g)':d.avg>=60?'var(--o)':'var(--r)'}">${d.avg}%</span></td>
+      </tr>`).join('')}</tbody></table>`;
+    }
+  }
+
+  // ══ สรุปรายเดือน ══
+  const byMonth = {};
+  data.forEach(s => {
+    const m = s.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, compSum:0 };
+    byMonth[m].total++;
+    if(s.status==='pass'||s.status==='partial') byMonth[m].pass++;
+    if(s.status==='pending') byMonth[m].pending++;
+    byMonth[m].compSum += calcCompletion(s);
+  });
+  const months = Object.entries(byMonth).sort((a,b) => b[0] > a[0] ? 1 : -1).slice(0,6);
+  const mt = document.getElementById('monthlyTable');
+  if(mt) {
+    if(months.length === 0) {
+      mt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูล</p>';
+    } else {
+      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>ผ่าน</th><th>รอประเมิน</th><th>เฉลี่ยสมบูรณ์</th><th>อัตราผ่าน</th></tr></thead><tbody>
+      ${months.map(([m, d]) => {
+        const reviewed = d.total - d.pending;
+        const rate = reviewed > 0 ? Math.round(d.pass/reviewed*100) : 0;
+        const avg  = d.total > 0 ? Math.round(d.compSum/d.total) : 0;
+        const [y,mo] = m.split('-');
+        const thYear = parseInt(y)+543;
+        const moNames = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        return `<tr>
+          <td style="font-weight:600">${moNames[parseInt(mo)]} ${thYear}</td>
+          <td>${d.total}</td>
+          <td style="color:var(--g);font-weight:600">${d.pass}</td>
+          <td style="color:#856404">${d.pending}</td>
+          <td><span style="color:${avg>=80?'var(--g)':avg>=60?'var(--o)':'var(--r)'};font-weight:700">${avg}%</span></td>
+          <td><span class="tag ${rate>=80?'tp':rate>=60?'tw2':'tf'}">${rate}%</span></td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+    }
+  }
 }
 
 function exportDashboardPDF(){const element=document.getElementById('view-dashboard');if(!element)return;showToast('⏳ กำลังเตรียมไฟล์ PDF...','warning');const opt={margin:10,filename:`Dashboard_PT_${fmtDate(new Date())}.pdf`,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};html2pdf().set(opt).from(element).save().then(()=>showToast('✅ ดาวน์โหลด PDF เรียบร้อย','success')).catch(()=>showToast('❌ เกิดข้อผิดพลาด','error'));}
