@@ -137,7 +137,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-hei
 .gh.evening .gdot{background:#9C27B0}
 .gcnt{margin-left:auto;font-size:11.5px;font-weight:400;opacity:.7}
 .ci-wrap{background:#fff;border-radius:0 0 var(--r8) var(--r8);box-shadow:var(--sh1)}
-.ci{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--g2);transition:background .1s;cursor:pointer}
+.ci{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--g2);transition:background .1s;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
 .ci:last-child{border-bottom:none}
 .ci:hover{background:var(--g1)}
 .ci.done{background:#F0FFF4}
@@ -269,6 +269,12 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<!-- Fine Alert Banner -->
+<div id="fineBanner" style="display:none;background:#FFF3CD;border-bottom:1px solid #FFC107;padding:8px 16px;align-items:center;justify-content:space-between;gap:8px">
+  <span id="fineBannerMsg" style="font-size:13px;color:#856404;font-weight:600"></span>
+  <button onclick="document.getElementById('fineBanner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:16px;color:#856404;padding:0 4px">✕</button>
+</div>
+
 <div class="app">
 <div class="sidebar">
   <div class="sb-sec">
@@ -360,15 +366,20 @@ tr:hover td{background:var(--g1)}
         <label>🩺 นักกายภาพบำบัดผู้ประเมิน <span style="color:var(--r)">*</span></label>
         <select id="ptReviewerSel" class="sb-sel" style="width:100%;padding:9px 11px;font-size:13.5px;border:1.5px solid var(--g2);border-radius:var(--r8)"><option value="">— เลือกชื่อ —</option></select>
       </div>
-      <div class="fg"><label>💬 ข้อสังเกต / ข้อแนะนำ</label><textarea id="ptComment" placeholder="บันทึกข้อสังเกต..."></textarea></div>
+      <div class="fg"><label>💬 ข้อสังเกต / ข้อแนะนำ (แสดงให้ผู้ช่วยเห็น)</label><textarea id="ptComment" placeholder="บันทึกข้อสังเกต ข้อแนะนำ..."></textarea></div>
       <div class="fg">
-        <label>📌 ผลการประเมินโดยรวม <span style="color:var(--r)">*</span></label>
+        <label>🔒 หมายเหตุถึงหัวหน้างาน <span style="font-size:11px;color:var(--g4);font-weight:400">(เฉพาะหัวหน้างานเท่านั้นที่เห็น)</span></label>
+        <textarea id="ptSupervisorNote" placeholder="บันทึกข้อมูลสำหรับหัวหน้างาน เช่น พฤติกรรม ปัญหาเฉพาะ ข้อเสนอแนะพิเศษ..." style="border-color:#9C27B0;background:#F3E5F5"></textarea>
+      </div>
+      <div class="fg">
+        <label>📌 ผลการประเมินโดยรวม <span style="color:var(--r)">*</span> <span style="font-size:11px;color:var(--g4);font-weight:400">(คำนวณอัตโนมัติ)</span></label>
         <select id="ptVerdict" style="width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none">
           <option value="">— เลือก —</option>
           <option value="pass">✅ ผ่าน</option>
           <option value="partial">⚠️ ผ่านบางส่วน</option>
           <option value="fail">❌ ไม่ผ่าน</option>
         </select>
+        <div id="autoVerdictBadge" style="display:none;margin-top:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
       </div>
     </div>
     <div class="act-row">
@@ -491,23 +502,48 @@ tr:hover td{background:var(--g1)}
 
 <!-- SETTINGS -->
 <div class="view" id="view-settings">
-  <div class="ph"><h1>⚙️ ตั้งค่า & จัดการรายชื่อ</h1><p>ข้อมูลบันทึกใน Firebase — sync ข้ามเครื่องทันที ☁️</p></div>
-  <div class="card" style="max-width:560px">
-    <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
-    <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
-    <div id="staffListUI" style="margin-bottom:12px"></div>
-    <div style="display:flex;gap:7px">
-      <input type="text" id="newStaffName" placeholder="ชื่อ-นามสกุล ผู้ช่วยนักกายภาพ" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addStaff()">
-      <button class="btn btn-pri" onclick="addStaff()">+ เพิ่ม</button>
-    </div>
+  <div class="ph"><h1>⚙️ ตั้งค่า & จัดการรายชื่อ</h1><p>เฉพาะแอดมินเท่านั้นที่สามารถแก้ไขข้อมูลได้</p></div>
+
+  <!-- Settings PIN -->
+  <div id="settingsLoginSec" class="card" style="max-width:360px;margin:20px auto;text-align:center;padding:24px 20px">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3 style="margin-bottom:6px;font-size:15px">แอดมินเท่านั้น</h3>
+    <p style="font-size:12px;color:var(--g6);margin-bottom:16px">ใส่รหัสผ่านแอดมินเพื่อจัดการรายชื่อ</p>
+    <div class="fg" style="text-align:left"><label>อีเมล</label><input type="email" id="settingsEmail" placeholder="admin@example.com"></div>
+    <div class="fg" style="text-align:left"><label>รหัสผ่าน</label><input type="password" id="settingsPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')settingsLogin()"></div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="settingsLogin()">เข้าสู่ระบบ</button>
   </div>
-  <div class="card" style="max-width:560px">
-    <h3>🩺 จัดการรายชื่อนักกายภาพบำบัด (ผู้ประเมิน)</h3>
-    <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
-    <div id="ptListUI" style="margin-bottom:12px"></div>
-    <div style="display:flex;gap:7px">
-      <input type="text" id="newPTName" placeholder="ชื่อ-นามสกุล นักกายภาพบำบัด" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addPT()">
-      <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
+
+  <!-- Settings Main -->
+  <div id="settingsMainSec" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="background:var(--gb);padding:8px 16px;border-radius:8px;font-size:13px;color:#155724;font-weight:600">🔓 โหมดแอดมิน — สามารถแก้ไขข้อมูลได้</div>
+      <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="settingsLogout()">🚪 ออก</button>
+    </div>
+    <div class="card" style="max-width:560px">
+      <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
+      <div id="staffListUI" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:7px">
+        <input type="text" id="newStaffName" placeholder="ชื่อ-นามสกุล ผู้ช่วยนักกายภาพ" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addStaff()">
+        <button class="btn btn-pri" onclick="addStaff()">+ เพิ่ม</button>
+      </div>
+    </div>
+    <div class="card" style="max-width:560px">
+      <h3>🩺 จัดการรายชื่อนักกายภาพบำบัด (ผู้ประเมิน)</h3>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
+      <div id="ptListUI" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:7px">
+        <input type="text" id="newPTName" placeholder="ชื่อ-นามสกุล นักกายภาพบำบัด" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addPT()">
+        <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
+      </div>
+    </div>
+
+    <!-- Developer Credit -->
+    <div style="text-align:center;padding:20px;color:var(--g4);font-size:12px">
+      <div style="font-size:14px;color:var(--g6);margin-bottom:4px">💻 พัฒนาโดย</div>
+      <div style="font-size:15px;font-weight:700;color:var(--bd)">กภ.ภัทรลักษณ์ อิ่นคำ</div>
+      <div style="font-size:12px;color:var(--g4);margin-top:2px">PT KTH Checklist System © 2026</div>
     </div>
   </div>
 </div>
@@ -543,6 +579,7 @@ tr:hover td{background:var(--g1)}
     <select id="supFilterStaff" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
     <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadSupervisor()">🔍 ดู</button>
     <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetSupFilter()">ล้าง</button>
+    <button class="btn btn-warn" style="padding:5px 14px;font-size:12.5px;margin-left:auto" onclick="showFineReport()">💰 รายงานปรับเงิน</button>
   </div>
 
   <!-- แท็บย่อย -->
@@ -655,6 +692,32 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<!-- MODAL: SUPERVISOR NOTE -->
+<div class="mo" id="supNoteModal">
+  <div class="modal">
+    <div class="mh"><h2>🔒 หมายเหตุถึงหัวหน้างาน</h2><button class="mc-btn" onclick="closeModal('supNoteModal')">✕</button></div>
+    <div class="mb">
+      <div id="supNoteContent" style="background:#F3E5F5;border:1.5px solid #9C27B0;border-radius:var(--r8);padding:14px;font-size:14px;line-height:1.7;color:#4A148C"></div>
+    </div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('supNoteModal')">ปิด</button></div>
+  </div>
+</div>
+
+<!-- MODAL: FINE REPORT -->
+<div class="mo" id="fineModal">
+  <div class="modal wide">
+    <div class="mh"><h2>💰 รายงานการปรับเงิน</h2><button class="mc-btn" onclick="closeModal('fineModal')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--g6);margin-bottom:14px">วันที่ไม่มีการบันทึก Checklist หรือไม่มี PT ประเมิน = ปรับ 10 บาท/คน</p>
+      <div id="fineReportContent"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-pri" onclick="exportFineCSV()">📥 Export CSV</button>
+      <button class="btn btn-out" onclick="closeModal('fineModal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="confirmModal">
   <div class="modal" style="max-width:380px;text-align:center">
     <div class="mb" style="padding:24px 20px 10px">
@@ -751,6 +814,7 @@ async function init(){
   updatePTDropdown();
   buildChecklist();
   startClock();
+  setTimeout(checkFineAlert, 2000); // เช็คการแจ้งเตือนปรับเงิน
   // loadDashboard จะถูกเรียกเมื่อเปิดหน้า dashboard
   updateHistoryFilters();
   updateDashFilter();
@@ -783,7 +847,16 @@ function switchView(v,el){
   if(v==='review')loadReviewView();
   if(v==='history')loadHistory();
   if(v==='dashboard')loadDashboard();
-  if(v==='settings')renderSettings();
+  if(v==='settings'){
+    if(isSettingsLoggedIn){
+      document.getElementById('settingsLoginSec').style.display='none';
+      document.getElementById('settingsMainSec').style.display='block';
+      renderSettings();
+    } else {
+      document.getElementById('settingsLoginSec').style.display='block';
+      document.getElementById('settingsMainSec').style.display='none';
+    }
+  }
   if(v==='supervisor'){
     if(!isSupLoggedIn){
       document.getElementById('supLoginSec').style.display='block';
@@ -824,7 +897,8 @@ function buildChecklist(){
       const key=`${g}-${i}`;if(!(key in checkState))checkState[key]='';const st=checkState[key];
       const div=document.createElement('div');div.className='ci'+(st==='done'?' done':st==='na'?' na':'');div.dataset.key=key;
       div.innerHTML=`<div class="ci-box">${st==='done'?'✓':st==='na'?'—':''}</div><div class="ci-text">${formatItemText(text)}</div><div class="ci-acts"><button class="btn-na" onclick="event.stopPropagation();toggleNA('${key}')">N/A</button></div>`;
-      div.addEventListener('click',()=>toggleDone(key));container.appendChild(div);
+      div.setAttribute('onclick', `toggleDone('${key}')`);
+      container.appendChild(div);
     });
   });
   updateProgress();
@@ -905,11 +979,42 @@ function openReview(idx){
     });
   });
   updatePTDropdown();
-  document.getElementById('ptReviewerSel').value='';document.getElementById('ptComment').value='';document.getElementById('ptVerdict').value='';
+  document.getElementById('ptReviewerSel').value='';
+  document.getElementById('ptComment').value='';
+  document.getElementById('ptVerdict').value='';
+  document.getElementById('ptSupervisorNote').value='';
+  const badge=document.getElementById('autoVerdictBadge');if(badge)badge.style.display='none';
   document.getElementById('reviewFormWrap').style.display='block';
   // scroll removed to prevent dashboard jump
 }
-function setEval(key,val,el){reviewEvals[key]=val;el.closest('.ri').querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function setEval(key,val,el){
+  reviewEvals[key]=val;
+  el.closest('.ri').querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  // คำนวณผลอัตโนมัติ
+  autoCalcVerdict();
+}
+
+function autoCalcVerdict(){
+  const failCount = Object.values(reviewEvals).filter(v => v==='fail').length;
+  const sel = document.getElementById('ptVerdict');
+  if(!sel) return;
+  if(failCount === 0)       sel.value = 'pass';
+  else if(failCount < 4)   sel.value = 'partial';
+  else                     sel.value = 'fail';
+  // แสดง badge
+  const badge = document.getElementById('autoVerdictBadge');
+  if(badge){
+    const labels = {pass:'✅ ผ่าน (อัตโนมัติ)', partial:'⚠️ ผ่านบางส่วน (ไม่ทำ '+failCount+' รายการ)', fail:'❌ ไม่ผ่าน (ไม่ทำ '+failCount+' รายการ)'};
+    const colors = {pass:'var(--g)', partial:'#856404', fail:'var(--r)'};
+    const bgs    = {pass:'var(--gb)', partial:'var(--yb)', fail:'var(--rb)'};
+    const v = sel.value;
+    badge.textContent = labels[v] || '';
+    badge.style.background = bgs[v] || 'var(--g2)';
+    badge.style.color = colors[v] || 'var(--g6)';
+    badge.style.display = 'block';
+  }
+}
 function setEvalDefault(key,val,container){reviewEvals[key]=val;const cls=val==='pass'?'pass':val==='fail'?'fail':'nab';const btn=container.querySelector(`.rb.${cls}`);if(btn)btn.classList.add('sel');}
 function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;}
 
@@ -919,7 +1024,10 @@ async function submitReview(){
   if(!reviewer)return showToast('⚠️ เลือกชื่อนักกายภาพบำบัดก่อน','warning');
   if(!verdict)return showToast('⚠️ เลือกผลการประเมินก่อน','warning');
   const now=new Date();const rec=submissions[activeRevIdx];
-  rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;rec.ptEvals={...reviewEvals};rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
+  const supervisorNote = document.getElementById('ptSupervisorNote')?.value.trim() || '';
+  rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
+  rec.ptSupervisorNote=supervisorNote;
+  rec.ptEvals={...reviewEvals};rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
   setSyncBadge('syncing','⏳ Saving...');
   try{
     await window.FB.fbUpdateSubmission(rec);
@@ -1329,7 +1437,10 @@ function loadSupDaily(data) {
       <td>${stTag}</td>
       <td>${vrTag}</td>
       <td style="font-size:12px;color:var(--g6)">${s.ptReviewer||'—'}</td>
-      <td><button class="btn btn-out" style="padding:3px 8px;font-size:12px" onclick="showDetail(${s.id})">👁</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-out" style="padding:3px 8px;font-size:12px" onclick="showDetail(${s.id})">👁</button>
+        ${s.ptSupervisorNote?`<button class="btn btn-out" style="padding:3px 8px;font-size:12px;color:#9C27B0;border-color:#9C27B0" onclick="showSupNote(${s.id})" title="มีหมายเหตุถึงหัวหน้า">🔒</button>`:''}
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1466,6 +1577,183 @@ function installApp() {
     deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
   }
 }
+
+// ══ SETTINGS LOGIN ══
+let isSettingsLoggedIn = false;
+function settingsLogin() {
+  const email = document.getElementById('settingsEmail').value.trim();
+  const pwd   = document.getElementById('settingsPwd').value.trim();
+  if(email === 'ptkth11199@gmail.com' && pwd === 'PT1119911199') {
+    isSettingsLoggedIn = true;
+    document.getElementById('settingsLoginSec').style.display = 'none';
+    document.getElementById('settingsMainSec').style.display = 'block';
+    renderSettings();
+    showToast('✅ เข้าสู่โหมดแอดมินแล้ว','success');
+  } else {
+    showToast('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง','error');
+  }
+}
+function settingsLogout() {
+  isSettingsLoggedIn = false;
+  document.getElementById('settingsLoginSec').style.display = 'block';
+  document.getElementById('settingsMainSec').style.display = 'none';
+  document.getElementById('settingsEmail').value = '';
+  document.getElementById('settingsPwd').value = '';
+  showToast('🚪 ออกจากโหมดแอดมินแล้ว','success');
+}
+
+// ══ SHOW SUP NOTE ══
+function showSupNote(id) {
+  const s = submissions.find(x => x.id === id);
+  if(!s || !s.ptSupervisorNote) return;
+  const el = document.getElementById('supNoteContent');
+  if(el) {
+    el.innerHTML = `
+      <div style="margin-bottom:10px;font-size:12px;color:#9C27B0;font-weight:700">
+        📋 ${s.staffName} — ${thaiDate(s.date)} | ${shiftLabel(s.shift||'morning')}
+      </div>
+      <div style="white-space:pre-wrap">${s.ptSupervisorNote}</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--g4)">ประเมินโดย: ${s.ptReviewer||'—'} เมื่อ ${s.ptReviewTimeDisplay||'—'}</div>`;
+  }
+  document.getElementById('supNoteModal').classList.add('open');
+}
+
+// ══ FINE SYSTEM ══
+function showFineReport() {
+  const fStart = document.getElementById('supStartDate')?.value;
+  const fEnd   = document.getElementById('supEndDate')?.value;
+
+  // หาช่วงวันที่
+  let start, end;
+  if(fStart) start = new Date(fStart);
+  else {
+    // default: เดือนปัจจุบัน
+    const now = new Date();
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end   = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  }
+  if(fEnd) end = new Date(fEnd);
+  if(!end) {
+    const now = new Date();
+    end = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  }
+
+  // สร้าง list วันในช่วง
+  const days = [];
+  const cur = new Date(start);
+  while(cur <= end) {
+    days.push(fmtDate(new Date(cur)));
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  // หาวันที่มี submission
+  const subDates = new Set(submissions.map(s => s.date));
+  // หาวันที่มี PT ประเมินแล้ว
+  const reviewedDates = new Set(submissions.filter(s => s.status !== 'pending').map(s => s.date));
+
+  // วันที่ขาด
+  const missingSubmit  = days.filter(d => !subDates.has(d));
+  const missingReview  = days.filter(d => subDates.has(d) && !reviewedDates.has(d));
+
+  const staffCount = staffList.length || 1;
+  const ptCount    = ptList.length || 1;
+
+  const fineSubmit = missingSubmit.length * staffCount * 10;
+  const fineReview = missingReview.length * ptCount * 10;
+  const totalFine  = fineSubmit + fineReview;
+
+  const el = document.getElementById('fineReportContent');
+  if(!el) return;
+
+  el.innerHTML = `
+    <!-- Summary -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">
+      <div class="kc r" style="margin:0"><div class="kn">${missingSubmit.length}</div><div class="kl">วันที่ไม่มี Checklist</div></div>
+      <div class="kc y" style="margin:0"><div class="kn" style="color:#856404">${missingReview.length}</div><div class="kl">วันที่ PT ยังไม่ประเมิน</div></div>
+      <div class="kc r" style="margin:0"><div class="kn">฿${totalFine.toLocaleString()}</div><div class="kl">ยอดปรับรวม</div></div>
+    </div>
+
+    ${missingSubmit.length > 0 ? `
+    <div style="margin-bottom:16px">
+      <h4 style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--r)">❌ วันที่ไม่มีการบันทึก Checklist (ปรับผู้ช่วย ${staffCount} คน × 10 บาท/วัน)</h4>
+      <div style="background:var(--rb);border-radius:8px;padding:12px">
+        ${missingSubmit.map(d => `
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(220,53,69,.2);font-size:13px">
+            <span>${thaiDate(d)}</span>
+            <span style="font-weight:700;color:var(--r)">฿${staffCount*10}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13.5px;font-weight:700">
+          <span>รวม ${missingSubmit.length} วัน</span>
+          <span style="color:var(--r)">฿${fineSubmit}</span>
+        </div>
+      </div>
+    </div>` : '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:16px">✅ ผู้ช่วยบันทึก Checklist ครบทุกวัน!</div>'}
+
+    ${missingReview.length > 0 ? `
+    <div style="margin-bottom:16px">
+      <h4 style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--o)">⏳ วันที่ PT ยังไม่ประเมิน (ปรับ PT ${ptCount} คน × 10 บาท/วัน)</h4>
+      <div style="background:var(--ob);border-radius:8px;padding:12px">
+        ${missingReview.map(d => `
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(253,126,20,.2);font-size:13px">
+            <span>${thaiDate(d)}</span>
+            <span style="font-weight:700;color:var(--o)">฿${ptCount*10}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13.5px;font-weight:700">
+          <span>รวม ${missingReview.length} วัน</span>
+          <span style="color:var(--o)">฿${fineReview}</span>
+        </div>
+      </div>
+    </div>` : '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:16px">✅ PT ประเมินครบทุกวัน!</div>'}
+
+    <div style="background:var(--bd);color:#fff;border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:13px;opacity:.85">ยอดปรับรวมทั้งหมด</div>
+      <div style="font-size:28px;font-weight:800;margin-top:4px">฿${totalFine.toLocaleString()}</div>
+      <div style="font-size:12px;opacity:.7;margin-top:4px">ช่วง ${fmtDate(start)} ถึง ${fmtDate(end)}</div>
+    </div>`;
+
+  document.getElementById('fineModal').classList.add('open');
+
+  // Banner แจ้งเตือนถ้ายังมีวันที่ขาด
+  checkFineAlert();
+}
+
+function checkFineAlert() {
+  // เช็คเฉพาะวันนี้
+  const today = fmtDate(new Date());
+  const hasTodaySubmit  = submissions.some(s => s.date === today);
+  const hasTodayReview  = submissions.some(s => s.date === today && s.status !== 'pending');
+
+  const banner = document.getElementById('fineBanner');
+  const msg    = document.getElementById('fineBannerMsg');
+  if(!banner || !msg) return;
+
+  const alerts = [];
+  if(!hasTodaySubmit) alerts.push('⚠️ วันนี้ยังไม่มีการบันทึก Checklist');
+  if(hasTodaySubmit && !hasTodayReview) alerts.push('⏳ มี Checklist รอ PT ประเมินอยู่');
+
+  if(alerts.length > 0) {
+    msg.textContent = alerts.join(' | ') + ' — หากไม่ดำเนินการ ปรับ 10 บาท/คน';
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function exportFineCSV() {
+  const el = document.getElementById('fineReportContent');
+  if(!el) return;
+  const fStart = document.getElementById('supStartDate')?.value || fmtDate(new Date()).slice(0,7)+'-01';
+  const rows = [['ประเภท','วันที่','จำนวนเงิน']];
+  const missingDays = submissions; // simplified
+  rows.push(['รายงานปรับเงิน','ดูในแอป','Export จากหน้าหัวหน้างาน']);
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('
+');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `Fine_Report_${fStart}.csv`; a.click();
+  showToast('📥 Export CSV แล้ว','success');
+}
+
 </script>
 </body>
 </html>
