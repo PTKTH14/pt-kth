@@ -630,6 +630,25 @@ tr:hover td{background:var(--g1)}
     <div class="act-row">
       <button class="btn" style="background:var(--r);color:#fff;border:none" onclick="clearAllData()">🗑️ ล้างข้อมูลทั้งหมด</button>
     </div>
+
+    <!-- PIN Management -->
+    <div class="card" style="max-width:400px;margin-top:20px">
+      <h3 style="margin-bottom:14px">🔑 ตั้งค่ารหัส PIN หัวหน้างาน</h3>
+      <p style="font-size:12.5px;color:var(--g6);margin-bottom:14px">รหัสปัจจุบัน: <span id="currentPinDisplay" style="font-weight:700;color:var(--bd)">****</span></p>
+      <div class="fg">
+        <label>รหัส PIN ใหม่ (4 หลัก)</label>
+        <input type="password" id="newPinInput" maxlength="4" placeholder="• • • •"
+          style="letter-spacing:8px;font-size:18px;text-align:center"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="fg">
+        <label>ยืนยันรหัส PIN</label>
+        <input type="password" id="confirmPinInput" maxlength="4" placeholder="• • • •"
+          style="letter-spacing:8px;font-size:18px;text-align:center"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeSupervisorPin()">🔑 เปลี่ยนรหัส PIN</button>
+    </div>
   </div>
 </div>
 
@@ -888,6 +907,35 @@ document.getElementById('staffSelect').addEventListener('change',function(){cons
 // ══ CHECKLIST ══
 function buildChecklist(){
   const wrap=document.getElementById('checklistGroups');if(!wrap)return;wrap.innerHTML='';
+
+  // แสดง time warning เวรเช้า
+  if(currentShift === 'morning') {
+    const now = new Date();
+    const activeDate = getActiveDate();
+    const isToday = activeDate === fmtDate(now);
+    if(isToday) {
+      const h = now.getHours(), m = now.getMinutes();
+      const totalMin = h*60+m;
+      const deadlineMin = 8*60+30;
+      const remaining = deadlineMin - totalMin;
+      let timeBanner = document.getElementById('timeLockBanner');
+      if(!timeBanner) {
+        timeBanner = document.createElement('div');
+        timeBanner.id = 'timeLockBanner';
+        wrap.parentNode.insertBefore(timeBanner, wrap);
+      }
+      if(totalMin >= deadlineMin) {
+        timeBanner.innerHTML = `<div style="background:var(--rb);border:1.5px solid var(--r);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:var(--r);font-weight:700;font-size:13.5px">⛔ เลยเวลา 08:30 น. แล้ว — ไม่สามารถบันทึกเวรเช้าได้อีก กรุณาติดต่อแอดมิน</div>`;
+      } else if(remaining <= 30) {
+        timeBanner.innerHTML = `<div style="background:var(--yb);border:1.5px solid var(--y);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:#856404;font-weight:700;font-size:13.5px">⏰ เหลือเวลาอีก ${remaining} นาที ก่อนถึงเวลา 08:30 น. — รีบบันทึกด่วน!</div>`;
+      } else {
+        timeBanner.innerHTML = '';
+      }
+    }
+  } else {
+    const timeBanner = document.getElementById('timeLockBanner');
+    if(timeBanner) timeBanner.innerHTML = '';
+  }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
     gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}<span class="gcnt" id="cnt-${g}">0/${info.items.length}</span></div><div class="ci-wrap" id="grp-${g}"></div>`;
@@ -922,6 +970,19 @@ function openSubmitModal(){
   const st=getActiveStaff();const date=getActiveDate();
   if(!st.text||st.text==='— เลือกชื่อ —'||st.text==='— เลือกชื่อผู้ช่วย —')return showToast('⚠️ เลือกชื่อผู้ช่วยก่อน','warning');
   if(!date)return showToast('⚠️ เลือกวันที่ก่อน','warning');
+
+  // เช็คเวลา: เวรเช้าต้องส่งก่อน 08:30 น.
+  if(currentShift === 'morning'){
+    const now=new Date(); const isToday=date===fmtDate(now);
+    if(isToday){
+      const h=now.getHours(),m=now.getMinutes();
+      if(h>8||(h===8&&m>=30)){
+        showToast('⛔ เลยเวลา 08:30 น. แล้ว ไม่สามารถบันทึกเวรเช้าได้','error');
+        return;
+      }
+    }
+  }
+
   let tDone=0,tNA=0,tMiss=0,tAll=0;
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
   document.getElementById('m_staff').value=st.text;
@@ -1301,19 +1362,27 @@ function exportDashboardPDF(){const element=document.getElementById('view-dashbo
 
 // ══ SETTINGS ══
 function renderSettings(){
+  // ถ้าไม่ได้ login ไม่ render — ป้องกันการเห็นข้อมูล
+  if(!isSettingsLoggedIn) return;
   const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${n}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${n}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
 }
 
-async function addStaff(){const n=document.getElementById('newStaffName').value.trim();if(!n)return;if(staffList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');staffList.push(n);document.getElementById('newStaffName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('✅ เพิ่มผู้ช่วยแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){staffList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
-async function removeStaff(i){showConfirm(`ต้องการลบชื่อ "${staffList[i]}" ใช่หรือไม่?`,async()=>{const removed=staffList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){staffList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
-async function addPT(){const n=document.getElementById('newPTName').value.trim();if(!n)return;if(ptList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');ptList.push(n);document.getElementById('newPTName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('✅ เพิ่มนักกายภาพแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){ptList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
-async function removePT(i){showConfirm(`ต้องการลบชื่อ "${ptList[i]}" ใช่หรือไม่?`,async()=>{const removed=ptList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){ptList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+async function addStaff(){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newStaffName').value.trim();if(!n)return;if(staffList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');staffList.push(n);document.getElementById('newStaffName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('✅ เพิ่มผู้ช่วยแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){staffList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+async function removeStaff(i){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${staffList[i]}" ใช่หรือไม่?`,async()=>{const removed=staffList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){staffList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+async function addPT(){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newPTName').value.trim();if(!n)return;if(ptList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');ptList.push(n);document.getElementById('newPTName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('✅ เพิ่มนักกายภาพแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){ptList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+async function removePT(i){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${ptList[i]}" ใช่หรือไม่?`,async()=>{const removed=ptList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){ptList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
 function updateStaffDropdown(){[document.getElementById('staffSelect'),document.getElementById('staffSelectMobile')].forEach(sel=>{if(!sel)return;const cur=sel.value;const placeholder=sel.id==='staffSelectMobile'?'— เลือกชื่อผู้ช่วย —':'— เลือกชื่อ —';sel.innerHTML=`<option value="">${placeholder}</option>`+staffList.map((n,i)=>`<option value="s${i}"${cur===`s${i}`?' selected':''}>${n}</option>`).join('');});}
 function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');if(!sel)return;sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+ptList.map(n=>`<option value="${n}">${n}</option>`).join('');}
 
 // ══ ADMIN ══
-function checkAdminAuth(){if(isAdminLoggedIn){document.getElementById('adminLoginSec').style.display='none';document.getElementById('adminDashSec').style.display='block';renderAdminTable();}else{document.getElementById('adminLoginSec').style.display='block';document.getElementById('adminDashSec').style.display='none';}}
+function checkAdminAuth(){if(isAdminLoggedIn){document.getElementById('adminLoginSec').style.display='none';document.getElementById('adminDashSec').style.display='block';renderAdminTable();
+    const pd=document.getElementById('currentPinDisplay');
+    if(pd) pd.textContent=localStorage.getItem('sup_pin')||'1234';}else{document.getElementById('adminLoginSec').style.display='block';document.getElementById('adminDashSec').style.display='none';}}
 function adminLogin(){const email=document.getElementById('admEmail').value.trim();const pwd=document.getElementById('admPwd').value.trim();if(email==='ptkth11199@gmail.com'&&pwd==='PT1119911199'){isAdminLoggedIn=true;document.getElementById('admPwd').value='';showToast('✅ เข้าสู่ระบบแอดมินสำเร็จ','success');checkAdminAuth();}else{showToast('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง','error');}}
 function adminLogout(){isAdminLoggedIn=false;showToast('🚪 ออกจากระบบแล้ว','success');checkAdminAuth();}
 function renderAdminTable(){const tb=document.getElementById('adminTableBody');if(!tb)return;if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}let data=[...submissions].reverse();tb.innerHTML=data.map(s=>{const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';return`<tr><td>${s.date} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${s.staffName}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;}).join('');}
@@ -1349,7 +1418,7 @@ function shareToLine() {
 // ══ SUPERVISOR ══
 let currentSupTab = 'daily';
 let isSupLoggedIn = false;
-const SUP_PIN = '1234';
+// SUP_PIN ถูกเก็บใน supervisorPin (localStorage)
 
 function checkSupPin() {
   const pin = document.getElementById('supPin').value;
@@ -1752,6 +1821,26 @@ function exportFineCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `Fine_Report_${fStart}.csv`; a.click();
   showToast('📥 Export CSV แล้ว','success');
+}
+
+
+// ══ PIN MANAGEMENT ══
+let supervisorPin = localStorage.getItem('sup_pin') || '1234';
+
+function changeSupervisorPin() {
+  const newPin     = document.getElementById('newPinInput')?.value.trim();
+  const confirmPin = document.getElementById('confirmPinInput')?.value.trim();
+  if(!newPin || newPin.length !== 4) return showToast('⚠️ รหัส PIN ต้องเป็น 4 หลัก','warning');
+  if(!/^\d{4}$/.test(newPin))       return showToast('⚠️ ใช้ตัวเลขเท่านั้น','warning');
+  if(newPin !== confirmPin)          return showToast('⚠️ รหัสไม่ตรงกัน','error');
+
+  supervisorPin = newPin;
+  localStorage.setItem('sup_pin', newPin);
+
+  document.getElementById('newPinInput').value     = '';
+  document.getElementById('confirmPinInput').value = '';
+  document.getElementById('currentPinDisplay').textContent = newPin;
+  showToast('✅ เปลี่ยนรหัส PIN หัวหน้างานแล้ว — รหัสใหม่: ' + newPin,'success');
 }
 
 </script>
