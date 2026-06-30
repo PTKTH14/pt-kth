@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด v20260629</title>
+<title>PT KTH — Checklist System v20260630</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260629">
+<meta name="version" content="v20260630">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -67,7 +67,18 @@ async function fbClearSubmissions() {
 }
 
 // expose to window
-window.FB = { fbGetConfig, fbSaveConfig, fbGetSubmissions, fbSaveSubmission, fbUpdateSubmission, fbDeleteSubmission, fbClearSubmissions };
+// Fine Records
+async function fbSaveFineRecord(record) {
+  try { await setDoc(doc(db, 'fine_records', String(record.id)), record); } catch(e) { console.error(e); }
+}
+async function fbGetFineRecords() {
+  try { const snap = await getDocs(collection(db, 'fine_records')); return snap.docs.map(d => d.data()); } catch(e) { return []; }
+}
+async function fbDeleteFineRecord(id) {
+  try { await deleteDoc(doc(db, 'fine_records', String(id))); } catch(e) { console.error(e); }
+}
+
+window.FB = { fbGetConfig, fbSaveConfig, fbGetSubmissions, fbSaveSubmission, fbUpdateSubmission, fbDeleteSubmission, fbClearSubmissions, fbSaveFineRecord, fbGetFineRecords, fbDeleteFineRecord };
 window.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
@@ -1993,6 +2004,16 @@ function checkFineLogin() {
     fineRecords = JSON.parse(localStorage.getItem('fine_records')||'[]');
     setFineThisMonth();
     renderFineRecords();
+    // sync Firebase
+    if(window.FB && window.FB.fbGetFineRecords) {
+      window.FB.fbGetFineRecords().then(fbRecs => {
+        if(fbRecs && fbRecs.length > 0) {
+          fineRecords = fbRecs.sort((a,b) => b.id - a.id);
+          localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+          renderFineRecords();
+        }
+      }).catch(()=>{});
+    }
   } else {
     document.getElementById('finePinError').style.display = 'block';
     document.getElementById('finePinInput').value = '';
