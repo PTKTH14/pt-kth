@@ -645,12 +645,36 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px" id="fineKpi"></div>
-    <div class="card"><div id="fineDetail"></div></div>
+    <div class="card" style="margin-bottom:16px"><div id="fineDetail"></div></div>
+
+    <!-- Admin: บันทึกค่าปรับรายบุคคล -->
+    <div class="card" style="margin-bottom:16px">
+      <h3 style="margin-bottom:12px">📝 บันทึกค่าปรับรายบุคคล (แอดมินระบุเอง)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end;flex-wrap:wrap" class="fine-add-row">
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">ชื่อผู้ถูกปรับ</label>
+          <select id="finePersonSel" class="sb-sel" style="padding:8px 10px">
+            <option value="">— เลือกชื่อ —</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">เหตุผล</label>
+          <input type="text" id="fineReason" placeholder="เหตุผลการปรับ" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;width:100%;outline:none">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">จำนวน (฿)</label>
+          <input type="number" id="fineAmount" value="10" min="1" style="width:80px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;text-align:center;outline:none">
+        </div>
+        <button class="btn btn-pri" style="padding:8px 14px;font-size:13px;height:fit-content" onclick="addFineRecord()">+ บันทึก</button>
+      </div>
+      <div style="margin-top:14px" id="fineRecordsList"></div>
+    </div>
+
     <div class="card" style="max-width:400px;margin-top:0">
-      <h3 style="margin-bottom:12px">⚙️ ตั้งค่าอัตราค่าปรับ</h3>
+      <h3 style="margin-bottom:12px">⚙️ ตั้งค่าอัตราค่าปรับอัตโนมัติ</h3>
       <div class="fg">
         <label>ค่าปรับต่อคนต่อวัน (บาท)</label>
-        <input type="number" id="finePerPerson" value="10" min="1" style="width:120px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:15px;text-align:center">
+        <input type="number" id="finePerPerson" value="10" min="1" style="width:120px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:15px;text-align:center;outline:none">
       </div>
     </div>
   </div>
@@ -681,6 +705,27 @@ tr:hover td{background:var(--g1)}
     </div>
     <div class="act-row">
       <button class="btn" style="background:var(--r);color:#fff;border:none" onclick="clearAllData()">🗑️ ล้างข้อมูลทั้งหมด</button>
+    </div>
+
+    <!-- Checklist Management -->
+    <div class="card" style="margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin-bottom:0">📋 จัดการรายการ Checklist</h3>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('morning')" id="clTabMorning">🌅 เวรเช้า</button>
+          <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('evening')" id="clTabEvening">🌙 เวรบ่าย</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:12px">⚠️ การแก้ไขจะมีผลกับ Checklist ใหม่ที่บันทึกหลังจากนี้เท่านั้น (ข้อมูลเก่าไม่เปลี่ยน)</p>
+      <div id="clItemList" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="newClItem" placeholder="พิมพ์รายการใหม่..." style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addClItem()">
+        <button class="btn btn-pri" onclick="addClItem()">+ เพิ่ม</button>
+      </div>
+      <div class="act-row" style="margin-top:12px">
+        <button class="btn btn-suc" onclick="saveClItems()">💾 บันทึกรายการ Checklist</button>
+        <button class="btn btn-out" onclick="resetClItems()">↩ คืนค่าเดิม</button>
+      </div>
     </div>
 
     <!-- PIN Management -->
@@ -943,6 +988,7 @@ function switchView(v,el){
       document.getElementById('fineLoginSec').style.display='none';
       document.getElementById('fineMainSec').style.display='block';
       setFineThisMonth();
+      renderFineRecords();
     } else {
       document.getElementById('fineLoginSec').style.display='block';
       document.getElementById('fineMainSec').style.display='none';
@@ -1153,11 +1199,22 @@ async function submitReview(){
   rec.ptEvals={...reviewEvals};rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
   setSyncBadge('syncing','⏳ Saving...');
   try{
+    // อัปเดต local array ก่อน
+    submissions[activeRevIdx] = rec;
+    // บันทึก Firebase
     await window.FB.fbUpdateSubmission(rec);
-    setSyncBadge('synced','🔥 Firebase');showToast('✅ บันทึกผลการประเมินแล้ว','success');
-    document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;
-    loadReviewView();loadDashboard();
-  }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}
+    setSyncBadge('synced','🔥 Firebase');
+    showToast('✅ บันทึกผลการประเมินแล้ว','success');
+    document.getElementById('reviewFormWrap').style.display='none';
+    activeRevIdx=null;
+    loadReviewView();
+    updateHistoryFilters();
+    updateDashFilter();
+  }catch(e){
+    setSyncBadge('error','⚠️ Error');
+    console.error('submitReview error:', e);
+    showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');
+  }
 }
 
 // ══ HISTORY ══
@@ -1444,7 +1501,7 @@ function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');i
 // ══ ADMIN ══
 function checkAdminAuth(){if(isAdminLoggedIn){document.getElementById('adminLoginSec').style.display='none';document.getElementById('adminDashSec').style.display='block';renderAdminTable();
     const pd=document.getElementById('currentPinDisplay');
-    if(pd) pd.textContent=localStorage.getItem('sup_pin')||'1234';}else{document.getElementById('adminLoginSec').style.display='block';document.getElementById('adminDashSec').style.display='none';}}
+    if(pd) pd.textContent=localStorage.getItem('sup_pin')||'2412';}else{document.getElementById('adminLoginSec').style.display='block';document.getElementById('adminDashSec').style.display='none';}}
 function adminLogin(){const email=document.getElementById('admEmail').value.trim();const pwd=document.getElementById('admPwd').value.trim();if(email===(localStorage.getItem('admin_email')||'ptkth11199@gmail.com')&&pwd===(localStorage.getItem('admin_pwd')||'PT1119911199')){isAdminLoggedIn=true;document.getElementById('admPwd').value='';showToast('✅ เข้าสู่ระบบแอดมินสำเร็จ','success');checkAdminAuth();}else{showToast('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง','error');}}
 function adminLogout(){isAdminLoggedIn=false;showToast('🚪 ออกจากระบบแล้ว','success');checkAdminAuth();}
 function renderAdminTable(){const tb=document.getElementById('adminTableBody');if(!tb)return;if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}let data=[...submissions].reverse();tb.innerHTML=data.map(s=>{const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';return`<tr><td>${s.date} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${s.staffName}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;}).join('');}
@@ -1903,7 +1960,7 @@ function exportFineCSV() {
 
 
 // ══ PIN MANAGEMENT ══
-let supervisorPin = localStorage.getItem('sup_pin') || '1234';
+let supervisorPin = localStorage.getItem('sup_pin') || '2412';
 
 function changeSupervisorPin() {
   const newPin     = (document.getElementById('newPinInput')?.value||'').trim();
@@ -1926,14 +1983,16 @@ let isFineLoggedIn = false;
 
 function checkFineLogin() {
   const pin = (document.getElementById('finePinInput')?.value||'').trim();
-  const supPin   = localStorage.getItem('sup_pin')||'1234';
+  const supPin   = localStorage.getItem('sup_pin')||'2412';
   const adminPwd = 'PT1119911199';
   if(pin === supPin || pin === adminPwd) {
     isFineLoggedIn = true;
     document.getElementById('fineLoginSec').style.display = 'none';
     document.getElementById('fineMainSec').style.display  = 'block';
     document.getElementById('finePinError').style.display = 'none';
+    fineRecords = JSON.parse(localStorage.getItem('fine_records')||'[]');
     setFineThisMonth();
+    renderFineRecords();
   } else {
     document.getElementById('finePinError').style.display = 'block';
     document.getElementById('finePinInput').value = '';
@@ -2068,6 +2127,213 @@ function exportFineReport() {
 
 // ══ COPYRIGHT ══
 // แสดง copyright ใน footer ของทุกหน้า (ใส่ใน sidebar)
+
+
+// ══ FINE RECORDS (Admin บันทึกเอง) ══
+let fineRecords = JSON.parse(localStorage.getItem('fine_records')||'[]');
+
+function updateFinePersonSel() {
+  const sel = document.getElementById('finePersonSel');
+  if(!sel) return;
+  const all = [...staffList, ...ptList];
+  sel.innerHTML = '<option value="">— เลือกชื่อ —</option>' +
+    all.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function addFineRecord() {
+  const person = document.getElementById('finePersonSel')?.value;
+  const reason = document.getElementById('fineReason')?.value.trim();
+  const amount = parseInt(document.getElementById('fineAmount')?.value||'10');
+  if(!person) return showToast('⚠️ เลือกชื่อก่อน','warning');
+  if(!reason) return showToast('⚠️ ใส่เหตุผลก่อน','warning');
+  const rec = { id: Date.now(), date: fmtDate(new Date()), person, reason, amount, addedBy: 'admin', time: getThaiTimestamp(new Date()) };
+  fineRecords.push(rec);
+  localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+  // ลอง save ไป Firebase ด้วย
+  if(window.FB) {
+    window.FB.fbSaveFineRecord(rec).catch(e => console.log('fine save:', e));
+  }
+  document.getElementById('fineReason').value = '';
+  renderFineRecords();
+  showToast('✅ บันทึกค่าปรับแล้ว','success');
+}
+
+function deleteFineRecord(id) {
+  showConfirm('ต้องการลบรายการค่าปรับนี้?', () => {
+    fineRecords = fineRecords.filter(r => r.id !== id);
+    localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+    renderFineRecords();
+    showToast('🗑️ ลบแล้ว','success');
+  });
+}
+
+function renderFineRecords() {
+  updateFinePersonSel();
+  const wrap = document.getElementById('fineRecordsList');
+  if(!wrap) return;
+  if(fineRecords.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--g4);padding:16px;font-size:13px">ยังไม่มีรายการค่าปรับ</div>';
+    return;
+  }
+  // คำนวณยอดรวมรายบุคคล
+  const byPerson = {};
+  fineRecords.forEach(r => {
+    if(!byPerson[r.person]) byPerson[r.person] = 0;
+    byPerson[r.person] += r.amount;
+  });
+
+  // แสดง summary
+  const summaryHtml = Object.entries(byPerson).length > 0 ?
+    `<div style="background:var(--g1);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">💰 ยอดสะสมรายบุคคล</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${Object.entries(byPerson).sort((a,b)=>b[1]-a[1]).map(([n,sum])=>
+          `<div style="background:#fff;border:1.5px solid var(--g2);border-radius:8px;padding:6px 12px;font-size:13px">
+            <span style="font-weight:600">${n}</span>
+            <span style="color:var(--r);font-weight:800;margin-left:8px">฿${sum}</span>
+          </div>`
+        ).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:14px;font-weight:800;color:var(--r)">รวมทั้งหมด: ฿${fineRecords.reduce((s,r)=>s+r.amount,0)}</div>
+    </div>` : '';
+
+  // แสดงรายการ
+  const listHtml = `<div class="tw" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>วันที่</th><th>ชื่อ</th><th>เหตุผล</th><th>จำนวน</th><th></th></tr></thead>
+      <tbody>${[...fineRecords].reverse().map(r=>`
+        <tr>
+          <td style="font-size:12px;white-space:nowrap">${r.date}</td>
+          <td style="font-weight:600">${r.person}</td>
+          <td style="font-size:12.5px">${r.reason}</td>
+          <td style="color:var(--r);font-weight:700">฿${r.amount}</td>
+          <td><button class="btn btn-out" style="padding:3px 8px;font-size:12px;color:var(--r)" onclick="deleteFineRecord(${r.id})">🗑️</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  wrap.innerHTML = summaryHtml + listHtml;
+}
+
+function exportFineReport() {
+  const rows = [['วันที่','ชื่อ','เหตุผล','จำนวน(฿)','บันทึกโดย']];
+  fineRecords.forEach(r => rows.push([r.date, r.person, r.reason, r.amount, r.addedBy||'admin']));
+  rows.push(['','','รวมทั้งหมด', fineRecords.reduce((s,r)=>s+r.amount,0),'']);
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('
+');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`Fine_Records_${fmtDate(new Date())}.csv`; a.click();
+  showToast('📥 Export สำเร็จ','success');
+}
+
+// ══ CHECKLIST MANAGEMENT ══
+let currentClShift = 'morning';
+// โหลด custom checklist จาก localStorage ถ้ามี
+function getClItems(shift) {
+  const key = 'custom_cl_' + shift;
+  const saved = localStorage.getItem(key);
+  if(saved) {
+    try { return JSON.parse(saved); } catch(e) {}
+  }
+  return CL[shift === 'morning' ? 'morning' : 'evening']?.items || [];
+}
+
+function setClShift(shift) {
+  currentClShift = shift;
+  const tm = document.getElementById('clTabMorning');
+  const te = document.getElementById('clTabEvening');
+  if(tm) { tm.className = shift==='morning' ? 'btn btn-pri' : 'btn btn-out'; tm.style.padding='5px 12px'; tm.style.fontSize='12.5px'; }
+  if(te) { te.className = shift==='evening' ? 'btn btn-pri' : 'btn btn-out'; te.style.padding='5px 12px'; te.style.fontSize='12.5px'; }
+  renderClItems();
+}
+
+function renderClItems() {
+  const wrap = document.getElementById('clItemList');
+  if(!wrap) return;
+  const items = getClItems(currentClShift);
+  if(items.length === 0) {
+    wrap.innerHTML = '<div style="color:var(--g4);font-size:13px;padding:8px">ยังไม่มีรายการ</div>';
+    return;
+  }
+  wrap.innerHTML = items.map((text, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">
+      <span style="color:var(--g4);font-size:12px;min-width:22px;text-align:center">${i+1}</span>
+      <span style="flex:1;font-size:13.5px">${text}</span>
+      <div style="display:flex;gap:4px">
+        ${i>0?`<button onclick="moveClItem(${i},-1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↑</button>`:'<span style="width:29px"></span>'}
+        ${i<items.length-1?`<button onclick="moveClItem(${i},1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↓</button>`:'<span style="width:29px"></span>'}
+        <button onclick="deleteClItem(${i})" style="background:none;border:1px solid var(--rb);color:var(--r);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function addClItem() {
+  const inp = document.getElementById('newClItem');
+  const text = inp?.value.trim();
+  if(!text) return;
+  const key = 'custom_cl_' + currentClShift;
+  const items = getClItems(currentClShift);
+  items.push(text);
+  localStorage.setItem(key, JSON.stringify(items));
+  // อัปเดต CL object ด้วย
+  _applyCLCustom();
+  inp.value = '';
+  renderClItems();
+  showToast('✅ เพิ่มรายการแล้ว','success');
+}
+
+function deleteClItem(idx) {
+  showConfirm('ต้องการลบรายการนี้?', () => {
+    const key = 'custom_cl_' + currentClShift;
+    const items = getClItems(currentClShift);
+    items.splice(idx, 1);
+    localStorage.setItem(key, JSON.stringify(items));
+    _applyCLCustom();
+    renderClItems();
+    showToast('🗑️ ลบแล้ว','success');
+  });
+}
+
+function moveClItem(idx, dir) {
+  const key = 'custom_cl_' + currentClShift;
+  const items = getClItems(currentClShift);
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= items.length) return;
+  [items[idx], items[newIdx]] = [items[newIdx], items[idx]];
+  localStorage.setItem(key, JSON.stringify(items));
+  _applyCLCustom();
+  renderClItems();
+}
+
+function saveClItems() {
+  _applyCLCustom();
+  buildChecklist();
+  showToast('💾 บันทึก Checklist แล้ว — มีผลทันที!','success');
+}
+
+function resetClItems() {
+  showConfirm('คืนค่า Checklist กลับเป็นค่าเริ่มต้นใช่หรือไม่?', () => {
+    localStorage.removeItem('custom_cl_morning');
+    localStorage.removeItem('custom_cl_evening');
+    _applyCLCustom();
+    renderClItems();
+    buildChecklist();
+    showToast('↩ คืนค่าเดิมแล้ว','success');
+  });
+}
+
+function _applyCLCustom() {
+  // apply custom items เข้า CL object
+  const mItems = getClItems('morning');
+  const eItems = getClItems('evening');
+  if(mItems.length > 0) CL.morning.items = mItems;
+  if(eItems.length > 0) CL.evening.items = eItems;
+}
+
+// โหลด custom checklist ตอนเริ่มแอป
+_applyCLCustom();
 
 </script>
 </body>
