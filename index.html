@@ -1548,11 +1548,10 @@ function shareToLine() {
 // ══ SUPERVISOR ══
 let currentSupTab = 'daily';
 let isSupLoggedIn = false;
-// SUP_PIN ถูกเก็บใน supervisorPin (localStorage)
-
 function checkSupPin() {
   const pin = document.getElementById('supPin').value;
   const errEl = document.getElementById('supPinError');
+  const SUP_PIN = localStorage.getItem('sup_pin') || '2412';
   if (pin === SUP_PIN) {
     isSupLoggedIn = true;
     document.getElementById('supLoginSec').style.display = 'none';
@@ -1759,8 +1758,8 @@ function loadSupPerson(data) {
   }).join('');
 }
 
-</script>
-<script>
+
+
 // PWA Service Worker
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -2237,17 +2236,6 @@ function renderFineRecords() {
   wrap.innerHTML = summaryHtml + listHtml;
 }
 
-function exportFineReport() {
-  const rows = [['วันที่','ชื่อ','เหตุผล','จำนวน(฿)','บันทึกโดย']];
-  fineRecords.forEach(r => rows.push([r.date, r.person, r.reason, r.amount, r.addedBy||'admin']));
-  rows.push(['','','รวมทั้งหมด', fineRecords.reduce((s,r)=>s+r.amount,0),'']);
-  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('
-');
-  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`Fine_Records_${fmtDate(new Date())}.csv`; a.click();
-  showToast('📥 Export สำเร็จ','success');
-}
 
 // ══ CHECKLIST MANAGEMENT ══
 let currentClShift = 'morning';
