@@ -15,11 +15,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-// ══ FIREBASE CONFIG ══
-const firebaseConfig = {
+// ══ FIREBASE MODULE ══
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyAUcwEcB0wS-Y8PaA7wyxnnP1PZRBUqQa8",
   authDomain: "pt-kth.firebaseapp.com",
   projectId: "pt-kth",
@@ -28,59 +25,69 @@ const firebaseConfig = {
   appId: "1:1088913906662:web:94c642ef451480adcfd427"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+async function initFirebase() {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
+    const { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } =
+      await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
 
-// ══ FIRESTORE HELPERS ══
-async function fbGetConfig() {
-  const snap = await getDoc(doc(db, 'config', 'main'));
-  if (!snap.exists()) return { staffList: [], ptList: [] };
-  const d = snap.data();
-  return { staffList: d.staffList || [], ptList: d.ptList || [] };
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db  = getFirestore(app);
+
+    // ══ FIREBASE FUNCTIONS ══
+    window.FB = {
+      async fbGetConfig() {
+        const snap = await getDoc(doc(db, 'config', 'main'));
+        if (!snap.exists()) return { staffList: [], ptList: [] };
+        const d = snap.data();
+        return { staffList: d.staffList||[], ptList: d.ptList||[] };
+      },
+      async fbSaveConfig(staffList, ptList) {
+        await setDoc(doc(db, 'config', 'main'), { staffList, ptList });
+      },
+      async fbGetSubmissions() {
+        const snap = await getDocs(collection(db, 'submissions'));
+        return snap.docs.map(d => d.data());
+      },
+      async fbSaveSubmission(record) {
+        await setDoc(doc(db, 'submissions', String(record.id)), record);
+      },
+      async fbUpdateSubmission(record) {
+        await setDoc(doc(db, 'submissions', String(record.id)), record);
+      },
+      async fbDeleteSubmission(id) {
+        await deleteDoc(doc(db, 'submissions', String(id)));
+      },
+      async fbClearSubmissions() {
+        const snap = await getDocs(collection(db, 'submissions'));
+        await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+      },
+      async fbSaveFineRecord(record) {
+        try { await setDoc(doc(db, 'fine_records', String(record.id)), record); } catch(e) {}
+      },
+      async fbGetFineRecords() {
+        try {
+          const snap = await getDocs(collection(db, 'fine_records'));
+          return snap.docs.map(d => d.data());
+        } catch(e) { return []; }
+      },
+      async fbDeleteFineRecord(id) {
+        try { await deleteDoc(doc(db, 'fine_records', String(id))); } catch(e) {}
+      }
+    };
+
+    console.log('✅ Firebase connected');
+  } catch(err) {
+    console.error('Firebase init failed:', err);
+    window.FB = null;
+  }
+  // เสมอ dispatch event ไม่ว่าจะสำเร็จหรือล้มเหลว
+  window.dispatchEvent(new Event('firebase-ready'));
 }
 
-async function fbSaveConfig(staffList, ptList) {
-  await setDoc(doc(db, 'config', 'main'), { staffList, ptList });
-}
-
-async function fbGetSubmissions() {
-  const snap = await getDocs(collection(db, 'submissions'));
-  return snap.docs.map(d => d.data());
-}
-
-async function fbSaveSubmission(record) {
-  await setDoc(doc(db, 'submissions', String(record.id)), record);
-}
-
-async function fbUpdateSubmission(record) {
-  await setDoc(doc(db, 'submissions', String(record.id)), record);
-}
-
-async function fbDeleteSubmission(id) {
-  await deleteDoc(doc(db, 'submissions', String(id)));
-}
-
-async function fbClearSubmissions() {
-  const snap = await getDocs(collection(db, 'submissions'));
-  const dels = snap.docs.map(d => deleteDoc(d.ref));
-  await Promise.all(dels);
-}
-
-// expose to window
-// Fine Records
-async function fbSaveFineRecord(record) {
-  try { await setDoc(doc(db, 'fine_records', String(record.id)), record); } catch(e) { console.error(e); }
-}
-async function fbGetFineRecords() {
-  try { const snap = await getDocs(collection(db, 'fine_records')); return snap.docs.map(d => d.data()); } catch(e) { return []; }
-}
-async function fbDeleteFineRecord(id) {
-  try { await deleteDoc(doc(db, 'fine_records', String(id))); } catch(e) { console.error(e); }
-}
-
-window.FB = { fbGetConfig, fbSaveConfig, fbGetSubmissions, fbSaveSubmission, fbUpdateSubmission, fbDeleteSubmission, fbClearSubmissions, fbSaveFineRecord, fbGetFineRecords, fbDeleteFineRecord };
-window.dispatchEvent(new Event('firebase-ready'));
+initFirebase();
 </script>
+
 <style>
 :root{
   --bd:#0F4C81;--bm:#1A6BAA;--bl:#EAF6FF;
@@ -910,7 +917,8 @@ function setLoadingDetail(t){const el=document.getElementById('loadingDetail');i
 function waitForFirebase(){
   return new Promise(resolve=>{
     if(window.FB) return resolve();
-    window.addEventListener('firebase-ready', resolve, {once:true});
+    const t = setTimeout(()=>{ console.warn('Firebase timeout'); resolve(); }, 8000);
+    window.addEventListener('firebase-ready', ()=>{ clearTimeout(t); resolve(); }, {once:true});
   });
 }
 
@@ -919,18 +927,41 @@ async function init(){
   await waitForFirebase();
   setSyncBadge('syncing','⏳ Loading...');
   setLoadingDetail('กำลังดึงข้อมูลจาก Firebase...');
-  try {
-    const config = await window.FB.fbGetConfig();
-    staffList = config.staffList || [];
-    ptList    = config.ptList    || [];
-    setLoadingDetail('โหลด submissions...');
-    submissions = await window.FB.fbGetSubmissions();
-    setSyncBadge('synced','🔥 Firebase');
-    showToast('✅ เชื่อมต่อ Firebase สำเร็จ','success');
-  } catch(e) {
-    setSyncBadge('error','⚠️ Error');
-    showToast('❌ Firebase Error: '+e.message,'error');
-    console.error(e);
+  if(!window.FB) {
+    // Firebase โหลดไม่ได้ — ใช้ localStorage offline
+    staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
+    ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
+    submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
+    setSyncBadge('error','⚠️ Offline');
+    showToast('⚠️ ใช้ข้อมูล offline (Firebase ไม่ตอบสนอง)','warning');
+  } else {
+    try {
+      // timeout 10 วิสำหรับ Firestore query
+      const withTimeout = (promise, ms=10000) => Promise.race([
+        promise,
+        new Promise((_,reject) => setTimeout(()=>reject(new Error('Firestore timeout')), ms))
+      ]);
+      const config = await withTimeout(window.FB.fbGetConfig());
+      staffList = (config && config.staffList) ? config.staffList : [];
+      ptList    = (config && config.ptList)    ? config.ptList    : [];
+      setLoadingDetail('โหลด submissions...');
+      const subs = await withTimeout(window.FB.fbGetSubmissions());
+      submissions = Array.isArray(subs) ? subs : [];
+      // cache ไว้ offline
+      localStorage.setItem('pt_staff',       JSON.stringify(staffList));
+      localStorage.setItem('pt_ptlist',      JSON.stringify(ptList));
+      localStorage.setItem('pt_submissions', JSON.stringify(submissions));
+      setSyncBadge('synced','🔥 Firebase');
+      showToast('✅ เชื่อมต่อ Firebase สำเร็จ','success');
+    } catch(e) {
+      // fallback offline
+      staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
+      ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
+      submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
+      setSyncBadge('error','⚠️ Offline');
+      showToast('⚠️ ใช้ข้อมูล offline ('+e.message+')','warning');
+      console.error('Firebase init error:', e);
+    }
   }
   document.getElementById('loadingOverlay').classList.add('hidden');
   // init UI
