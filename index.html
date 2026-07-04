@@ -1872,101 +1872,18 @@ function showSupNote(id) {
 
 // ══ FINE SYSTEM ══
 function showFineReport() {
-  const fStart = document.getElementById('supStartDate')?.value;
-  const fEnd   = document.getElementById('supEndDate')?.value;
-
-  // หาช่วงวันที่
-  let start, end;
-  if(fStart) start = new Date(fStart);
-  else {
-    // default: เดือนปัจจุบัน
-    const now = new Date();
-    start = new Date(now.getFullYear(), now.getMonth(), 1);
-    end   = new Date(now.getFullYear(), now.getMonth()+1, 0);
-  }
-  if(fEnd) end = new Date(fEnd);
-  if(!end) {
-    const now = new Date();
-    end = new Date(now.getFullYear(), now.getMonth()+1, 0);
-  }
-
-  // สร้าง list วันในช่วง
-  const days = [];
-  const cur = new Date(start);
-  while(cur <= end) {
-    days.push(fmtDate(new Date(cur)));
-    cur.setDate(cur.getDate() + 1);
-  }
-
-  // หาวันที่มี submission
-  const subDates = new Set(submissions.map(s => s.date));
-  // หาวันที่มี PT ประเมินแล้ว
-  const reviewedDates = new Set(submissions.filter(s => s.status !== 'pending').map(s => s.date));
-
-  // วันที่ขาด
-  const missingSubmit  = days.filter(d => !subDates.has(d));
-  const missingReview  = days.filter(d => subDates.has(d) && !reviewedDates.has(d));
-
-  const staffCount = staffList.length || 1;
-  const ptCount    = ptList.length || 1;
-
-  const fineSubmit = missingSubmit.length * staffCount * 10;
-  const fineReview = missingReview.length * ptCount * 10;
-  const totalFine  = fineSubmit + fineReview;
-
   const el = document.getElementById('fineReportContent');
   if(!el) return;
-
-  el.innerHTML = `
-    <!-- Summary -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">
-      <div class="kc r" style="margin:0"><div class="kn">${missingSubmit.length}</div><div class="kl">วันที่ไม่มี Checklist</div></div>
-      <div class="kc y" style="margin:0"><div class="kn" style="color:#856404">${missingReview.length}</div><div class="kl">วันที่ PT ยังไม่ประเมิน</div></div>
-      <div class="kc r" style="margin:0"><div class="kn">฿${totalFine.toLocaleString()}</div><div class="kl">ยอดปรับรวม</div></div>
-    </div>
-
-    ${missingSubmit.length > 0 ? `
-    <div style="margin-bottom:16px">
-      <h4 style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--r)">❌ วันที่ไม่มีการบันทึก Checklist (ปรับผู้ช่วย ${staffCount} คน × 10 บาท/วัน)</h4>
-      <div style="background:var(--rb);border-radius:8px;padding:12px">
-        ${missingSubmit.map(d => `
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(220,53,69,.2);font-size:13px">
-            <span>${thaiDate(d)}</span>
-            <span style="font-weight:700;color:var(--r)">฿${staffCount*10}</span>
-          </div>`).join('')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13.5px;font-weight:700">
-          <span>รวม ${missingSubmit.length} วัน</span>
-          <span style="color:var(--r)">฿${fineSubmit}</span>
-        </div>
-      </div>
-    </div>` : '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:16px">✅ ผู้ช่วยบันทึก Checklist ครบทุกวัน!</div>'}
-
-    ${missingReview.length > 0 ? `
-    <div style="margin-bottom:16px">
-      <h4 style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--o)">⏳ วันที่ PT ยังไม่ประเมิน (ปรับ PT ${ptCount} คน × 10 บาท/วัน)</h4>
-      <div style="background:var(--ob);border-radius:8px;padding:12px">
-        ${missingReview.map(d => `
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(253,126,20,.2);font-size:13px">
-            <span>${thaiDate(d)}</span>
-            <span style="font-weight:700;color:var(--o)">฿${ptCount*10}</span>
-          </div>`).join('')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13.5px;font-weight:700">
-          <span>รวม ${missingReview.length} วัน</span>
-          <span style="color:var(--o)">฿${fineReview}</span>
-        </div>
-      </div>
-    </div>` : '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:16px">✅ PT ประเมินครบทุกวัน!</div>'}
-
-    <div style="background:var(--bd);color:#fff;border-radius:8px;padding:14px;text-align:center">
-      <div style="font-size:13px;opacity:.85">ยอดปรับรวมทั้งหมด</div>
-      <div style="font-size:28px;font-weight:800;margin-top:4px">฿${totalFine.toLocaleString()}</div>
-      <div style="font-size:12px;opacity:.7;margin-top:4px">ช่วง ${fmtDate(start)} ถึง ${fmtDate(end)}</div>
-    </div>`;
-
-  document.getElementById('fineModal').classList.add('open');
-
-  // Banner แจ้งเตือนถ้ายังมีวันที่ขาด
-  checkFineAlert();
+  const fStart = (document.getElementById('supStartDate')?.value || fmtDate(new Date()).slice(0,7)+'-01');
+  const rows = [['ประเภท','วันที่','จำนวนเงิน']];
+  rows.push(['รายงานปรับเงิน','ดูในแอป','Export จากหน้าค่าปรับ']);
+  const csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c)+'"'; }).join(','); }).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Fine_Report.csv';
+  a.click();
+  showToast('📥 Export CSV แล้ว','success');
 }
 
 function checkFineAlert() {
@@ -1998,8 +1915,7 @@ function exportFineCSV() {
   const rows = [['ประเภท','วันที่','จำนวนเงิน']];
   const missingDays = submissions; // simplified
   rows.push(['รายงานปรับเงิน','ดูในแอป','Export จากหน้าหัวหน้างาน']);
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('
-');
+  const csv = rows.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
   const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `Fine_Report_${fStart}.csv`; a.click();
@@ -2173,8 +2089,7 @@ function exportFineReport() {
     ...d.missingReview.map(date => ['PT ไม่ประเมิน',date,d.pc,d.rate,d.pc*d.rate]),
     ['','','','รวมทั้งหมด',d.totalFine],
   ];
-  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('
-');
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
   const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
