@@ -1,889 +1,2302 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>ระบบลาเจ้าหน้าที่</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT KTH — Checklist System v20260630</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Checklist PT">
+<link rel="apple-touch-icon" href="icon-512.svg">
+<meta name="theme-color" content="#0F4C81">
+<meta name="version" content="v20260630">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// ══ FIREBASE INIT (compat mode — ทำงานได้ทุก browser) ══
+(function() {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyAUcwEcB0wS-Y8PaA7wyxnnP1PZRBUqQa8",
+    authDomain: "pt-kth.firebaseapp.com",
+    projectId: "pt-kth",
+    storageBucket: "pt-kth.firebasestorage.app",
+    messagingSenderId: "1088913906662",
+    appId: "1:1088913906662:web:94c642ef451480adcfd427"
+  };
 
-  <meta name="application-name" content="ระบบลาเจ้าหน้าที่">
-  <meta name="apple-mobile-web-app-title" content="ระบบลาเจ้าหน้าที่">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#1B2A4A">
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Noto+Sans+Thai:wght@500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --ink: #1B2A4A; --ink-hover: #2A3E66; --paper: #F6F4EF; --card: #FFFFFF;
-      --line: #DEDACB; --muted: #6B7280; --text: #262A33;
-      --seal: #A13327; --seal-bg: #FBEAE7;
-      --brass: #96742F; --brass-bg: #F6EFDD;
-      --forest: #2F6844; --forest-bg: #E9F1EC;
-      /* สีสดสำหรับจุดในปฏิทินโดยเฉพาะ ต้องแยกจากกันชัดเจนแม้เป็นจุดเล็กๆ */
-      --cal-sick: #E0304A;
-      --cal-personal: #F5A623;
-      --cal-vacation: #14A84E;
-      --cal-maternity: #6C5CE7;
+  // safety net — ถ้า Firebase SDK โหลดไม่ได้ใน 5 วิ ใช้ offline
+  const safetyTimer = setTimeout(function() {
+    if(!window.FB) {
+      console.warn('Firebase safety timeout — offline mode');
+      window.FB = null;
+      window.dispatchEvent(new Event('firebase-ready'));
     }
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Sarabun', sans-serif; background: var(--paper);
-      background-image: linear-gradient(var(--line) 1px, transparent 1px);
-      background-size: 100% 42px; color: var(--text); margin: 0; padding: 0 0 40px; font-size: 15px;
-    }
-    .doc-header { background: var(--ink); color: #EDEFF4; padding: 22px 20px 20px; border-bottom: 4px solid var(--brass); }
-    .doc-eyebrow { font-family: 'Noto Sans Thai', sans-serif; font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #B7C2DA; margin-bottom: 4px; }
-    .doc-header h1 { font-family: 'Noto Sans Thai', sans-serif; font-size: 22px; font-weight: 700; margin: 0 0 6px; }
-    .doc-meta { font-size: 12.5px; color: #C7D0E3; }
-    .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
-    .doc-tabs { display: flex; margin-top: 18px; border-bottom: 1px solid rgba(255,255,255,0.18); }
-    .tab-btn {
-      flex: 1; min-width: 0; background: transparent; border: none; padding: 12px 4px;
-      font-family: 'Sarabun', sans-serif; font-size: 13.5px; font-weight: 600; color: #93A3C4;
-      cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .tab-btn:hover { color: #D7DEEC; }
-    .tab-btn.active { color: #FFFFFF; border-bottom-color: var(--brass); }
+  }, 5000);
 
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 18px; margin: 16px 0; box-shadow: 0 1px 2px rgba(27,42,74,0.05); }
-    .card h3 { font-family: 'Noto Sans Thai', sans-serif; font-size: 15px; margin: 0 0 14px; color: var(--ink); }
-    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    label { font-size: 13.5px; color: var(--muted); }
-    select, input[type="date"], input[type="text"], input[type="number"], input[type="password"] {
-      font-family: 'Sarabun', sans-serif; font-size: 14px; padding: 9px 11px; border-radius: 4px;
-      border: 1px solid var(--line); background: #FDFCFA; color: var(--text);
-    }
-    select:focus, input:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
-    button {
-      font-family: 'Sarabun', sans-serif; font-weight: 600; font-size: 13.5px; background: var(--ink);
-      color: white; border: none; padding: 9px 16px; border-radius: 4px; cursor: pointer;
-    }
-    button:hover { background: var(--ink-hover); }
-    button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-    button.secondary:hover { background: #EEEBE2; }
-    button.danger { background: var(--seal); }
-    button:disabled { background: #C7C3B5; cursor: not-allowed; }
+  try {
+    const app = firebase.initializeApp(FIREBASE_CONFIG);
+    const db  = firebase.firestore(app);
 
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); background: #FDFCFA; }
-    thead th.num, td.num { text-align: center; }
-    tbody td { padding: 10px 10px; font-size: 13.5px; border-bottom: 1px solid #EFECE2; font-variant-numeric: tabular-nums; vertical-align: top; }
-    tbody tr:nth-child(even) { background: #FBF9F4; }
-    td.name { font-weight: 600; color: var(--ink); }
-    .name-sub { display: block; font-size: 10.5px; color: var(--muted); font-weight: 400; }
+    window.FB = {
+      fbGetConfig: async function() {
+        const snap = await db.collection('config').doc('main').get();
+        if (!snap.exists) return { staffList: [], ptList: [] };
+        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[] };
+      },
+      fbSaveConfig: async function(staffList, ptList) {
+        await db.collection('config').doc('main').set({ staffList, ptList });
+      },
+      fbGetSubmissions: async function() {
+        const snap = await db.collection('submissions').get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbSaveSubmission: async function(record) {
+        await db.collection('submissions').doc(String(record.id)).set(record);
+      },
+      fbUpdateSubmission: async function(record) {
+        await db.collection('submissions').doc(String(record.id)).set(record);
+      },
+      fbDeleteSubmission: async function(id) {
+        await db.collection('submissions').doc(String(id)).delete();
+      },
+      fbClearSubmissions: async function() {
+        const snap = await db.collection('submissions').get();
+        const batch = db.batch();
+        snap.docs.forEach(function(d) { batch.delete(d.ref); });
+        await batch.commit();
+      },
+      fbSaveFineRecord: async function(record) {
+        try { await db.collection('fine_records').doc(String(record.id)).set(record); } catch(e) {}
+      },
+      fbGetFineRecords: async function() {
+        try {
+          const snap = await db.collection('fine_records').get();
+          return snap.docs.map(function(d) { return d.data(); });
+        } catch(e) { return []; }
+      },
+      fbDeleteFineRecord: async function(id) {
+        try { await db.collection('fine_records').doc(String(id)).delete(); } catch(e) {}
+      }
+    };
 
-    .type-cell { line-height: 1.5; }
-    .type-cell .t-used { font-weight: 700; }
-    .type-cell .t-quota { color: var(--muted); font-size: 11px; }
-    .chip { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10.5px; font-weight: 700; }
-    .chip.ok { background: var(--forest-bg); color: var(--forest); }
-    .chip.near { background: var(--brass-bg); color: var(--brass); }
-    .chip.over { background: var(--seal-bg); color: var(--seal); }
-    .chip.nopay { background: #EEECE6; color: var(--muted); }
+    clearTimeout(safetyTimer);
+    console.log('✅ Firebase compat connected');
+    window.dispatchEvent(new Event('firebase-ready'));
+  } catch(err) {
+    clearTimeout(safetyTimer);
+    console.error('Firebase init error:', err);
+    window.FB = null;
+    window.dispatchEvent(new Event('firebase-ready'));
+  }
+})();
+</script>
 
-    th.hist-col, td.hist-col { text-align: center; width: 40px; }
-    .hist-toggle { background: transparent; border: 1px solid var(--line); color: var(--ink); width: 28px; height: 28px; padding: 0; border-radius: 4px; }
-    tr.detail-row { display: none; }
-    tr.detail-row.open { display: table-row; }
-    tr.detail-row td { padding: 0; background: #FBF9F4; }
-    .detail-inner { padding: 10px 16px 14px; }
-    .detail-empty { font-size: 12.5px; color: var(--muted); padding: 6px 0; }
-    .detail-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed #E6E2D5; font-size: 12.5px; }
-    .detail-item:last-child { border-bottom: none; }
-    .detail-item .d-main { font-weight: 600; color: var(--ink); }
-    .detail-item .d-sub { color: var(--muted); display: block; font-size: 11.5px; margin-top: 2px; }
-    .detail-del { background: transparent; color: var(--seal); border: 1px solid var(--seal); padding: 2px 8px; font-size: 10.5px; font-weight: 700; width: auto; flex-shrink: 0; }
-
-    .staff-list-item { padding: 10px 2px; border-bottom: 1px solid #EFECE2; font-size: 13.5px; }
-    .staff-list-item:last-child { border-bottom: none; }
-    .staff-list-top { display: flex; justify-content: space-between; align-items: center; }
-    .staff-tags { margin-top: 4px; }
-    .tag { display: inline-block; background: #EEECE6; color: var(--muted); font-size: 10.5px; padding: 2px 7px; border-radius: 3px; margin-right: 5px; }
-
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(27,42,74,0.45); align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: white; border-radius: 4px; padding: 22px; width: 100%; max-width: 340px; border-top: 4px solid var(--brass); }
-    .modal h3 { margin: 0 0 14px; font-family: 'Noto Sans Thai', sans-serif; font-size: 15px; color: var(--ink); }
-    .modal input { width: 100%; margin-bottom: 14px; }
-
-    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #EDEFF4; padding: 10px 20px; border-radius: 4px; font-size: 13.5px; display: none; z-index: 200; border-left: 3px solid var(--brass); }
-    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    .empty { text-align: center; color: var(--muted); padding: 24px 0; font-size: 13.5px; }
-    .section-divider { font-family:'Noto Sans Thai',sans-serif; font-size:12px; color:var(--brass); font-weight:700; letter-spacing:0.5px; margin: 18px 0 8px; text-transform: uppercase; }
-
-    /* ===== ปฏิทิน ===== */
-    .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--muted); margin-bottom: 12px; align-items: center; }
-    .cal-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.9); }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .cal-weekday { text-align: center; font-size: 10.5px; color: var(--muted); font-weight: 700; padding: 4px 0; }
-    .cal-cell {
-      aspect-ratio: 1; border: 1px solid var(--line); border-radius: 4px; background: #FDFCFA;
-      padding: 4px; cursor: pointer; display: flex; flex-direction: column; overflow: hidden;
-    }
-    .cal-cell:hover { background: #F3F0E8; }
-    .cal-cell.empty-cell { background: transparent; border: none; cursor: default; }
-    .cal-cell.today { border-color: var(--brass); border-width: 2px; }
-    .cal-cell.selected { background: var(--brass-bg); border-color: var(--brass); }
-    .cal-daynum { font-size: 11.5px; font-weight: 700; color: var(--ink); }
-    .cal-dots { display: flex; gap: 2px; margin-top: auto; flex-wrap: wrap; }
-    .cal-dots .cal-dot { width: 7px; height: 7px; margin: 0 1px 0 0; }
-    .cal-detail-item { padding: 8px 0; border-bottom: 1px dashed #E6E2D5; font-size: 13px; }
-    .cal-detail-item:last-child { border-bottom: none; }
-    .cal-detail-item .c-name { font-weight: 600; color: var(--ink); }
-    .cal-detail-item .c-type { color: var(--muted); font-size: 12px; }
-
-    @media (min-width: 1000px) { .wrap { max-width: 820px; } }
-    @media (max-width: 640px) {
-      .wrap { padding: 0 14px; } .doc-header { padding: 18px 14px 16px; } .doc-header h1 { font-size: 19px; } .card { padding: 15px; }
-    }
-    @media (max-width: 480px) {
-      body { font-size: 14px; }
-      .doc-header { padding: 16px 12px 14px; } .doc-header h1 { font-size: 17px; }
-      .tab-btn { font-size: 11.5px; padding: 10px 2px; }
-      .card { padding: 13px; margin: 12px 0; } .card h3 { font-size: 14px; }
-      .row { gap: 8px; } .row > label { width: 100%; margin-bottom: -2px; }
-      .row input, .row select { flex: 1 1 auto; min-width: 0; }
-      .card.row { flex-direction: column; align-items: stretch; }
-      .card.row > * { width: 100%; }
-      button { width: 100%; padding: 11px 14px; font-size: 14px; }
-      .card.row button { width: 100%; }
-      thead th { padding: 7px 6px; font-size: 10px; } tbody td { padding: 8px 6px; font-size: 12px; }
-      .modal { padding: 18px; }
-      .toast { width: calc(100% - 32px); left: 16px; right: 16px; transform: none; text-align: center; }
-
-      .cal-nav-row { flex-direction: row !important; }
-      .cal-nav-row button { width: auto !important; font-size: 11.5px; padding: 8px 8px !important; }
-      .cal-weekday { font-size: 9px; }
-      .cal-daynum { font-size: 10px; }
-      .cal-dots .cal-dot { width: 6px; height: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,0.9); }
-      .cal-legend { font-size: 10px; gap: 8px; }
-    }
-  </style>
+<style>
+:root{
+  --bd:#0F4C81;--bm:#1A6BAA;--bl:#EAF6FF;
+  --g:#28A745;--gb:#D4EDDA;--y:#FFC107;--yb:#FFF3CD;
+  --o:#FD7E14;--r:#DC3545;--rb:#F8D7DA;
+  --g1:#F8F9FA;--g2:#E9ECEF;--g4:#9CA3AF;--g6:#6C757D;--g8:#343A40;
+  --sh1:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 12px rgba(15,76,129,.12);--sh3:0 8px 32px rgba(15,76,129,.18);
+  --r8:8px;--r12:12px;--mobile-nav-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-height:100vh}
+.topbar{background:var(--bd);color:#fff;padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh2)}
+.tl{display:flex;align-items:center;gap:10px}
+.tlogo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.ttitle{font-size:16px;font-weight:700}
+.tr{display:flex;align-items:center;gap:8px}
+.live{background:var(--g);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.sync-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.15)}
+.sync-badge.syncing{background:#FFC107;color:#343A40}
+.sync-badge.synced{background:var(--g)}
+.sync-badge.error{background:var(--r)}
+.clock{font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
+.app{display:flex;height:calc(100vh - 64px)}
+.sidebar{width:230px;background:#fff;border-right:1px solid var(--g2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-sec{padding:12px 14px;border-bottom:1px solid var(--g2)}
+.sb-sec label{font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px}
+.sb-sel{width:100%;border:1px solid var(--g2);border-radius:var(--r8);padding:7px 9px;font-family:inherit;font-size:13px;color:var(--g8);background:var(--g1);outline:none;cursor:pointer}
+.sb-sel:focus{border-color:var(--bm);background:#fff}
+.sb-input{width:100%;border:1px solid var(--g2);border-radius:var(--r8);padding:7px 9px;font-family:inherit;font-size:13px;outline:none}
+.sb-input:focus{border-color:var(--bm)}
+.shift-row{display:flex;gap:6px;margin-top:6px}
+.shift-btn{flex:1;padding:6px 4px;border:1.5px solid var(--g2);border-radius:6px;background:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;color:var(--g6)}
+.shift-btn.active-morning{background:#FFF3E0;border-color:#FF9800;color:#E65100}
+.shift-btn.active-afternoon{background:#E3F2FD;border-color:#2196F3;color:#1565C0}
+.nav{flex:1;padding:6px 0}
+.ni{display:flex;align-items:center;gap:9px;padding:10px 16px;font-size:13.5px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;color:var(--g6)}
+.ni:hover{background:var(--bl);color:var(--bd)}
+.ni.active{background:var(--bl);color:var(--bd);font-weight:700;border-left-color:var(--bd)}
+.ni-icon{font-size:14px;width:17px;text-align:center}
+.sf{padding:12px 14px;border-top:1px solid var(--g2)}
+.sf-info{display:flex;align-items:center;gap:9px}
+.sf-av{width:32px;height:32px;background:var(--bl);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--bd);flex-shrink:0}
+.sf-name{font-size:13px;font-weight:700}
+.sf-role{font-size:11px;color:var(--g4)}
+.main{flex:1;overflow-y:auto;padding:18px 22px;padding-bottom:80px}
+.view{display:none}.view.active{display:block}
+.ph{margin-bottom:18px}
+.ph h1{font-size:21px;font-weight:800;color:var(--bd)}
+.ph p{font-size:13px;color:var(--g6);margin-top:3px}
+.ds{background:#fff;border-radius:var(--r12);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;box-shadow:var(--sh1);flex-wrap:wrap;gap:8px}
+.ds-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dchip{background:var(--bd);color:#fff;padding:5px 13px;border-radius:20px;font-size:13px;font-weight:700}
+.dlabel{font-size:13.5px;color:var(--g6)}
+.shift-chip{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.sc-morning{background:#FFF3E0;color:#E65100}
+.sc-afternoon{background:#E3F2FD;color:#1565C0}
+.prog-pill{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--g6)}
+.pbo{width:100px;height:7px;background:var(--g2);border-radius:4px;overflow:hidden}
+.pbi{height:100%;border-radius:4px;transition:width .4s ease,background .4s}
+.cg{margin-bottom:16px}
+.gh{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:var(--r8) var(--r8) 0 0;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.gh.morning{background:#FFF3E0;color:#E65100}
+.gh.evening{background:#EDE7F6;color:#4527A0}
+.gdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.gh.morning .gdot{background:#FF9800}
+.gh.evening .gdot{background:#9C27B0}
+.gcnt{margin-left:auto;font-size:11.5px;font-weight:400;opacity:.7}
+.ci-wrap{background:#fff;border-radius:0 0 var(--r8) var(--r8);box-shadow:var(--sh1)}
+.ci{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--g2);transition:background .1s;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+.ci:last-child{border-bottom:none}
+.ci:hover{background:var(--g1)}
+.ci.done{background:#F0FFF4}
+.ci.na{background:#FFFBF0}
+.ci-box{width:21px;height:21px;border:2px solid var(--g4);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:12px;color:#fff}
+.ci.done .ci-box{background:var(--g);border-color:var(--g)}
+.ci.na .ci-box{background:var(--y);border-color:var(--y)}
+.ci-text{flex:1;font-size:13.5px;line-height:1.4}
+.ci.done .ci-text{color:var(--g4);text-decoration:line-through}
+.ci-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.ci:hover .ci-acts{opacity:1}
+.btn-na{font-size:11px;padding:3px 8px;border:1px solid var(--y);background:#fff;color:#856404;border-radius:4px;cursor:pointer;font-family:inherit}
+.btn-na:hover{background:var(--yb)}
+.ri{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border-bottom:1px solid var(--g2)}
+.ri:last-child{border-bottom:none}
+.rs{display:flex;gap:5px;flex-shrink:0}
+.rb{width:26px;height:26px;border-radius:50%;border:2px solid var(--g2);background:#fff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.rb.pass:hover,.rb.pass.sel{background:var(--g);border-color:var(--g);color:#fff}
+.rb.fail:hover,.rb.fail.sel{background:var(--r);border-color:var(--r);color:#fff}
+.rb.nab:hover,.rb.nab.sel{background:var(--y);border-color:var(--y);color:#fff}
+.act-row{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
+.btn{padding:9px 18px;border-radius:var(--r8);font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border:none;transition:all .15s;display:flex;align-items:center;gap:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-pri{background:var(--bd);color:#fff}
+.btn-pri:hover:not(:disabled){background:var(--bm);box-shadow:var(--sh2)}
+.btn-suc{background:var(--g);color:#fff}
+.btn-suc:hover:not(:disabled){background:#218838}
+.btn-out{background:#fff;border:1.5px solid var(--g2);color:var(--g8)}
+.btn-out:hover{border-color:var(--bm);color:var(--bd)}
+.btn-line{background:#06C755;color:#fff}
+.btn-line:hover{background:#05a847}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:20px}
+.kc{background:#fff;border-radius:var(--r12);padding:16px;box-shadow:var(--sh1);border-left:4px solid var(--bd)}
+.kc.g{border-left-color:var(--g)}.kc.y{border-left-color:var(--y)}.kc.r{border-left-color:var(--r)}
+.kn{font-size:26px;font-weight:800;color:var(--bd)}
+.kc.g .kn{color:var(--g)}.kc.y .kn{color:#856404}.kc.r .kn{color:var(--r)}
+.kl{font-size:12px;color:var(--g6);margin-top:2px}
+.card{background:#fff;border-radius:var(--r12);padding:18px;box-shadow:var(--sh1);margin-bottom:16px}
+.card canvas{max-width:100%;display:block}
+.card h3{font-size:14.5px;font-weight:800;margin-bottom:14px;color:var(--g8)}
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bd);color:#fff;font-size:12px;font-weight:700;padding:10px 13px;text-align:left}
+td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--g2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--g1)}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11.5px;font-weight:700}
+.tp{background:var(--gb);color:#155724}.tf{background:var(--rb);color:#721C24}
+.tw2{background:var(--yb);color:#856404}.td0{background:var(--g2);color:var(--g6)}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:16px}
+.mo.open{display:flex}
+.modal{background:#fff;border-radius:var(--r12);width:100%;max-width:540px;box-shadow:var(--sh3);overflow:hidden;animation:su .2s ease}
+.modal.wide{max-width:680px}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between}
+.mh h2{font-size:17px;font-weight:800;color:var(--bd)}
+.mc-btn{background:none;border:none;font-size:19px;cursor:pointer;color:var(--g4);padding:4px;line-height:1}
+.mc-btn:hover{color:var(--g8)}
+.mb{padding:18px 22px;max-height:62vh;overflow-y:auto}
+.mf{padding:14px 22px;border-top:1px solid var(--g2);display:flex;gap:9px;justify-content:flex-end}
+.fg{margin-bottom:14px}
+.fg label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bm)}
+.fg textarea{min-height:75px;resize:vertical}
+.link-box{display:flex;align-items:center;gap:8px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r8);padding:9px 12px}
+.link-box span{flex:1;font-size:12px;color:var(--g6);word-break:break-all;font-family:monospace}
+.link-copy{background:var(--bd);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.link-copy:hover{background:var(--bm)}
+.link-copy.copied{background:var(--g)}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.loading-overlay.hidden{display:none}
+.spin{width:44px;height:44px;border:4px solid var(--g2);border-top-color:var(--bd);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--mobile-nav-h);background:#fff;border-top:1px solid var(--g2);box-shadow:0 -2px 12px rgba(15,76,129,.10);z-index:300;align-items:stretch}
+.mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:inherit;font-size:10px;font-weight:600;color:var(--g4);background:none;border:none;padding:6px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.mn-item.active{color:var(--bd)}
+.mn-item:active{background:var(--bl)}
+.mn-icon{font-size:20px;line-height:1}
+.mn-label{font-size:9.5px;text-align:center}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{padding:14px;padding-bottom:calc(var(--mobile-nav-h) + 14px)}
+  .mobile-nav{display:flex}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .chart-grid{grid-template-columns:1fr}
+  .toast{bottom:calc(var(--mobile-nav-h) + 12px);right:12px;left:12px;max-width:unset}
+  .ph h1{font-size:17px}
+  .mobile-controls{display:flex !important}
+}
+.toast{position:fixed;bottom:calc(var(--mobile-nav-h) + 12px);right:22px;background:var(--g8);color:#fff;padding:11px 18px;border-radius:var(--r8);font-size:13.5px;box-shadow:var(--sh3);z-index:9999;display:flex;align-items:center;gap:9px;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--g)}.toast.error{background:var(--r)}.toast.warning{background:var(--o)}
+@media print{.topbar,.sidebar,.act-row,.ci-acts,.mobile-nav{display:none!important}.main{padding:0}}
+</style>
 </head>
 <body>
 
-  <div class="doc-header">
-    <div class="wrap">
-      <div class="doc-eyebrow">ระบบทะเบียนการลา · หน่วยกายภาพบำบัด</div>
-      <h1>ทะเบียนการลาเจ้าหน้าที่</h1>
-      <div class="doc-meta" id="headerSub">สรุปสิทธิ์การลารายบุคคล ตามประเภทบุคลากร</div>
-      <div class="doc-tabs">
-        <button class="tab-btn active" onclick="showTab('summary')">สรุปการลา</button>
-        <button class="tab-btn" onclick="showTab('calendar')">ปฏิทิน</button>
-        <button class="tab-btn" onclick="showTab('record')">บันทึกลา</button>
-        <button class="tab-btn" onclick="showTab('admin')">จัดการระบบ</button>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spin"></div>
+  <div style="font-size:15px;color:var(--g6);font-weight:700">🔥 กำลังเชื่อมต่อ Firebase...</div>
+  <div style="font-size:12px;color:var(--g4)" id="loadingDetail">โหลดข้อมูลจาก Cloud</div>
+</div>
+
+<div class="topbar">
+  <div class="tl">
+    <div class="tlogo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="ttitle">PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</div>
+  </div>
+  <div class="tr">
+    <span class="live">● LIVE</span>
+    <span class="sync-badge synced" id="syncBadge">🔥 Firebase</span>
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+</div>
+
+<!-- PWA Install Banner -->
+<div id="installBanner" style="display:none;background:#1A6BAA;color:#fff;padding:10px 16px;align-items:center;justify-content:space-between;gap:10px;font-size:13px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:22px">📱</span>
+    <span><strong>ติดตั้งแอป Checklist PT</strong> บนหน้าจอโฮมได้เลย!</span>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="installApp()" style="background:#fff;color:var(--bd);border:none;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit;font-size:12.5px;cursor:pointer">ติดตั้ง</button>
+    <button onclick="document.getElementById('installBanner').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-family:inherit;cursor:pointer">✕</button>
+  </div>
+</div>
+
+<!-- Fine Alert Banner -->
+<div id="fineBanner" style="display:none;background:#FFF3CD;border-bottom:1px solid #FFC107;padding:8px 16px;align-items:center;justify-content:space-between;gap:8px">
+  <span id="fineBannerMsg" style="font-size:13px;color:#856404;font-weight:600"></span>
+  <button onclick="document.getElementById('fineBanner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:16px;color:#856404;padding:0 4px">✕</button>
+</div>
+
+<div class="app">
+<div class="sidebar">
+  <div class="sb-sec">
+    <label>ผู้ช่วยนักกายภาพ</label>
+    <select class="sb-sel" id="staffSelect"><option value="">— เลือกชื่อ —</option></select>
+  </div>
+  <div class="sb-sec">
+    <label>วันที่บันทึก</label>
+    <input type="date" class="sb-input" id="dateInput">
+    <div style="margin-top:8px">
+      <label style="font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ประเภทเวร</label>
+      <div class="shift-row">
+        <button class="shift-btn active-morning" id="shiftMorning" onclick="setShift('morning')">🌅 เวรเช้า</button>
+        <button class="shift-btn" id="shiftAfternoon" onclick="setShift('afternoon')">🌙 เวรบ่าย</button>
+      </div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="ni active" id="nav-checklist" onclick="switchView('checklist',this)"><span class="ni-icon">✅</span> บันทึก Checklist</div>
+    <div class="ni" id="nav-review" onclick="switchView('review',this)"><span class="ni-icon">🔍</span> ประเมินผล (PT)</div>
+    <div class="ni" id="nav-dashboard" onclick="switchView('dashboard',this)"><span class="ni-icon">📊</span> Dashboard</div>
+    <div class="ni" id="nav-history" onclick="switchView('history',this)"><span class="ni-icon">📋</span> ประวัติบันทึก</div>
+    <div class="ni" id="nav-supervisor" onclick="switchView('supervisor',this)"><span class="ni-icon">👔</span> หัวหน้างาน</div>
+    <div class="ni" id="nav-settings" onclick="switchView('settings',this)"><span class="ni-icon">⚙️</span> ตั้งค่า & จัดการ</div>
+    <div class="ni" id="nav-fine" onclick="switchView('fine',this)"><span class="ni-icon">💰</span> ระบบค่าปรับ</div>
+    <div class="ni" id="nav-admin" onclick="switchView('admin',this)"><span class="ni-icon">🛡️</span> แอดมิน</div>
+  </nav>
+  <div class="sf">
+    <div class="sf-info">
+      <div class="sf-av">👤</div>
+      <div>
+        <div class="sf-name" id="sidebarName">เลือกชื่อก่อน</div>
+        <div class="sf-role">ผู้ช่วยนักกายภาพบำบัด</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--g2);text-align:center">
+      <div style="font-size:10px;color:var(--g4);line-height:1.6">
+        <div style="font-weight:700;color:var(--g6);font-size:11px">Checklist PT System</div>
+        <div>© 2026 กภ.ภัทรลักษณ์ อิ่นคำ</div>
+        <div style="font-size:9px">All rights reserved</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="mainArea">
+
+<!-- CHECKLIST -->
+<div class="view active" id="view-checklist">
+  <div class="ph"><h1>📋 บันทึก Checklist ประจำวัน</h1><p>คลิกรายการที่ดำเนินการแล้ว • กด N/A ถ้ารายการนั้นไม่เกี่ยวข้องวันนี้</p></div>
+  <div class="mobile-controls" style="display:none;gap:8px;margin-bottom:14px;flex-direction:column">
+    <select class="sb-sel" id="staffSelectMobile" style="width:100%"><option value="">— เลือกชื่อผู้ช่วย —</option></select>
+    <div style="display:flex;gap:8px">
+      <input type="date" class="sb-input" id="dateInputMobile" style="flex:1">
+      <div class="shift-row" style="flex:1;margin:0">
+        <button class="shift-btn active-morning" id="shiftMorningM" onclick="setShift('morning')">🌅 เช้า</button>
+        <button class="shift-btn" id="shiftAfternoonM" onclick="setShift('afternoon')">🌙 บ่าย</button>
+      </div>
+    </div>
+  </div>
+  <div class="ds">
+    <div class="ds-l">
+      <span class="dchip" id="todayChip">—</span>
+      <span class="dlabel" id="todayLabel"></span>
+      <span class="shift-chip sc-morning" id="shiftChip">🌅 เวรเช้า</span>
+    </div>
+    <div class="prog-pill">
+      <span id="progTxt">0 / 0</span>
+      <div class="pbo"><div class="pbi" id="progBar" style="width:0%"></div></div>
+      <span id="progPct" style="font-weight:700">0%</span>
+    </div>
+  </div>
+  <div id="checklistGroups"></div>
+  <div class="act-row">
+    <button class="btn btn-pri" onclick="openSubmitModal()">📤 ส่งให้ PT ประเมิน</button>
+    <button class="btn btn-out" onclick="resetChecklist()">🔄 ล้างทั้งหมด</button>
+    <button class="btn btn-out" onclick="window.print()">🖨️ พิมพ์</button>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="view" id="view-review">
+  <div class="ph"><h1>🔍 ประเมินผลงาน (นักกายภาพบำบัด)</h1><p>ตรวจสอบ Checklist ที่ผู้ช่วยส่งมา</p></div>
+  <div id="pendingList"></div>
+  <div id="reviewFormWrap" style="display:none">
+    <div class="ds">
+      <div class="ds-l">
+        <span class="dchip" id="rvDateChip">—</span>
+        <span class="dlabel" id="rvStaffLabel"></span>
+        <span class="shift-chip sc-morning" id="rvShiftChip">—</span>
+      </div>
+      <span id="rvProg" style="font-size:13px;color:var(--g6)">—</span>
+    </div>
+    <div id="reviewGroups"></div>
+    <div class="card" style="margin-top:14px">
+      <div class="fg">
+        <label>🩺 นักกายภาพบำบัดผู้ประเมิน <span style="color:var(--r)">*</span></label>
+        <select id="ptReviewerSel" class="sb-sel" style="width:100%;padding:9px 11px;font-size:13.5px;border:1.5px solid var(--g2);border-radius:var(--r8)"><option value="">— เลือกชื่อ —</option></select>
+      </div>
+      <div class="fg"><label>💬 ข้อสังเกต / ข้อแนะนำ (แสดงให้ผู้ช่วยเห็น)</label><textarea id="ptComment" placeholder="บันทึกข้อสังเกต ข้อแนะนำ..."></textarea></div>
+      <div class="fg">
+        <label>🔒 หมายเหตุถึงหัวหน้างาน <span style="font-size:11px;color:var(--g4);font-weight:400">(เฉพาะหัวหน้างานเท่านั้นที่เห็น)</span></label>
+        <textarea id="ptSupervisorNote" placeholder="บันทึกข้อมูลสำหรับหัวหน้างาน เช่น พฤติกรรม ปัญหาเฉพาะ ข้อเสนอแนะพิเศษ..." style="border-color:#9C27B0;background:#F3E5F5"></textarea>
+      </div>
+      <div class="fg">
+        <label>📌 ผลการประเมินโดยรวม <span style="color:var(--r)">*</span> <span style="font-size:11px;color:var(--g4);font-weight:400">(คำนวณอัตโนมัติ)</span></label>
+        <select id="ptVerdict" style="width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none">
+          <option value="">— เลือก —</option>
+          <option value="pass">✅ ผ่าน</option>
+          <option value="partial">⚠️ ผ่านบางส่วน</option>
+          <option value="fail">❌ ไม่ผ่าน</option>
+        </select>
+        <div id="autoVerdictBadge" style="display:none;margin-top:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
+      </div>
+    </div>
+    <div class="act-row">
+      <button class="btn btn-suc" onclick="submitReview()">✅ บันทึกผลการประเมิน</button>
+      <button class="btn btn-out" onclick="cancelReview()">↩ ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="view" id="view-dashboard">
+  <div class="ph">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+      <div><h1>📊 Dashboard ภาพรวม</h1><p>วิเคราะห์ข้อมูลจาก Checklist ทั้งหมด</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-out" style="padding:7px 14px;font-size:13px" onclick="refreshDashboard()">🔄 Refresh</button>
+        <button class="btn btn-pri" style="padding:7px 14px;font-size:13px" onclick="exportDashboardPDF()">📄 Export PDF</button>
       </div>
     </div>
   </div>
 
-  <div class="wrap">
+  <!-- FILTER -->
+  <div class="card" style="padding:12px 16px;margin-bottom:16px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:13px;font-weight:700;color:var(--g8)">🗓 ช่วงเวลา:</span>
+      <input type="date" id="dashStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <span style="font-size:13px;color:var(--g6)">ถึง</span>
+      <input type="date" id="dashEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <select id="dashFilter" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
+      <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ดู</button>
+      <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetDashFilter()">ล้าง</button>
+    </div>
+  </div>
 
-  <!-- ================= TAB: สรุปการลา ================= -->
-  <div id="tab-summary">
-    <div class="card row">
-      <label>ปี (ค.ศ.)</label>
-      <input type="number" id="yearPicker" style="width:100px">
-      <select id="jobGroupFilter" onchange="applyJobGroupFilter()">
-        <option value="all">ทุกตำแหน่ง</option>
-        <option value="กภ.">กภ.</option>
-        <option value="ผช.">ผช.</option>
-      </select>
-      <button id="btnLoadSummary" onclick="loadSummary()">โหลดข้อมูล</button>
-      <button class="secondary" onclick="captureSummary()">📷 แคปภาพสรุป</button>
+  <!-- KPI ROW 1: ภาพรวม -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
+    <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
+    <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">✅ ผ่านการประเมิน</div></div>
+    <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอประเมิน</div></div>
+    <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">❌ ไม่ผ่าน</div></div>
+    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 เฉลี่ยสมบูรณ์</div></div>
+    <div class="kc" style="border-left-color:#00BCD4"><div class="kn" style="color:#00BCD4" id="kpiPassRate">0%</div><div class="kl">🏆 อัตราผ่านรวม</div></div>
+  </div>
+
+  <!-- ROW: เวรเช้า vs บ่าย -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="card" style="margin-bottom:0;border-left:4px solid #FF9800">
+      <h3 style="font-size:13px;margin-bottom:10px">🌅 เวรเช้า</h3>
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#E65100" id="shiftMorningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMorningPass">0%</div><div style="font-size:11px;color:var(--g6)">ผ่าน</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMorningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-left:4px solid #2196F3">
+      <h3 style="font-size:13px;margin-bottom:10px">🌙 เวรบ่าย</h3>
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#1565C0" id="shiftEveningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftEveningPass">0%</div><div style="font-size:11px;color:var(--g6)">ผ่าน</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftEveningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART: อัตราความสมบูรณ์รายวัน (แบบ bar ง่ายๆ ไม่ใช้ Chart.js) -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📈 อัตราความสมบูรณ์ 14 วันล่าสุด</h3>
+    <div id="barChart" style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px"></div>
+    <div id="barChartLabels" style="display:flex;gap:4px;padding:4px 4px 0;margin-top:4px"></div>
+  </div>
+
+  <!-- ตารางรายการปัญหาบ่อย -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>⚠️ 5 อันดับรายการที่ทำไม่ครบบ่อย</h3>
+    <p style="font-size:12px;color:var(--g6);margin-top:-8px;margin-bottom:12px">นับจากรายการที่ N/A, ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน</p>
+    <div id="issueTable"></div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ</h3>
+    <div id="rankTable"></div>
+  </div>
+
+  <!-- สถิติรายเดือน -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📅 สรุปรายเดือน</h3>
+    <div id="monthlyTable"></div>
+  </div>
+
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="view-history">
+  <div class="ph"><h1>📋 ประวัติการบันทึก</h1></div>
+  <div class="card" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:12px 18px;align-items:center">
+    <span style="font-size:13px;font-weight:700">กรองวันที่:</span>
+    <input type="date" id="hisStartDate" class="sb-input" style="width:auto;padding:6px 9px">
+    <span style="font-size:13px;color:var(--g6)">ถึง</span>
+    <input type="date" id="hisEndDate" class="sb-input" style="width:auto;padding:6px 9px">
+    <select id="hisFilterStaff" class="sb-input" style="width:auto;padding:6px 9px"><option value="">ผู้ช่วยทั้งหมด</option></select>
+    <select id="hisFilterStatus" class="sb-input" style="width:auto;padding:6px 9px">
+      <option value="">สถานะทั้งหมด</option>
+      <option value="pending">รอประเมิน</option>
+      <option value="pass">ผ่าน</option>
+      <option value="partial">ผ่านบางส่วน</option>
+      <option value="fail">ไม่ผ่าน</option>
+    </select>
+    <button class="btn btn-pri" style="padding:6px 14px;font-size:13px" onclick="loadHistory()">🔍 ค้นหา</button>
+    <button class="btn btn-out" style="padding:6px 14px;font-size:13px" onclick="resetHisFilter()">ล้าง</button>
+    <button class="btn btn-out" style="padding:6px 14px;font-size:13px;margin-left:auto" onclick="exportCSV()">📥 Export CSV</button>
+  </div>
+  <div class="tw" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>สถานะ</th><th>ผลประเมิน</th><th></th></tr></thead>
+      <tbody id="historyBody"><tr><td colspan="8" style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการ</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="view" id="view-settings">
+  <div class="ph"><h1>⚙️ ตั้งค่า & จัดการรายชื่อ</h1><p>เฉพาะแอดมินเท่านั้นที่สามารถแก้ไขข้อมูลได้</p></div>
+
+  <!-- Settings PIN -->
+  <div id="settingsLoginSec" class="card" style="max-width:360px;margin:20px auto;text-align:center;padding:24px 20px">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3 style="margin-bottom:6px;font-size:15px">แอดมินเท่านั้น</h3>
+    <p style="font-size:12px;color:var(--g6);margin-bottom:16px">ใส่รหัสผ่านแอดมินเพื่อจัดการรายชื่อ</p>
+    <div class="fg" style="text-align:left"><label>อีเมล</label><input type="email" id="settingsEmail" placeholder="admin@example.com"></div>
+    <div class="fg" style="text-align:left"><label>รหัสผ่าน</label><input type="password" id="settingsPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')settingsLogin()"></div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="settingsLogin()">เข้าสู่ระบบ</button>
+  </div>
+
+  <!-- Settings Main -->
+  <div id="settingsMainSec" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="background:var(--gb);padding:8px 16px;border-radius:8px;font-size:13px;color:#155724;font-weight:600">🔓 โหมดแอดมิน — สามารถแก้ไขข้อมูลได้</div>
+      <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="settingsLogout()">🚪 ออก</button>
+    </div>
+    <div class="card" style="max-width:560px">
+      <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
+      <div id="staffListUI" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:7px">
+        <input type="text" id="newStaffName" placeholder="ชื่อ-นามสกุล ผู้ช่วยนักกายภาพ" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addStaff()">
+        <button class="btn btn-pri" onclick="addStaff()">+ เพิ่ม</button>
+      </div>
+    </div>
+    <div class="card" style="max-width:560px">
+      <h3>🩺 จัดการรายชื่อนักกายภาพบำบัด (ผู้ประเมิน)</h3>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
+      <div id="ptListUI" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:7px">
+        <input type="text" id="newPTName" placeholder="ชื่อ-นามสกุล นักกายภาพบำบัด" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addPT()">
+        <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
+      </div>
     </div>
 
-    <div class="card" id="captureArea" style="padding:0;overflow:hidden">
-      <div style="background:#FDFCFA;padding:18px 18px 14px;text-align:center;border-bottom:2px solid var(--ink)">
-        <div style="font-size:11px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">ทะเบียนสรุปการลา</div>
-        <div id="summaryYearLabel" style="font-family:'Noto Sans Thai',sans-serif;font-size:18px;font-weight:700;color:var(--ink);margin:4px 0 2px">-</div>
-        <div style="font-size:12.5px;color:var(--brass);font-weight:600">ป่วย / กิจ / พักร้อน / คลอด (วัน)</div>
-      </div>
-      <div class="table-scroll">
+    <!-- Developer Credit -->
+    <div style="text-align:center;padding:20px;color:var(--g4);font-size:12px">
+      <div style="font-size:14px;color:var(--g6);margin-bottom:4px">💻 พัฒนาโดย</div>
+      <div style="font-size:15px;font-weight:700;color:var(--bd)">กภ.ภัทรลักษณ์ อิ่นคำ</div>
+      <div style="font-size:12px;color:var(--g4);margin-top:2px">PT KTH Checklist System © 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPERVISOR -->
+<div class="view" id="view-supervisor">
+  <div class="ph"><h1>👔 หัวหน้างาน — ภาพรวมการทำงาน</h1><p>ติดตามการทำงานของผู้ช่วยรายวัน และประเมินรายบุคคล</p></div>
+
+  <!-- PIN LOGIN -->
+  <div id="supLoginSec" class="card" style="max-width:360px;margin:30px auto;text-align:center;padding:28px 20px">
+    <div style="font-size:40px;margin-bottom:10px">🔐</div>
+    <h3 style="margin-bottom:6px;font-size:16px">เข้าสู่หน้าหัวหน้างาน</h3>
+    <p style="font-size:12.5px;color:var(--g6);margin-bottom:18px">กรุณาใส่รหัส PIN</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
+      <input type="password" id="supPin" maxlength="4" placeholder="• • • •"
+        style="width:120px;padding:12px;text-align:center;font-size:22px;letter-spacing:8px;border:2px solid var(--g2);border-radius:var(--r8);font-family:inherit;outline:none"
+        onkeydown="if(event.key==='Enter')checkSupPin()"
+        oninput="this.style.borderColor=this.value?'var(--bm)':'var(--g2)'">
+    </div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="checkSupPin()">เข้าสู่ระบบ</button>
+    <div id="supPinError" style="color:var(--r);font-size:12.5px;margin-top:10px;display:none">❌ รหัส PIN ไม่ถูกต้อง</div>
+  </div>
+
+  <!-- MAIN CONTENT (hidden until PIN) -->
+  <div id="supMainSec" style="display:none">
+
+  <!-- ตัวกรอง -->
+  <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center;margin-bottom:0">
+    <span style="font-size:13px;font-weight:700">กรองข้อมูล:</span>
+    <input type="date" id="supStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+    <span style="font-size:13px;color:var(--g6)">ถึง</span>
+    <input type="date" id="supEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+    <select id="supFilterStaff" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
+    <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadSupervisor()">🔍 ดู</button>
+    <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetSupFilter()">ล้าง</button>
+    <button class="btn btn-warn" style="padding:5px 14px;font-size:12.5px;margin-left:auto" onclick="showFineReport()">💰 รายงานปรับเงิน</button>
+  </div>
+
+  <!-- แท็บย่อย -->
+  <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--g2)">
+    <button class="sup-tab active" id="supTab-daily" onclick="setSupTab('daily')" style="padding:10px 20px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--bd);border-bottom:3px solid var(--bd);margin-bottom:-2px">📅 รายวัน</button>
+    <button class="sup-tab" id="supTab-person" onclick="setSupTab('person')" style="padding:10px 20px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">👤 รายบุคคล</button>
+  </div>
+
+  <!-- รายวัน -->
+  <div id="supView-daily">
+    <div class="tw" style="overflow-x:auto">
       <table>
-        <thead>
-          <tr>
-            <th>รายชื่อเจ้าหน้าที่</th>
-            <th class="num">ลาป่วย</th>
-            <th class="num">ลากิจ</th>
-            <th class="num">ลาพักผ่อน</th>
-            <th class="num">ลาคลอด</th>
-            <th class="hist-col">ประวัติ</th>
-          </tr>
-        </thead>
-        <tbody id="summaryBody">
-          <tr><td colspan="6" class="empty">กำลังโหลด...</td></tr>
-        </tbody>
+        <thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>ความสมบูรณ์</th><th>สถานะ</th><th>ผล PT</th><th>ผู้ประเมิน</th><th></th></tr></thead>
+        <tbody id="supDailyBody"><tr><td colspan="8" style="text-align:center;color:var(--g4);padding:24px">กำลังโหลด...</td></tr></tbody>
       </table>
-      </div>
-      <div style="padding:8px 18px;font-size:10.5px;color:var(--muted);border-top:1px dashed var(--line);text-align:right" id="registerFoot">-</div>
     </div>
   </div>
 
-  <!-- ================= TAB: ปฏิทิน ================= -->
-  <div id="tab-calendar" style="display:none">
-    <div class="card row cal-nav-row" style="justify-content:space-between">
-      <button class="secondary" style="width:auto" onclick="changeCalendarMonth(-1)">‹ เดือนก่อนหน้า</button>
-      <div id="calLabel" style="font-family:'Noto Sans Thai',sans-serif;font-weight:700;color:var(--ink);font-size:15px">-</div>
-      <button class="secondary" style="width:auto" onclick="changeCalendarMonth(1)">เดือนถัดไป ›</button>
-    </div>
-
-    <div class="card" id="calCard">
-      <div class="cal-legend">
-        <span class="cal-dot" style="background:var(--cal-sick)"></span> ลาป่วย
-        <span class="cal-dot" style="background:var(--cal-personal)"></span> ลากิจ
-        <span class="cal-dot" style="background:var(--cal-vacation)"></span> ลาพักผ่อน
-        <span class="cal-dot" style="background:var(--cal-maternity)"></span> ลาคลอด
-      </div>
-      <div class="cal-grid" id="calGrid">
-        <div class="empty">กำลังโหลด...</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 id="calDetailTitle">รายละเอียดวันที่ -</h3>
-      <div id="calDetailArea"><div class="empty">แตะวันที่ต้องการดูรายละเอียด</div></div>
-    </div>
+  <!-- รายบุคคล -->
+  <div id="supView-person" style="display:none">
+    <div id="supPersonCards"></div>
   </div>
+</div>
 
-  <!-- ================= TAB: บันทึกลา ================= -->
-  <div id="tab-record" style="display:none">
-    <div class="card">
-      <h3>บันทึกการลา</h3>
-      <div class="row" style="margin-bottom:12px"><label style="width:100%">เจ้าหน้าที่</label><select id="recStaff" style="width:100%"></select></div>
-      <div class="row" style="margin-bottom:12px"><label style="width:100%">ประเภทการลา</label><select id="recType" style="width:100%" onchange="onLeaveTypeChange()"></select></div>
-      <div class="row" style="margin-bottom:12px">
-        <label style="width:100%">วันที่เริ่มลา</label><input type="date" id="recStart" style="width:100%" onchange="onDateChange()">
-      </div>
-      <div class="row" style="margin-bottom:12px">
-        <label style="width:100%">วันที่สิ้นสุด (ถ้าลาวันเดียว ใส่วันเดียวกัน)</label><input type="date" id="recEnd" style="width:100%" onchange="onDateChange()">
-      </div>
-      <div class="row" id="halfDayRow" style="margin-bottom:12px;display:none">
-        <label><input type="checkbox" id="recHalfDay"> ลาแค่ครึ่งวัน (เฉพาะกรณีลาวันเดียว)</label>
-      </div>
-      <div class="row" style="margin-bottom:16px">
-        <label style="width:100%">เหตุผลการลา (ไม่บังคับ แต่แนะนำให้กรอก)</label>
-        <input type="text" id="recReason" style="width:100%" placeholder="เช่น ลาป่วยไข้หวัด, ลากิจธุระที่บ้าน"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();openPinModal('record');}">
-      </div>
-      <div id="recDaysPreview" class="hint"></div>
-      <button onclick="openPinModal('record')">ยืนยันบันทึกลา</button>
-      <div class="hint">ใส่ PIN ส่วนตัวของท่านเอง เพื่อบันทึกได้ทันที (หรือให้แอดมิน/หัวหน้างานบันทึกแทนก็ได้)</div>
-      <div id="recordMsg" style="margin-top:8px;font-size:13px;color:var(--forest);font-weight:600"></div>
+<!-- FINE SYSTEM -->
+<div class="view" id="view-fine">
+  <div class="ph"><h1>💰 ระบบค่าปรับ</h1><p>ติดตามวันที่ขาดบันทึก/ประเมิน และคำนวณค่าปรับ</p></div>
+  <div id="fineLoginSec" class="card" style="max-width:360px;margin:20px auto;text-align:center;padding:24px 20px">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3 style="margin-bottom:14px">เข้าถึงระบบค่าปรับ</h3>
+    <div class="fg" style="text-align:left">
+      <label>PIN หัวหน้างาน หรือ รหัสผ่านแอดมิน</label>
+      <input type="password" id="finePinInput" placeholder="••••" style="text-align:center;font-size:18px;letter-spacing:6px" onkeydown="if(event.key==='Enter')checkFineLogin()">
     </div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center;margin-top:8px" onclick="checkFineLogin()">เข้าสู่ระบบ</button>
+    <div id="finePinError" style="color:var(--r);font-size:12.5px;margin-top:8px;display:none">❌ รหัสไม่ถูกต้อง</div>
   </div>
-
-  <!-- ================= TAB: จัดการระบบ ================= -->
-  <div id="tab-admin" style="display:none">
-    <div class="card">
-      <h3>👤 เพิ่มเจ้าหน้าที่ใหม่</h3>
-      <div class="row" style="margin-bottom:10px">
-        <input type="text" id="newStaffName" placeholder="ชื่อเจ้าหน้าที่" style="flex:1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();openPinModal('addStaff');}">
-      </div>
-      <div class="row" style="margin-bottom:10px">
-        <select id="newStaffJobGroup" style="flex:1"></select>
-        <select id="newStaffPersonnelType" style="flex:2"></select>
-      </div>
-      <div class="row" style="margin-bottom:10px">
-        <input type="text" id="newStaffPin" placeholder="ตั้ง PIN ส่วนตัว (4 หลัก) ให้เจ้าหน้าที่ท่านนี้" style="flex:1" inputmode="numeric"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();openPinModal('addStaff');}">
-      </div>
-      <div class="hint" style="margin-bottom:10px">เจ้าหน้าที่จะใช้ PIN นี้เข้ามาบันทึกลาของตัวเองได้โดยไม่ต้องพึ่งแอดมิน/หัวหน้างาน</div>
-      <button onclick="openPinModal('addStaff')">เพิ่มเจ้าหน้าที่</button>
-    </div>
-
-    <div class="card">
-      <h3>📋 รายชื่อเจ้าหน้าที่ทั้งหมด</h3>
-      <div id="staffListArea"><div class="empty">กดปุ่มด้านล่างเพื่อโหลดรายชื่อ</div></div>
-      <button class="secondary" onclick="openPinModal('loadStaff')" style="margin-top:10px">โหลดรายชื่อทั้งหมด</button>
-    </div>
-
-    <div class="card">
-      <h3>📅 วันหยุดนักขัตฤกษ์</h3>
-      <p class="hint" style="margin-top:0">
-        ใส่ไว้เพื่อให้ระบบตัดออกจากการนับ "วันทำการ" ตอนคำนวณวันลา (มีชุดเริ่มต้นปี 2569 ให้แล้ว
-        แต่ควรตรวจสอบกับประกาศทางการอีกครั้ง เผื่อมีวันหยุดเฉพาะหน่วยงาน/จังหวัดเพิ่มเติม)
-      </p>
-      <div class="row" style="margin-bottom:10px">
-        <label>ปี (ค.ศ.)</label>
-        <input type="number" id="holidayYearPicker" style="width:100px">
-        <button class="secondary" onclick="loadHolidays()">โหลดรายการ</button>
-      </div>
-      <div id="holidayListArea"><div class="empty">เลือกปีแล้วกด "โหลดรายการ"</div></div>
-      <div class="row" style="margin-top:14px">
-        <input type="date" id="newHolidayDate" style="flex:1">
-        <input type="text" id="newHolidayName" placeholder="ชื่อวันหยุด" style="flex:2">
-        <button onclick="openPinModal('addHoliday')">เพิ่ม</button>
+  <div id="fineMainSec" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div style="background:var(--gb);padding:8px 16px;border-radius:8px;font-size:13px;color:#155724;font-weight:600">🔓 เข้าสู่ระบบสำเร็จ</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="fineLogout()">🚪 ออก</button>
+        <button class="btn btn-pri" style="padding:6px 12px;font-size:12px" onclick="exportFineReport()">📥 Export CSV</button>
       </div>
     </div>
-
-    <div class="card">
-      <h3>📱 ตั้งค่าแจ้งเตือน LINE</h3>
-      <p class="hint" style="margin-top:0">
-        ใช้ LINE Messaging API (LINE Notify ปิดบริการไปแล้ว) — ต้องสร้าง LINE Official Account +
-        Messaging API Channel ก่อน แล้วนำ Channel Access Token มาใส่ที่นี่ จากนั้นเชิญบอทเข้ากลุ่ม LINE
-        ของหน่วยงาน ระบบจะจับ Group ID ให้อัตโนมัติ
-      </p>
-      <div class="row" style="margin-bottom:10px">
-        <label style="width:100%">Channel Access Token</label>
-        <input type="text" id="lineToken" style="width:100%" placeholder="วาง Token ที่ได้จาก LINE Developers Console">
+    <div class="card" style="padding:12px 16px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:13px;font-weight:700">ช่วงเวลา:</span>
+        <input type="date" id="fineStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+        <span style="font-size:13px;color:var(--g6)">ถึง</span>
+        <input type="date" id="fineEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+        <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="calcFine()">💰 คำนวณ</button>
+        <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="setFineThisMonth()">เดือนนี้</button>
       </div>
-      <div class="row" style="margin-bottom:10px">
-        <label style="width:100%">แจ้งเตือนล่วงหน้ากี่วันก่อนถึงวันลา</label>
-        <input type="number" id="lineReminderDays" min="0" max="14" style="width:100px">
-      </div>
-      <div class="row">
-        <button onclick="openPinModal('updateLine')">บันทึกการตั้งค่า</button>
-        <button class="secondary" onclick="openPinModal('testLine')">ส่งข้อความทดสอบ</button>
-      </div>
-      <div id="lineMsg" style="margin-top:8px;font-size:13px;color:var(--forest);font-weight:600"></div>
     </div>
-  </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px" id="fineKpi"></div>
+    <div class="card" style="margin-bottom:16px"><div id="fineDetail"></div></div>
 
-  </div>
+    <!-- Admin: บันทึกค่าปรับรายบุคคล -->
+    <div class="card" style="margin-bottom:16px">
+      <h3 style="margin-bottom:12px">📝 บันทึกค่าปรับรายบุคคล (แอดมินระบุเอง)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end;flex-wrap:wrap" class="fine-add-row">
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">ชื่อผู้ถูกปรับ</label>
+          <select id="finePersonSel" class="sb-sel" style="padding:8px 10px">
+            <option value="">— เลือกชื่อ —</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">เหตุผล</label>
+          <input type="text" id="fineReason" placeholder="เหตุผลการปรับ" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;width:100%;outline:none">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:12px">จำนวน (฿)</label>
+          <input type="number" id="fineAmount" value="10" min="1" style="width:80px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;text-align:center;outline:none">
+        </div>
+        <button class="btn btn-pri" style="padding:8px 14px;font-size:13px;height:fit-content" onclick="addFineRecord()">+ บันทึก</button>
+      </div>
+      <div style="margin-top:14px" id="fineRecordsList"></div>
+    </div>
 
-  <div class="modal-overlay" id="editModal">
-    <div class="modal" style="max-width:380px">
-      <h3>แก้ไขรายการลา</h3>
-      <div class="row" style="margin-bottom:10px"><label style="width:100%">ประเภทการลา</label><select id="editLeaveType" style="width:100%"></select></div>
-      <div class="row" style="margin-bottom:10px"><label style="width:100%">วันที่เริ่ม</label><input type="date" id="editStart" style="width:100%" onchange="onEditDateChange()"></div>
-      <div class="row" style="margin-bottom:10px"><label style="width:100%">วันที่สิ้นสุด</label><input type="date" id="editEnd" style="width:100%" onchange="onEditDateChange()"></div>
-      <div class="row" id="editHalfDayRow" style="margin-bottom:10px;display:none"><label><input type="checkbox" id="editHalfDay" onchange="onEditDateChange()"> ลาแค่ครึ่งวัน</label></div>
-      <div class="row" style="margin-bottom:12px"><label style="width:100%">เหตุผลการลา</label><input type="text" id="editReason" style="width:100%"></div>
-      <div id="editDaysPreview" class="hint" style="margin-bottom:10px"></div>
-      <div class="row" style="justify-content:flex-end">
-        <button class="secondary" onclick="closeEditModal()">ยกเลิก</button>
-        <button onclick="submitEditRecord()">บันทึกการแก้ไข</button>
+    <div class="card" style="max-width:400px;margin-top:0">
+      <h3 style="margin-bottom:12px">⚙️ ตั้งค่าอัตราค่าปรับอัตโนมัติ</h3>
+      <div class="fg">
+        <label>ค่าปรับต่อคนต่อวัน (บาท)</label>
+        <input type="number" id="finePerPerson" value="10" min="1" style="width:120px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:15px;text-align:center;outline:none">
       </div>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay" id="pinModal">
-    <div class="modal">
-      <h3 id="pinModalTitle">กรุณาใส่ PIN</h3>
-      <input type="password" id="pinInput" placeholder="PIN" inputmode="numeric"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();confirmPin();}else if(event.key==='Escape'){closePinModal();}">
-      <div class="row" style="justify-content:flex-end">
-        <button class="secondary" onclick="closePinModal()">ยกเลิก</button>
-        <button id="pinConfirmBtn" onclick="confirmPin()">ยืนยัน</button>
+<!-- ADMIN -->
+</div><!-- /supMainSec -->
+
+<div class="view" id="view-admin">
+  <div class="ph"><h1>🛡️ ระบบจัดการหลังบ้าน (Admin)</h1></div>
+  <div id="adminLoginSec" class="card" style="max-width:400px;margin:40px auto;text-align:center;padding:30px 20px">
+    <div style="font-size:40px;margin-bottom:10px">🔐</div>
+    <h3 style="margin-bottom:20px">เข้าสู่ระบบแอดมิน</h3>
+    <div class="fg" style="text-align:left"><label>อีเมล</label><input type="email" id="admEmail" placeholder="admin@example.com"></div>
+    <div class="fg" style="text-align:left"><label>รหัสผ่าน</label><input type="password" id="admPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center;margin-top:10px" onclick="adminLogin()">เข้าสู่ระบบ</button>
+  </div>
+  <div id="adminDashSec" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:800;color:var(--bd)">จัดการข้อมูล Checklist ทั้งหมด</h3>
+      <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="adminLogout()">🚪 ออก</button>
+    </div>
+    <div class="tw" style="overflow-x:auto;margin-bottom:20px">
+      <table>
+        <thead><tr><th>วันที่</th><th>ผู้ช่วย</th><th>สถานะ</th><th>ผลประเมิน</th><th>จัดการ</th></tr></thead>
+        <tbody id="adminTableBody"><tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="act-row">
+      <button class="btn" style="background:var(--r);color:#fff;border:none" onclick="clearAllData()">🗑️ ล้างข้อมูลทั้งหมด</button>
+    </div>
+
+    <!-- Checklist Management -->
+    <div class="card" style="margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin-bottom:0">📋 จัดการรายการ Checklist</h3>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('morning')" id="clTabMorning">🌅 เวรเช้า</button>
+          <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('evening')" id="clTabEvening">🌙 เวรบ่าย</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:12px">⚠️ การแก้ไขจะมีผลกับ Checklist ใหม่ที่บันทึกหลังจากนี้เท่านั้น (ข้อมูลเก่าไม่เปลี่ยน)</p>
+      <div id="clItemList" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="newClItem" placeholder="พิมพ์รายการใหม่..." style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addClItem()">
+        <button class="btn btn-pri" onclick="addClItem()">+ เพิ่ม</button>
+      </div>
+      <div class="act-row" style="margin-top:12px">
+        <button class="btn btn-suc" onclick="saveClItems()">💾 บันทึกรายการ Checklist</button>
+        <button class="btn btn-out" onclick="resetClItems()">↩ คืนค่าเดิม</button>
+      </div>
+    </div>
+
+    <!-- PIN Management -->
+    <div class="card" style="max-width:400px;margin-top:20px">
+      <h3 style="margin-bottom:14px">🔑 ตั้งค่ารหัส PIN หัวหน้างาน</h3>
+      <p style="font-size:12.5px;color:var(--g6);margin-bottom:14px">รหัสปัจจุบัน: <span id="currentPinDisplay" style="font-weight:700;color:var(--bd)">****</span></p>
+      <div class="fg">
+        <label>รหัส PIN ใหม่ (4 หลัก)</label>
+        <input type="password" id="newPinInput" maxlength="4" placeholder="• • • •"
+          style="letter-spacing:8px;font-size:18px;text-align:center"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="fg">
+        <label>ยืนยันรหัส PIN</label>
+        <input type="password" id="confirmPinInput" maxlength="4" placeholder="• • • •"
+          style="letter-spacing:8px;font-size:18px;text-align:center"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeSupervisorPin()">🔑 เปลี่ยนรหัส PIN</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" id="mobileNav">
+  <button class="mn-item active" id="mnav-checklist" onclick="switchView('checklist',document.getElementById('nav-checklist'));setMobileNav('checklist')"><span class="mn-icon">✅</span><span class="mn-label">Checklist</span></button>
+  <button class="mn-item" id="mnav-review" onclick="switchView('review',document.getElementById('nav-review'));setMobileNav('review')"><span class="mn-icon">🔍</span><span class="mn-label">ประเมิน</span></button>
+  <button class="mn-item" id="mnav-dashboard" onclick="switchView('dashboard',document.getElementById('nav-dashboard'));setMobileNav('dashboard')"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></button>
+  <button class="mn-item" id="mnav-supervisor" onclick="switchView('supervisor',document.getElementById('nav-supervisor'));setMobileNav('supervisor')"><span class="mn-icon">👔</span><span class="mn-label">หัวหน้า</span></button>
+  <button class="mn-item" id="mnav-history" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
+  <button class="mn-item" id="mnav-fine" onclick="switchView('fine',document.getElementById('nav-fine'));setMobileNav('fine')"><span class="mn-icon">💰</span><span class="mn-label">ค่าปรับ</span></button>
+</nav>
+
+<!-- MODALS -->
+<div class="mo" id="submitModal">
+  <div class="modal">
+    <div class="mh"><h2>📤 ส่ง Checklist ให้ PT ประเมิน</h2><button class="mc-btn" onclick="closeModal('submitModal')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label>ผู้ช่วยนักกายภาพ</label><input type="text" id="m_staff" readonly style="background:var(--g1)"></div>
+      <div class="fg"><label>วันที่ / เวร</label><input type="text" id="m_date" readonly style="background:var(--g1)"></div>
+      <div class="fg"><label>สรุปผล</label><div id="m_summary" style="background:var(--g1);padding:11px;border-radius:var(--r8);font-size:13px;line-height:1.9"></div></div>
+      <div class="fg"><label>หมายเหตุ</label><textarea id="m_note" placeholder="ปัญหาที่พบ วัสดุที่ขาด ฯลฯ"></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="closeModal('submitModal')">ยกเลิก</button>
+      <button class="btn btn-suc" onclick="submitChecklist()">✅ บันทึก & ส่ง</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="shareModal">
+  <div class="modal">
+    <div class="mh"><h2>✅ ส่ง Checklist สำเร็จ!</h2><button class="mc-btn" onclick="closeModal('shareModal')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13.5px;color:var(--g6);margin-bottom:14px">บันทึกลง Firebase แล้ว PT สามารถเห็นได้ทันทีในหน้าประเมิน</p>
+      <div style="background:var(--gb);padding:14px;border-radius:var(--r8);font-size:13.5px;color:#155724;margin-bottom:14px">
+        ✅ ข้อมูล sync ข้ามเครื่องแล้ว — PT เปิดแอปแล้วไปที่หน้า "ประเมินผล" ได้เลย
+      </div>
+      <p style="font-size:13px;color:var(--g6);margin-bottom:8px">หรือแชร์ลิงก์แอปให้ PT ทาง LINE:</p>
+      <div class="link-box">
+        <span id="shareAppLink">https://ptkth14.github.io/pt-kth/</span>
+        <button class="link-copy" id="copyAppLinkBtn" onclick="copyAppLink()">📋 Copy</button>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-line" onclick="shareToLine()">💬 แชร์ผ่าน LINE</button>
+      <button class="btn btn-out" onclick="closeModal('shareModal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="detailModal">
+  <div class="modal wide">
+    <div class="mh"><h2 id="detailTitle">รายละเอียด</h2><button class="mc-btn" onclick="closeModal('detailModal')">✕</button></div>
+    <div class="mb" id="detailBody"></div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('detailModal')">ปิด</button></div>
+  </div>
+</div>
+
+<!-- MODAL: SUPERVISOR NOTE -->
+<div class="mo" id="supNoteModal">
+  <div class="modal">
+    <div class="mh"><h2>🔒 หมายเหตุถึงหัวหน้างาน</h2><button class="mc-btn" onclick="closeModal('supNoteModal')">✕</button></div>
+    <div class="mb">
+      <div id="supNoteContent" style="background:#F3E5F5;border:1.5px solid #9C27B0;border-radius:var(--r8);padding:14px;font-size:14px;line-height:1.7;color:#4A148C"></div>
+    </div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('supNoteModal')">ปิด</button></div>
+  </div>
+</div>
+
+<!-- MODAL: FINE REPORT -->
+<div class="mo" id="fineModal">
+  <div class="modal wide">
+    <div class="mh"><h2>💰 รายงานการปรับเงิน</h2><button class="mc-btn" onclick="closeModal('fineModal')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--g6);margin-bottom:14px">วันที่ไม่มีการบันทึก Checklist หรือไม่มี PT ประเมิน = ปรับ 10 บาท/คน</p>
+      <div id="fineReportContent"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-pri" onclick="exportFineCSV()">📥 Export CSV</button>
+      <button class="btn btn-out" onclick="closeModal('fineModal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="confirmModal">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div class="mb" style="padding:24px 20px 10px">
+      <div style="font-size:42px;margin-bottom:12px">⚠️</div>
+      <h3 id="confirmMsg" style="font-size:16px;font-weight:700;margin-bottom:20px;line-height:1.5"></h3>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-out" onclick="closeConfirm(false)" style="flex:1;justify-content:center">ยกเลิก</button>
+        <button class="btn btn-pri" id="confirmYesBtn" style="flex:1;justify-content:center;background:var(--r)">ตกลง</button>
       </div>
     </div>
   </div>
+</div>
 
-
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"><span id="toastMsg">—</span></div>
 
 <script>
-  let pendingAction = null;
-  let currentSummaryData = null;
-  let lastAdminPin = null;
-  let referenceData = null;
-  let calendarLoadedOnce = false;
-  let calYear, calMonth; // เดือน/ปีที่กำลังดูอยู่ในปฏิทิน
-  let calendarData = null;
-  let selectedDay = null;
+// ══ CHECKLIST DATA ══
+const CL = {
+  morning: {
+    label:'ก่อนเริ่มงาน (≤08.30 น.)', emoji:'🌅', cls:'morning', shifts:['morning'],
+    items:[
+      'เตรียมตู้ kiosk, เปิดเครื่อง com รูดบัตร (ทันที)',
+      'จัดวางคิวให้ผู้รับบริการ',
+      'พับเก็บผ้าคลุมเครื่องทุกเครื่อง (ทำทันทีที่มา)',
+      'เตรียมผ้าคลุมประจำเตียง 12 ผืน (ทำทันทีที่มา)',
+      'จัดเตรียมเตียง, วางหมอนให้พร้อมใช้งาน',
+      'เปิดเครื่องมือกายภาพทุกเครื่อง + เช็ดทำความสะอาดเครื่อง',
+      'เตรียมน้ำ + ขั้วกระตุ้นไฟฟ้า (ทำทันทีที่มา)',
+      'พับเตรียมผ้าห่อแผ่นร้อนให้พร้อมใช้',
+      'พับเตรียมผ้ารองหมอน / รองไหล่ให้พร้อมใช้'
+    ]
+  },
+  evening: {
+    label:'ก่อนเลิกงาน (ส.≤15.30 / จ.-ศ.≤19.30 น.)', emoji:'🌙', cls:'evening', shifts:['afternoon'],
+    items:[
+      'ตรวจเช็คสำลีแอลกอฮอล์ / เจล US / พลาสเตอร์ทรานสปอร์',
+      'ทิ้งสำลีเช็ดแอลกอฮอล์ใช้แล้ว',
+      'สครับเตียง / หมอน',
+      'ปิดเครื่องมือกายภาพทุกเครื่อง',
+      'นำผ้าคลุมเครื่องมือกายภาพทุกเครื่อง',
+      'ตรวจสอบระดับน้ำหม้อต้มแผ่นร้อน (เติม)',
+      'เก็บ / ทำความสะอาด ขั้วกระตุ้นไฟฟ้า',
+      'พับผ้าห่อแผ่นร้อน / ผ้ารองหมอน / เปลี่ยนปลอกหมอน (เวรเสาร์)',
+      'เติมน้ำกระเป๋าน้ำร้อนที่ใช้จำหน่าย (หากมี)',
+      'จัดเรียงคิวผู้รับบริการให้พร้อมใช้วันถัดไป',
+      'เก็บคิวนักกายภาพบำบัด',
+      'นำส่งผ้าใช้แล้วที่โรงซัก',
+      'ปิดตู้ kiosk, ปิดเครื่อง com รูดบัตร',
+      'ปิดเครื่องปรับอากาศ, ปิดระบบส่องสว่าง',
+      'นำส่งสลิปรูดบัตรที่ห้องการเงิน'
+    ]
+  }
+};
 
-  function showTab(name) {
-    ['summary','calendar','record','admin'].forEach(t => {
-      document.getElementById('tab-' + t).style.display = (t === name) ? 'block' : 'none';
-    });
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-      const names = ['summary','calendar','record','admin'];
-      btn.classList.toggle('active', names[idx] === name);
-    });
-    if (name === 'calendar' && !calendarLoadedOnce) { loadCalendar(); calendarLoadedOnce = true; }
-  }
+// ══ STATE ══
+let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[];
+let activeRevIdx=null, reviewEvals={}, isAdminLoggedIn=false;
 
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 3500);
-  }
-  function onServerError(err) {
-    console.error(err);
-    showToast('เกิดข้อผิดพลาด: ' + (err && err.message ? err.message : err));
-  }
-  function setLoading(btnEl, isLoading, loadingText) {
-    if (!btnEl) return;
-    if (isLoading) {
-      if (!btnEl.dataset.originalText) btnEl.dataset.originalText = btnEl.textContent;
-      btnEl.textContent = loadingText || 'กำลังดำเนินการ...';
-      btnEl.disabled = true;
-    } else {
-      btnEl.textContent = btnEl.dataset.originalText || btnEl.textContent;
-      btnEl.disabled = false;
+function setSyncBadge(state,text){const b=document.getElementById('syncBadge');if(!b)return;b.className='sync-badge '+state;b.textContent=text;}
+function setLoadingDetail(t){const el=document.getElementById('loadingDetail');if(el)el.textContent=t;}
+
+// ══ WAIT FOR FIREBASE ══
+function waitForFirebase(){
+  return new Promise(resolve=>{
+    if(window.FB) return resolve();
+    const t = setTimeout(()=>{ console.warn('Firebase timeout'); resolve(); }, 8000);
+    window.addEventListener('firebase-ready', ()=>{ clearTimeout(t); resolve(); }, {once:true});
+  });
+}
+
+// ══ INIT ══
+async function init(){
+  await waitForFirebase();
+  setSyncBadge('syncing','⏳ Loading...');
+  setLoadingDetail('กำลังดึงข้อมูลจาก Firebase...');
+  if(!window.FB) {
+    // Firebase โหลดไม่ได้ — ใช้ localStorage offline
+    staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
+    ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
+    submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
+    setSyncBadge('error','⚠️ Offline');
+    showToast('⚠️ ใช้ข้อมูล offline (Firebase ไม่ตอบสนอง)','warning');
+  } else {
+    try {
+      // timeout 10 วิสำหรับ Firestore query
+      const withTimeout = (promise, ms=10000) => Promise.race([
+        promise,
+        new Promise((_,reject) => setTimeout(()=>reject(new Error('Firestore timeout')), ms))
+      ]);
+      const config = await withTimeout(window.FB.fbGetConfig());
+      staffList = (config && config.staffList) ? config.staffList : [];
+      ptList    = (config && config.ptList)    ? config.ptList    : [];
+      setLoadingDetail('โหลด submissions...');
+      const subs = await withTimeout(window.FB.fbGetSubmissions());
+      submissions = Array.isArray(subs) ? subs : [];
+      // cache ไว้ offline
+      localStorage.setItem('pt_staff',       JSON.stringify(staffList));
+      localStorage.setItem('pt_ptlist',      JSON.stringify(ptList));
+      localStorage.setItem('pt_submissions', JSON.stringify(submissions));
+      setSyncBadge('synced','🔥 Firebase');
+      showToast('✅ เชื่อมต่อ Firebase สำเร็จ','success');
+    } catch(e) {
+      // fallback offline
+      staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
+      ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
+      submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
+      setSyncBadge('error','⚠️ Offline');
+      showToast('⚠️ ใช้ข้อมูล offline ('+e.message+')','warning');
+      console.error('Firebase init error:', e);
     }
   }
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-  }
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  // init UI
+  document.getElementById('dateInput').value = fmtDate(new Date());
+  document.getElementById('dateInputMobile').value = fmtDate(new Date());
+  updateDateDisplay();
+  updateStaffDropdown();
+  updatePTDropdown();
+  buildChecklist();
+  startClock();
+  setTimeout(checkFineAlert, 2000); // เช็คการแจ้งเตือนปรับเงิน
+  // loadDashboard จะถูกเรียกเมื่อเปิดหน้า dashboard
+  updateHistoryFilters();
+  updateDashFilter();
+  // sync mobile/desktop inputs
+  document.getElementById('dateInputMobile').addEventListener('change',function(){document.getElementById('dateInput').value=this.value;updateDateDisplay();});
+  document.getElementById('dateInput').addEventListener('change',function(){document.getElementById('dateInputMobile').value=this.value;});
+  document.getElementById('staffSelectMobile').addEventListener('change',function(){
+    document.getElementById('staffSelect').value=this.value;
+    const n=this.options[this.selectedIndex]?.text;
+    document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อผู้ช่วย —')?n:'เลือกชื่อก่อน';
+  });
+}
+init();
 
-  window.onload = function() {
+// ══ HELPERS ══
+function fmtDate(d){return d.toISOString().slice(0,10);}
+function thaiDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
+function shiftLabel(s){return s==='morning'?'🌅 เวรเช้า':'🌙 เวรบ่าย';}
+function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<start)return false;if(end&&ds>end)return false;return true;}
+function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
+function startClock(){const tick=()=>{const el=document.getElementById('clock');if(el)el.textContent=new Date().toLocaleTimeString('th-TH');};tick();setInterval(tick,1000);}
+function setMobileNav(v){document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));const btn=document.getElementById('mnav-'+v);if(btn)btn.classList.add('active');}
+function formatItemText(t){return t.replace(/\(([^)]+)\)/g,'(<span style="color:var(--r);font-weight:700">$1</span>)');}
+
+function switchView(v,el){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(el)el.classList.add('active');
+  if(v==='review')loadReviewView();
+  if(v==='history')loadHistory();
+  if(v==='dashboard')loadDashboard();
+  if(v==='settings'){
+    if(isSettingsLoggedIn){
+      document.getElementById('settingsLoginSec').style.display='none';
+      document.getElementById('settingsMainSec').style.display='block';
+      renderSettings();
+    } else {
+      document.getElementById('settingsLoginSec').style.display='block';
+      document.getElementById('settingsMainSec').style.display='none';
+    }
+  }
+  if(v==='supervisor'){
+    if(!isSupLoggedIn){
+      document.getElementById('supLoginSec').style.display='block';
+      document.getElementById('supMainSec').style.display='none';
+      setTimeout(()=>document.getElementById('supPin')?.focus(),100);
+    } else {
+      updateSupFilter();loadSupervisor();
+    }
+  }
+  if(v==='admin')checkAdminAuth();
+  if(v==='fine'){
+    if(isFineLoggedIn){
+      document.getElementById('fineLoginSec').style.display='none';
+      document.getElementById('fineMainSec').style.display='block';
+      setFineThisMonth();
+      renderFineRecords();
+    } else {
+      document.getElementById('fineLoginSec').style.display='block';
+      document.getElementById('fineMainSec').style.display='none';
+    }
+  }
+}
+
+// ══ SHIFT ══
+function setShift(s){
+  currentShift=s;
+  document.getElementById('shiftMorning').className='shift-btn'+(s==='morning'?' active-morning':'');
+  document.getElementById('shiftAfternoon').className='shift-btn'+(s==='afternoon'?' active-afternoon':'');
+  document.getElementById('shiftMorningM').className='shift-btn'+(s==='morning'?' active-morning':'');
+  document.getElementById('shiftAfternoonM').className='shift-btn'+(s==='afternoon'?' active-afternoon':'');
+  document.getElementById('shiftChip').textContent=shiftLabel(s);
+  document.getElementById('shiftChip').className='shift-chip '+(s==='morning'?'sc-morning':'sc-afternoon');
+  checkState={};buildChecklist();
+}
+
+document.getElementById('dateInput').addEventListener('change',updateDateDisplay);
+function updateDateDisplay(){const v=document.getElementById('dateInput').value;document.getElementById('todayChip').textContent=v||'—';document.getElementById('todayLabel').textContent=v?thaiDate(v):'';}
+document.getElementById('staffSelect').addEventListener('change',function(){const n=this.options[this.selectedIndex]?.text;document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อ —')?n:'เลือกชื่อก่อน';document.getElementById('staffSelectMobile').value=this.value;});
+
+// ══ CHECKLIST ══
+function buildChecklist(){
+  const wrap=document.getElementById('checklistGroups');if(!wrap)return;wrap.innerHTML='';
+
+  // แสดง time warning เวรเช้า
+  if(currentShift === 'morning') {
     const now = new Date();
-    document.getElementById('yearPicker').value = now.getFullYear();
-    document.getElementById('holidayYearPicker').value = now.getFullYear();
-    document.getElementById('recStart').valueAsDate = now;
-    document.getElementById('recEnd').valueAsDate = now;
-    calYear = now.getFullYear();
-    calMonth = now.getMonth() + 1;
-    selectedDay = now.getDate();
-
-    const btn = document.getElementById('btnLoadSummary');
-    setLoading(btn, true, 'กำลังโหลด...');
-    google.script.run.withSuccessHandler(res => {
-      setLoading(btn, false);
-      referenceData = res.reference;
-      fillReferenceDropdowns();
-      fillStaffDropdown(res.staff);
-      renderSummary(res.summary);
-    }).withFailureHandler(err => { setLoading(btn, false); onServerError(err); }).getInitialData(String(now.getFullYear()));
-  };
-
-  function fillReferenceDropdowns() {
-    const typeSel = document.getElementById('recType');
-    typeSel.innerHTML = referenceData.leaveTypes.map(t => '<option value="' + t + '">' + t + '</option>').join('');
-
-    const editTypeSel = document.getElementById('editLeaveType');
-    editTypeSel.innerHTML = referenceData.leaveTypes.map(t => '<option value="' + t + '">' + t + '</option>').join('');
-
-    const jobSel = document.getElementById('newStaffJobGroup');
-    jobSel.innerHTML = referenceData.jobGroups.map(g => '<option value="' + g + '">' + g + '</option>').join('');
-
-    const ptSel = document.getElementById('newStaffPersonnelType');
-    ptSel.innerHTML = referenceData.personnelTypes.map(p => '<option value="' + p + '">' + p + '</option>').join('');
-
-    document.getElementById('lineReminderDays').value = 1;
+    const activeDate = getActiveDate();
+    const isToday = activeDate === fmtDate(now);
+    if(isToday) {
+      const h = now.getHours(), m = now.getMinutes();
+      const totalMin = h*60+m;
+      const deadlineMin = 8*60+30;
+      const remaining = deadlineMin - totalMin;
+      let timeBanner = document.getElementById('timeLockBanner');
+      if(!timeBanner) {
+        timeBanner = document.createElement('div');
+        timeBanner.id = 'timeLockBanner';
+        wrap.parentNode.insertBefore(timeBanner, wrap);
+      }
+      if(totalMin >= deadlineMin) {
+        timeBanner.innerHTML = `<div style="background:var(--rb);border:1.5px solid var(--r);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:var(--r);font-weight:700;font-size:13.5px">⛔ เลยเวลา 08:30 น. แล้ว — ไม่สามารถบันทึกเวรเช้าได้อีก กรุณาติดต่อแอดมิน</div>`;
+      } else if(remaining <= 30) {
+        timeBanner.innerHTML = `<div style="background:var(--yb);border:1.5px solid var(--y);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:#856404;font-weight:700;font-size:13.5px">⏰ เหลือเวลาอีก ${remaining} นาที ก่อนถึงเวลา 08:30 น. — รีบบันทึกด่วน!</div>`;
+      } else {
+        timeBanner.innerHTML = '';
+      }
+    }
+  } else {
+    const timeBanner = document.getElementById('timeLockBanner');
+    if(timeBanner) timeBanner.innerHTML = '';
   }
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{
+    const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
+    gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}<span class="gcnt" id="cnt-${g}">0/${info.items.length}</span></div><div class="ci-wrap" id="grp-${g}"></div>`;
+    wrap.appendChild(gDiv);
+    const container=gDiv.querySelector(`#grp-${g}`);
+    info.items.forEach((text,i)=>{
+      const key=`${g}-${i}`;if(!(key in checkState))checkState[key]='';const st=checkState[key];
+      const div=document.createElement('div');div.className='ci'+(st==='done'?' done':st==='na'?' na':'');div.dataset.key=key;
+      div.innerHTML=`<div class="ci-box">${st==='done'?'✓':st==='na'?'—':''}</div><div class="ci-text">${formatItemText(text)}</div><div class="ci-acts"><button class="btn-na" onclick="event.stopPropagation();toggleNA('${key}')">N/A</button></div>`;
+      div.setAttribute('onclick', `toggleDone('${key}')`);
+      container.appendChild(div);
+    });
+  });
+  updateProgress();
+}
+function toggleDone(k){checkState[k]=checkState[k]==='done'?'':'done';buildChecklist();}
+function toggleNA(k){checkState[k]=checkState[k]==='na'?'':'na';buildChecklist();}
+function resetChecklist(){showConfirm('ต้องการล้าง Checklist ทั้งหมดใช่หรือไม่?',()=>{checkState={};buildChecklist();showToast('🔄 ล้างข้อมูลแล้ว','success');});}
+function updateProgress(){
+  const groups=Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift));let total=0,done=0;
+  groups.forEach(g=>{const n=CL[g].items.length;let d=0;CL[g].items.forEach((_,i)=>{const s=checkState[`${g}-${i}`];if(s==='done'||s==='na')d++;});total+=n;done+=d;const el=document.getElementById(`cnt-${g}`);if(el)el.textContent=`${d}/${n}`;});
+  const pct=total>0?Math.round(done/total*100):0;
+  const ptEl=document.getElementById('progTxt'),ppEl=document.getElementById('progPct'),bar=document.getElementById('progBar');
+  if(ptEl)ptEl.textContent=`${done} / ${total}`;if(ppEl)ppEl.textContent=pct+'%';
+  if(bar){bar.style.width=pct+'%';bar.style.background=pct>=100?'var(--g)':pct>=80?'var(--y)':pct>=60?'var(--o)':'var(--r)';}
+}
 
-  function fillStaffDropdown(list) {
-    const sel = document.getElementById('recStaff');
-    sel.innerHTML = list.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('');
-  }
+function getActiveStaff(){const isMobile=window.innerWidth<=768;const sel=isMobile?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
+function getActiveDate(){const isMobile=window.innerWidth<=768;return isMobile?document.getElementById('dateInputMobile').value:document.getElementById('dateInput').value;}
 
-  // ===== แท็บบันทึกลา: แสดง/ซ่อนตัวเลือกครึ่งวัน + พรีวิวจำนวนวัน =====
-  function onDateChange() {
-    const start = document.getElementById('recStart').value;
-    const end = document.getElementById('recEnd').value;
-    const halfRow = document.getElementById('halfDayRow');
-    const preview = document.getElementById('recDaysPreview');
-    if (!start || !end) { preview.textContent = ''; return; }
-    if (end < start) { preview.textContent = '⚠️ วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม'; halfRow.style.display = 'none'; return; }
+function openSubmitModal(){
+  const st=getActiveStaff();const date=getActiveDate();
+  if(!st.text||st.text==='— เลือกชื่อ —'||st.text==='— เลือกชื่อผู้ช่วย —')return showToast('⚠️ เลือกชื่อผู้ช่วยก่อน','warning');
+  if(!date)return showToast('⚠️ เลือกวันที่ก่อน','warning');
 
-    if (start === end) {
-      halfRow.style.display = 'block';
-      const isHalf = document.getElementById('recHalfDay').checked;
-      preview.textContent = 'รวม ' + (isHalf ? '0.5' : '1') + ' วัน';
-    } else {
-      halfRow.style.display = 'none';
-      document.getElementById('recHalfDay').checked = false;
-      const days = countWeekdaysClient(start, end);
-      preview.textContent = 'รวม ' + days + ' วันทำการ (ประมาณการ ยังไม่หักวันหยุดนักขัตฤกษ์ ค่าจริงจะคำนวณตอนบันทึก)';
+  // เช็คเวลา: เวรเช้าต้องส่งก่อน 08:30 น.
+  if(currentShift === 'morning'){
+    const now=new Date(); const isToday=date===fmtDate(now);
+    if(isToday){
+      const h=now.getHours(),m=now.getMinutes();
+      if(h>8||(h===8&&m>=30)){
+        showToast('⛔ เลยเวลา 08:30 น. แล้ว ไม่สามารถบันทึกเวรเช้าได้','error');
+        return;
+      }
     }
   }
-  function onLeaveTypeChange() { /* เผื่ออนาคตอยากปรับ UI ตามประเภทการลา */ }
-  document.addEventListener('change', function(e){
-    if (e.target && e.target.id === 'recHalfDay') onDateChange();
+
+  let tDone=0,tNA=0,tMiss=0,tAll=0;
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
+  document.getElementById('m_staff').value=st.text;
+  document.getElementById('m_date').value=thaiDate(date)+' | '+shiftLabel(currentShift);
+  document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: <strong>${Math.round((tDone+tNA)/tAll*100)}%</strong>`;
+  document.getElementById('m_note').value='';
+  document.getElementById('submitModal').classList.add('open');
+}
+
+async function submitChecklist(){
+  const st=getActiveStaff();const date=getActiveDate();const note=document.getElementById('m_note').value.trim();
+  const snap={};
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
+  const now=new Date();
+  const rec={id:Date.now(),date,staffName:st.text,shift:currentShift,note,snap,submitTime:now.toISOString(),submitTimeDisplay:getThaiTimestamp(now),status:'pending',ptVerdict:'',ptReviewer:'',ptComment:'',ptReviewTime:'',ptEvals:{}};
+  setSyncBadge('syncing','⏳ Saving...');
+  try{
+    await window.FB.fbSaveSubmission(rec);
+    submissions.push(rec);
+    setSyncBadge('synced','🔥 Firebase');
+    closeModal('submitModal');
+    showToast('✅ บันทึกลง Firebase แล้ว','success');
+    updateHistoryFilters();updateDashFilter();
+    document.getElementById('shareModal').classList.add('open');
+  }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}
+}
+
+// ══ REVIEW ══
+function loadReviewView(){
+  const pending=submissions.filter(s=>s.status==='pending');
+  const pl=document.getElementById('pendingList');if(!pl)return;
+  if(pending.length===0){pl.innerHTML=`<div style="background:#fff;border-radius:var(--r12);padding:30px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:34px;margin-bottom:8px">📭</div><div style="font-size:15px;color:var(--g6)">ไม่มี Checklist ที่รอประเมิน</div></div>`;document.getElementById('reviewFormWrap').style.display='none';return;}
+  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pending.map(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);const idx=submissions.indexOf(s);return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${s.staffName}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${s.submitTimeDisplay||''}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})">🔍 ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`;
+}
+
+function openReview(idx){
+  activeRevIdx=idx;reviewEvals={};const rec=submissions[idx];
+  document.getElementById('rvDateChip').textContent=rec.date;
+  document.getElementById('rvStaffLabel').textContent=rec.staffName;
+  document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
+  document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':'sc-afternoon');
+  const tot=Object.keys(rec.snap).length;const dn=Object.values(rec.snap).filter(v=>v.status==='done'||v.status==='na').length;
+  document.getElementById('rvProg').textContent=`ความสมบูรณ์: ${Math.round(dn/tot*100)}% (${dn}/${tot})`;
+  const container=document.getElementById('reviewGroups');container.innerHTML='';
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(rec.shift)).forEach(g=>{
+    const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
+    gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}</div><div class="ci-wrap" id="rv-grp-${g}"></div>`;
+    container.appendChild(gDiv);const wrap=gDiv.querySelector(`#rv-grp-${g}`);
+    info.items.forEach((text,i)=>{
+      const key=`${g}-${i}`;const stSt=rec.snap[key]?.status||'';
+      const div=document.createElement('div');div.className='ri';
+      div.innerHTML=`<div class="rs"><div class="rb pass" title="ผ่าน" onclick="setEval('${key}','pass',this)">✓</div><div class="rb fail" title="ไม่ผ่าน" onclick="setEval('${key}','fail',this)">✗</div><div class="rb nab" title="N/A" onclick="setEval('${key}','na',this)">—</div></div><div style="flex:1"><div style="font-size:13.5px">${text}</div><div style="font-size:11.5px;color:var(--g4);margin-top:2px">ผู้ช่วยบันทึก: ${stSt==='done'?'✅ ทำแล้ว':stSt==='na'?'— N/A':'❌ ยังไม่ได้ทำ'}</div></div>`;
+      setEvalDefault(key,stSt==='done'?'pass':stSt==='na'?'na':'fail',div);
+      wrap.appendChild(div);
+    });
+  });
+  updatePTDropdown();
+  document.getElementById('ptReviewerSel').value='';
+  document.getElementById('ptComment').value='';
+  document.getElementById('ptVerdict').value='';
+  document.getElementById('ptSupervisorNote').value='';
+  const badge=document.getElementById('autoVerdictBadge');if(badge)badge.style.display='none';
+  document.getElementById('reviewFormWrap').style.display='block';
+  // scroll removed to prevent dashboard jump
+}
+function setEval(key,val,el){
+  reviewEvals[key]=val;
+  el.closest('.ri').querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  // คำนวณผลอัตโนมัติ
+  autoCalcVerdict();
+}
+
+function autoCalcVerdict(){
+  const failCount = Object.values(reviewEvals).filter(v => v==='fail').length;
+  const sel = document.getElementById('ptVerdict');
+  if(!sel) return;
+  if(failCount === 0)       sel.value = 'pass';
+  else if(failCount < 4)   sel.value = 'partial';
+  else                     sel.value = 'fail';
+  // แสดง badge
+  const badge = document.getElementById('autoVerdictBadge');
+  if(badge){
+    const labels = {pass:'✅ ผ่าน (อัตโนมัติ)', partial:'⚠️ ผ่านบางส่วน (ไม่ทำ '+failCount+' รายการ)', fail:'❌ ไม่ผ่าน (ไม่ทำ '+failCount+' รายการ)'};
+    const colors = {pass:'var(--g)', partial:'#856404', fail:'var(--r)'};
+    const bgs    = {pass:'var(--gb)', partial:'var(--yb)', fail:'var(--rb)'};
+    const v = sel.value;
+    badge.textContent = labels[v] || '';
+    badge.style.background = bgs[v] || 'var(--g2)';
+    badge.style.color = colors[v] || 'var(--g6)';
+    badge.style.display = 'block';
+  }
+}
+function setEvalDefault(key,val,container){reviewEvals[key]=val;const cls=val==='pass'?'pass':val==='fail'?'fail':'nab';const btn=container.querySelector(`.rb.${cls}`);if(btn)btn.classList.add('sel');}
+function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;}
+
+async function submitReview(){
+  if(activeRevIdx===null)return;
+  const reviewer=document.getElementById('ptReviewerSel').value;const comment=document.getElementById('ptComment').value.trim();const verdict=document.getElementById('ptVerdict').value;
+  if(!reviewer)return showToast('⚠️ เลือกชื่อนักกายภาพบำบัดก่อน','warning');
+  if(!verdict)return showToast('⚠️ เลือกผลการประเมินก่อน','warning');
+  const now=new Date();const rec=submissions[activeRevIdx];
+  const supervisorNote = document.getElementById('ptSupervisorNote')?.value.trim() || '';
+  rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
+  rec.ptSupervisorNote=supervisorNote;
+  rec.ptEvals={...reviewEvals};rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
+  setSyncBadge('syncing','⏳ Saving...');
+  try{
+    // อัปเดต local array ก่อน
+    submissions[activeRevIdx] = rec;
+    // บันทึก Firebase
+    await window.FB.fbUpdateSubmission(rec);
+    setSyncBadge('synced','🔥 Firebase');
+    showToast('✅ บันทึกผลการประเมินแล้ว','success');
+    document.getElementById('reviewFormWrap').style.display='none';
+    activeRevIdx=null;
+    loadReviewView();
+    updateHistoryFilters();
+    updateDashFilter();
+  }catch(e){
+    setSyncBadge('error','⚠️ Error');
+    console.error('submitReview error:', e);
+    showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');
+  }
+}
+
+// ══ HISTORY ══
+function resetHisFilter(){document.getElementById('hisStartDate').value='';document.getElementById('hisEndDate').value='';document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';loadHistory();}
+function updateHistoryFilters(){const sel=document.getElementById('hisFilterStaff');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');}
+function loadHistory(){
+  const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;const fStaff=document.getElementById('hisFilterStaff')?.value;const fStatus=document.getElementById('hisFilterStatus')?.value;
+  let data=[...submissions].reverse().filter(s=>isDateInRange(s.date,fStart,fEnd));
+  if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
+  const tb=document.getElementById('historyBody');if(!tb)return;
+  if(data.length===0){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';return;}
+  tb.innerHTML=data.map(s=>{
+    const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);
+    const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
+    const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
+    const timePart=(s.submitTimeDisplay||'').split(' ')[1]||s.submitTimeDisplay||'';
+    return`<tr><td>${s.date}</td><td><span style="font-size:12px">${shiftLabel(s.shift||'morning')}</span></td><td>${s.staffName}</td><td><strong style="color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</strong></td><td style="font-size:12px;color:var(--g6)">${timePart}</td><td>${stTag}</td><td>${vrTag}</td><td><button class="btn btn-out" style="padding:4px 9px;font-size:12px" onclick="showDetail(${s.id})">👁</button></td></tr>`;
+  }).join('');
+}
+
+function showDetail(id){
+  const s=submissions.find(x=>x.id===id);if(!s)return;
+  const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;
+  document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${s.submitTimeDisplay||''}</div><div><strong>ความสมบูรณ์:</strong> ${Math.round(dn/tot*100)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${s.ptReviewTimeDisplay||'—'}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${s.ptComment}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${s.note}</div>`:''}</div>`;
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
+    html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
+    CL[g].items.forEach((text,i)=>{const st=s.snap[`${g}-${i}`]?.status||'';const ptE=s.ptEvals?.[`${g}-${i}`]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${text}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
+  });
+  document.getElementById('detailBody').innerHTML=html;document.getElementById('detailModal').classList.add('open');
+}
+
+async function deleteRecord(id){
+  showConfirm('ต้องการลบรายการนี้ใช่หรือไม่?',async()=>{
+    try{await window.FB.fbDeleteSubmission(id);submissions=submissions.filter(s=>s.id!==id);loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();if(isAdminLoggedIn)renderAdminTable();showToast('🗑️ ลบแล้ว','success');}
+    catch(e){showToast('❌ ลบไม่สำเร็จ: '+e.message,'error');}
+  });
+}
+
+function exportCSV(){
+  const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;const fStaff=document.getElementById('hisFilterStaff')?.value;const fStatus=document.getElementById('hisFilterStatus')?.value;
+  let data=[...submissions].reverse().filter(s=>isDateInRange(s.date,fStart,fEnd));
+  if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
+  const rows=[['วันที่','เวร','ผู้ช่วย','ความสมบูรณ์%','สถานะ','PT ประเมิน','ผลประเมิน','ความเห็น PT']];
+  data.forEach(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;rows.push([s.date,shiftLabel(s.shift||'morning'),s.staffName,Math.round(dn/tot*100),s.status,s.ptReviewer||'—',s.ptVerdict||'—',s.ptComment||'']);});
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PT_KTH.csv';a.click();showToast('📥 Export CSV สำเร็จ','success');
+}
+
+// ══ DASHBOARD ══
+function resetDashFilter() {
+  document.getElementById('dashStartDate').value = '';
+  document.getElementById('dashEndDate').value = '';
+  document.getElementById('dashFilter').value = 'all';
+  loadDashboard();
+}
+
+function updateDashFilter() {
+  const sel = document.getElementById('dashFilter');
+  if(!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(submissions.map(s => s.staffName))];
+  sel.innerHTML = '<option value="all">👥 ผู้ช่วยทั้งหมด</option>' +
+    names.map(n => `<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');
+}
+
+function refreshDashboard() {
+  setSyncBadge('syncing','⏳ Loading...');
+  window.FB.fbGetSubmissions().then(subs => {
+    submissions = Array.isArray(subs) ? subs : [];
+    setSyncBadge('synced','🔥 Firebase');
+    loadDashboard();
+    showToast('🔄 โหลดข้อมูลใหม่แล้ว','success');
+  }).catch(e => {
+    setSyncBadge('error','⚠️ Error');
+    showToast('❌ โหลดไม่สำเร็จ: '+e.message,'error');
+  });
+}
+
+function calcCompletion(s) {
+  const tot = Object.keys(s.snap).length;
+  const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
+  return tot > 0 ? Math.round(dn/tot*100) : 0;
+}
+
+function loadDashboard() {
+  updateDashFilter();
+  const fStart = document.getElementById('dashStartDate')?.value;
+  const fEnd   = document.getElementById('dashEndDate')?.value;
+  const f      = document.getElementById('dashFilter')?.value || 'all';
+
+  let data = submissions.filter(s => isDateInRange(s.date, fStart, fEnd));
+  if(f !== 'all') data = data.filter(s => s.staffName === f);
+
+  // ══ KPI ══
+  const reviewed = data.filter(s => s.status !== 'pending');
+  const passed   = data.filter(s => s.status === 'pass' || s.status === 'partial');
+  const failed   = data.filter(s => s.status === 'fail');
+  const pending  = data.filter(s => s.status === 'pending');
+  const avgComp  = data.length > 0 ? Math.round(data.reduce((sum,s) => sum + calcCompletion(s), 0) / data.length) : 0;
+  const passRate = reviewed.length > 0 ? Math.round(passed.length / reviewed.length * 100) : 0;
+
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('kpiTotal',    data.length);
+  set('kpiPass',     passed.length);
+  set('kpiPend',     pending.length);
+  set('kpiFail',     failed.length);
+  set('kpiAvg',      avgComp + '%');
+  set('kpiPassRate', passRate + '%');
+
+  // ══ เวรเช้า vs บ่าย ══
+  const morning = data.filter(s => s.shift === 'morning');
+  const evening = data.filter(s => s.shift !== 'morning');
+  const mReviewed = morning.filter(s => s.status !== 'pending');
+  const ePassed   = evening.filter(s => s.status === 'pass' || s.status === 'partial');
+  const mPassed   = morning.filter(s => s.status === 'pass' || s.status === 'partial');
+  const eReviewed = evening.filter(s => s.status !== 'pending');
+  const mAvg = morning.length > 0 ? Math.round(morning.reduce((sum,s) => sum+calcCompletion(s),0)/morning.length) : 0;
+  const eAvg = evening.length > 0 ? Math.round(evening.reduce((sum,s) => sum+calcCompletion(s),0)/evening.length) : 0;
+  const mPass = mReviewed.length > 0 ? Math.round(mPassed.length/mReviewed.length*100) : 0;
+  const ePass = eReviewed.length > 0 ? Math.round(ePassed.length/eReviewed.length*100) : 0;
+
+  set('shiftMorningCount', morning.length);
+  set('shiftMorningPass',  mPass + '%');
+  set('shiftMorningAvg',   mAvg + '%');
+  set('shiftEveningCount', evening.length);
+  set('shiftEveningPass',  ePass + '%');
+  set('shiftEveningAvg',   eAvg + '%');
+
+  // ══ BAR CHART รายวัน (CSS-based ไม่ใช้ Chart.js) ══
+  const recent = [...data].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
+  const barWrap = document.getElementById('barChart');
+  const labelWrap = document.getElementById('barChartLabels');
+  if(barWrap && recent.length > 0) {
+    const barW = Math.floor(100 / recent.length);
+    barWrap.innerHTML = recent.map(s => {
+      const pct = calcCompletion(s);
+      const color = pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px">
+        <span style="font-size:9px;color:var(--g6);font-weight:700">${pct}%</span>
+        <div style="width:100%;background:${color};border-radius:4px 4px 0 0;height:${Math.max(pct*1.4,4)}px;transition:height .3s"></div>
+      </div>`;
+    }).join('');
+    labelWrap.innerHTML = recent.map(s =>
+      `<div style="flex:1;text-align:center;font-size:9px;color:var(--g6);overflow:hidden">${s.date.slice(5)}</div>`
+    ).join('');
+  } else if(barWrap) {
+    barWrap.innerHTML = '<div style="width:100%;text-align:center;color:var(--g4);font-size:13px;padding:40px 0">ยังไม่มีข้อมูล</div>';
+    if(labelWrap) labelWrap.innerHTML = '';
+  }
+
+  // ══ ISSUE TABLE ══
+  const issueCounts = {};
+  data.forEach(s => {
+    Object.keys(s.snap).forEach(k => {
+      const st = s.snap[k].status;
+      const pt = s.ptEvals && s.ptEvals[k];
+      if(pt === 'fail' || st === 'na' || st !== 'done') {
+        const parts = k.split('-'); const g = parts[0]; const i = parts[1];
+        if(CL[g] && CL[g].items[i]) {
+          let text = CL[g].items[i].replace(/\([^)]+\)/g,'').trim();
+          issueCounts[text] = (issueCounts[text]||0) + 1;
+        }
+      }
+    });
+  });
+  const top5 = Object.entries(issueCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const issueEl = document.getElementById('issueTable');
+  if(issueEl) {
+    if(top5.length === 0) {
+      issueEl.innerHTML = '<div style="text-align:center;color:var(--g);padding:16px;font-size:13.5px">✅ ยอดเยี่ยม! ไม่พบรายการที่มีปัญหา</div>';
+    } else {
+      const maxCount = top5[0][1];
+      issueEl.innerHTML = top5.map(([text, count], i) => {
+        const pct = Math.round(count/maxCount*100);
+        const colors = ['var(--r)','var(--o)','var(--y)','#1A6BAA','var(--g4)'];
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:13px;font-weight:${i===0?'700':'400'}">${i+1}. ${text}</span>
+            <span style="background:${colors[i]}20;color:${colors[i]};padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700;flex-shrink:0;margin-left:8px">${count} ครั้ง</span>
+          </div>
+          <div style="height:6px;background:var(--g2);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${colors[i]};border-radius:3px;transition:width .5s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ══ RANKING ══
+  const byStaff = {};
+  data.filter(s => s.status !== 'pending').forEach(s => {
+    if(!byStaff[s.staffName]) byStaff[s.staffName] = { total:0, pass:0, compSum:0 };
+    byStaff[s.staffName].total++;
+    if(s.status==='pass'||s.status==='partial') byStaff[s.staffName].pass++;
+    byStaff[s.staffName].compSum += calcCompletion(s);
+  });
+  const ranked = Object.entries(byStaff)
+    .map(([n,d]) => ({ name:n, ...d, rate: Math.round(d.pass/d.total*100), avg: Math.round(d.compSum/d.total) }))
+    .sort((a,b) => b.rate - a.rate || b.avg - a.avg);
+  const rt = document.getElementById('rankTable');
+  if(rt) {
+    if(ranked.length === 0) {
+      rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
+    } else {
+      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ผ่าน/ทั้งหมด</th><th>อัตราผ่าน</th><th>เฉลี่ยสมบูรณ์</th></tr></thead><tbody>
+      ${ranked.map((d,i) => `<tr>
+        <td><strong style="font-size:18px">${['🥇','🥈','🥉'][i]||'#'+(i+1)}</strong></td>
+        <td style="font-weight:600">${d.name}</td>
+        <td>${d.pass}/${d.total}</td>
+        <td><span class="tag ${d.rate>=80?'tp':d.rate>=60?'tw2':'tf'}">${d.rate}%</span></td>
+        <td><span style="font-size:13px;font-weight:700;color:${d.avg>=80?'var(--g)':d.avg>=60?'var(--o)':'var(--r)'}">${d.avg}%</span></td>
+      </tr>`).join('')}</tbody></table>`;
+    }
+  }
+
+  // ══ สรุปรายเดือน ══
+  const byMonth = {};
+  data.forEach(s => {
+    const m = s.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, compSum:0 };
+    byMonth[m].total++;
+    if(s.status==='pass'||s.status==='partial') byMonth[m].pass++;
+    if(s.status==='pending') byMonth[m].pending++;
+    byMonth[m].compSum += calcCompletion(s);
+  });
+  const months = Object.entries(byMonth).sort((a,b) => b[0] > a[0] ? 1 : -1).slice(0,6);
+  const mt = document.getElementById('monthlyTable');
+  if(mt) {
+    if(months.length === 0) {
+      mt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูล</p>';
+    } else {
+      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>ผ่าน</th><th>รอประเมิน</th><th>เฉลี่ยสมบูรณ์</th><th>อัตราผ่าน</th></tr></thead><tbody>
+      ${months.map(([m, d]) => {
+        const reviewed = d.total - d.pending;
+        const rate = reviewed > 0 ? Math.round(d.pass/reviewed*100) : 0;
+        const avg  = d.total > 0 ? Math.round(d.compSum/d.total) : 0;
+        const [y,mo] = m.split('-');
+        const thYear = parseInt(y)+543;
+        const moNames = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        return `<tr>
+          <td style="font-weight:600">${moNames[parseInt(mo)]} ${thYear}</td>
+          <td>${d.total}</td>
+          <td style="color:var(--g);font-weight:600">${d.pass}</td>
+          <td style="color:#856404">${d.pending}</td>
+          <td><span style="color:${avg>=80?'var(--g)':avg>=60?'var(--o)':'var(--r)'};font-weight:700">${avg}%</span></td>
+          <td><span class="tag ${rate>=80?'tp':rate>=60?'tw2':'tf'}">${rate}%</span></td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+    }
+  }
+
+  // restore scroll หลัง render เสร็จ
+  if(mainEl && isDashVisible) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        mainEl.scrollTop = savedTop;
+      });
+    });
+  }
+}
+
+function exportDashboardPDF(){const element=document.getElementById('view-dashboard');if(!element)return;showToast('⏳ กำลังเตรียมไฟล์ PDF...','warning');const opt={margin:10,filename:`Dashboard_PT_${fmtDate(new Date())}.pdf`,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};html2pdf().set(opt).from(element).save().then(()=>showToast('✅ ดาวน์โหลด PDF เรียบร้อย','success')).catch(()=>showToast('❌ เกิดข้อผิดพลาด','error'));}
+
+// ══ SETTINGS ══
+function renderSettings(){
+  // ถ้าไม่ได้ login ไม่ render — ป้องกันการเห็นข้อมูล
+  if(!isSettingsLoggedIn) return;
+  const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${n}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
+  const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${n}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
+}
+
+async function addStaff(){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newStaffName').value.trim();if(!n)return;if(staffList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');staffList.push(n);document.getElementById('newStaffName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('✅ เพิ่มผู้ช่วยแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){staffList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+async function removeStaff(i){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${staffList[i]}" ใช่หรือไม่?`,async()=>{const removed=staffList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){staffList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+async function addPT(){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newPTName').value.trim();if(!n)return;if(ptList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');ptList.push(n);document.getElementById('newPTName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('✅ เพิ่มนักกายภาพแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){ptList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+async function removePT(i){
+  if(!isSettingsLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${ptList[i]}" ใช่หรือไม่?`,async()=>{const removed=ptList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){ptList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+function updateStaffDropdown(){[document.getElementById('staffSelect'),document.getElementById('staffSelectMobile')].forEach(sel=>{if(!sel)return;const cur=sel.value;const placeholder=sel.id==='staffSelectMobile'?'— เลือกชื่อผู้ช่วย —':'— เลือกชื่อ —';sel.innerHTML=`<option value="">${placeholder}</option>`+staffList.map((n,i)=>`<option value="s${i}"${cur===`s${i}`?' selected':''}>${n}</option>`).join('');});}
+function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');if(!sel)return;sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+ptList.map(n=>`<option value="${n}">${n}</option>`).join('');}
+
+// ══ ADMIN ══
+function checkAdminAuth(){if(isAdminLoggedIn){document.getElementById('adminLoginSec').style.display='none';document.getElementById('adminDashSec').style.display='block';renderAdminTable();
+    const pd=document.getElementById('currentPinDisplay');
+    if(pd) pd.textContent=localStorage.getItem('sup_pin')||'2412';}else{document.getElementById('adminLoginSec').style.display='block';document.getElementById('adminDashSec').style.display='none';}}
+function adminLogin(){const email=document.getElementById('admEmail').value.trim();const pwd=document.getElementById('admPwd').value.trim();if(email===(localStorage.getItem('admin_email')||'ptkth11199@gmail.com')&&pwd===(localStorage.getItem('admin_pwd')||'PT1119911199')){isAdminLoggedIn=true;document.getElementById('admPwd').value='';showToast('✅ เข้าสู่ระบบแอดมินสำเร็จ','success');checkAdminAuth();}else{showToast('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง','error');}}
+function adminLogout(){isAdminLoggedIn=false;showToast('🚪 ออกจากระบบแล้ว','success');checkAdminAuth();}
+function renderAdminTable(){const tb=document.getElementById('adminTableBody');if(!tb)return;if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}let data=[...submissions].reverse();tb.innerHTML=data.map(s=>{const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';return`<tr><td>${s.date} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${s.staffName}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;}).join('');}
+async function clearAllData(){showConfirm('🚨 ล้างข้อมูลทั้งหมดในระบบ? (กู้คืนไม่ได้!)',async()=>{try{await window.FB.fbClearSubmissions();submissions=[];renderAdminTable();loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว','success');}catch(e){showToast('❌ ล้างไม่สำเร็จ: '+e.message,'error');}});}
+
+// ══ MODAL & CONFIRM ══
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+window.addEventListener('click',function(e){if(e.target.classList.contains('mo'))e.target.classList.remove('open');});
+let confirmCallback=null;
+function showConfirm(msg,callback){document.getElementById('confirmMsg').textContent=msg;confirmCallback=callback;document.getElementById('confirmModal').classList.add('open');}
+function closeConfirm(result){document.getElementById('confirmModal').classList.remove('open');if(result&&confirmCallback)confirmCallback();}
+document.getElementById('confirmYesBtn').addEventListener('click',()=>closeConfirm(true));
+
+// ══ TOAST ══
+let toastTimer;
+function showToast(msg,type){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.className='toast show'+(type?' '+type:'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},3000);}
+
+// ══ SHARE ══
+function copyAppLink() {
+  const link = 'https://ptkth14.github.io/pt-kth/';
+  navigator.clipboard.writeText(link).then(() => {
+    document.getElementById('copyAppLinkBtn').textContent = '✅ Copied!';
+    document.getElementById('copyAppLinkBtn').classList.add('copied');
+    showToast('📋 Copy ลิงก์แล้ว', 'success');
+  });
+}
+function shareToLine() {
+  const link = 'https://ptkth14.github.io/pt-kth/';
+  const msg = encodeURIComponent('📋 PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด\nมี Checklist ใหม่รอประเมิน → เปิดแอปที่หน้า "ประเมินผล" ได้เลยจ้ะ\n🔗 ' + link);
+  window.open('https://line.me/R/share?text=' + msg, '_blank');
+}
+
+// ══ SUPERVISOR ══
+let currentSupTab = 'daily';
+let isSupLoggedIn = false;
+function checkSupPin() {
+  const pin = document.getElementById('supPin').value;
+  const errEl = document.getElementById('supPinError');
+  const SUP_PIN = localStorage.getItem('sup_pin') || '2412';
+  if (pin === SUP_PIN) {
+    isSupLoggedIn = true;
+    document.getElementById('supLoginSec').style.display = 'none';
+    document.getElementById('supMainSec').style.display = 'block';
+    updateSupFilter();
+    loadSupervisor();
+    errEl.style.display = 'none';
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('supPin').value = '';
+    document.getElementById('supPin').style.borderColor = 'var(--r)';
+  }
+}
+
+function setSupTab(tab) {
+  currentSupTab = tab;
+  document.querySelectorAll('.sup-tab').forEach(b => {
+    const isActive = b.id === 'supTab-' + tab;
+    b.style.color = isActive ? 'var(--bd)' : 'var(--g6)';
+    b.style.fontWeight = isActive ? '700' : '600';
+    b.style.borderBottom = isActive ? '3px solid var(--bd)' : '3px solid transparent';
+  });
+  document.getElementById('supView-daily').style.display  = tab === 'daily'  ? 'block' : 'none';
+  document.getElementById('supView-person').style.display = tab === 'person' ? 'block' : 'none';
+  loadSupervisor();
+}
+
+function resetSupFilter() {
+  document.getElementById('supStartDate').value = '';
+  document.getElementById('supEndDate').value = '';
+  document.getElementById('supFilterStaff').value = 'all';
+  loadSupervisor();
+}
+
+function updateSupFilter() {
+  const sel = document.getElementById('supFilterStaff');
+  if (!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(submissions.map(s => s.staffName))];
+  sel.innerHTML = '<option value="all">ผู้ช่วยทั้งหมด</option>' +
+    names.map(n => `<option value="${n}"${cur===n?' selected':''}>${n}</option>`).join('');
+}
+
+function loadSupervisor() {
+  updateSupFilter();
+  const fStart = document.getElementById('supStartDate')?.value;
+  const fEnd   = document.getElementById('supEndDate')?.value;
+  const fStaff = document.getElementById('supFilterStaff')?.value || 'all';
+
+  let data = [...submissions].reverse().filter(s => isDateInRange(s.date, fStart, fEnd));
+  if (fStaff !== 'all') data = data.filter(s => s.staffName === fStaff);
+
+  if (currentSupTab === 'daily') loadSupDaily(data);
+  else loadSupPerson(data);
+}
+
+function loadSupDaily(data) {
+  const tb = document.getElementById('supDailyBody');
+  if (!tb) return;
+  if (data.length === 0) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(s => {
+    const tot = Object.keys(s.snap).length;
+    const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
+    const pct = Math.round(dn/tot*100);
+    const bar = `<div style="display:flex;align-items:center;gap:6px">
+      <div style="width:60px;height:6px;background:var(--g2);border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)'};border-radius:3px"></div>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span>
+    </div>`;
+    const stTag = s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
+    const vrTag = s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
+    return `<tr>
+      <td style="white-space:nowrap">${s.date}</td>
+      <td><span style="font-size:11px">${shiftLabel(s.shift||'morning')}</span></td>
+      <td style="font-weight:600">${s.staffName}</td>
+      <td>${bar}</td>
+      <td>${stTag}</td>
+      <td>${vrTag}</td>
+      <td style="font-size:12px;color:var(--g6)">${s.ptReviewer||'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-out" style="padding:3px 8px;font-size:12px" onclick="showDetail(${s.id})">👁</button>
+        ${s.ptSupervisorNote?`<button class="btn btn-out" style="padding:3px 8px;font-size:12px;color:#9C27B0;border-color:#9C27B0" onclick="showSupNote(${s.id})" title="มีหมายเหตุถึงหัวหน้า">🔒</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function loadSupPerson(data) {
+  const wrap = document.getElementById('supPersonCards');
+  if (!wrap) return;
+
+  // จัดกลุ่มตามชื่อ
+  const byStaff = {};
+  data.forEach(s => {
+    if (!byStaff[s.staffName]) byStaff[s.staffName] = [];
+    byStaff[s.staffName].push(s);
   });
 
-  function countWeekdaysClient(startStr, endStr) {
-    let count = 0;
-    const cur = new Date(startStr + 'T00:00:00');
-    const end = new Date(endStr + 'T00:00:00');
-    while (cur <= end) {
-      const d = cur.getDay();
-      if (d !== 0 && d !== 6) count++;
-      cur.setDate(cur.getDate() + 1);
-    }
-    return count;
+  if (Object.keys(byStaff).length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--g4);padding:40px;font-size:14px">ไม่พบข้อมูล</div>';
+    return;
   }
 
-  // ===== สรุปการลา =====
-  function loadSummary() {
-    const btn = document.getElementById('btnLoadSummary');
-    setLoading(btn, true, 'กำลังโหลด...');
-    const yearStr = String(document.getElementById('yearPicker').value);
-    document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" class="empty">กำลังโหลด...</td></tr>';
-    google.script.run.withSuccessHandler(res => {
-      setLoading(btn, false);
-      renderSummary(res);
-    }).withFailureHandler(err => { setLoading(btn, false); onServerError(err); }).getAnnualSummary(yearStr);
-  }
+  wrap.innerHTML = Object.entries(byStaff).map(([name, records]) => {
+    const total    = records.length;
+    const reviewed = records.filter(s => s.status !== 'pending').length;
+    const passed   = records.filter(s => s.status === 'pass' || s.status === 'partial').length;
+    const failed   = records.filter(s => s.status === 'fail').length;
+    const pending  = records.filter(s => s.status === 'pending').length;
+    const passRate = reviewed > 0 ? Math.round(passed/reviewed*100) : 0;
 
-  const typeShort = { 'ลาป่วย':'ป่วย', 'ลากิจส่วนตัว':'กิจ', 'ลาพักผ่อน':'พักผ่อน', 'ลาคลอดบุตร':'คลอด' };
-  const typeDotColor = { 'ลาป่วย': 'var(--cal-sick)', 'ลากิจส่วนตัว': 'var(--cal-personal)', 'ลาพักผ่อน': 'var(--cal-vacation)', 'ลาคลอดบุตร': 'var(--cal-maternity)' };
-  const thaiMonthsFull = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  const thaiWeekdays = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+    // เฉลี่ยความสมบูรณ์
+    const avgComplete = Math.round(
+      records.reduce((sum, s) => {
+        const tot = Object.keys(s.snap).length;
+        const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
+        return sum + (tot>0 ? dn/tot*100 : 0);
+      }, 0) / total
+    );
 
-  function changeCalendarMonth(delta) {
-    calMonth += delta;
-    if (calMonth > 12) { calMonth = 1; calYear++; }
-    if (calMonth < 1) { calMonth = 12; calYear--; }
-    selectedDay = null;
-    loadCalendar();
-  }
-
-  function loadCalendar() {
-    document.getElementById('calGrid').innerHTML = '<div class="empty">กำลังโหลด...</div>';
-    document.getElementById('calLabel').textContent = thaiMonthsFull[calMonth-1] + ' ' + (calYear + 543);
-    google.script.run.withSuccessHandler(res => {
-      calendarData = res;
-      renderCalendar();
-    }).withFailureHandler(onServerError).getCalendarData(String(calYear), String(calMonth));
-  }
-
-  function renderCalendar() {
-    document.getElementById('calLabel').textContent = thaiMonthsFull[calMonth-1] + ' ' + (calYear + 543);
-    const grid = document.getElementById('calGrid');
-    const now = new Date();
-    const isCurrentMonth = (now.getFullYear() === calYear && now.getMonth()+1 === calMonth);
-
-    let html = thaiWeekdays.map(w => '<div class="cal-weekday">' + w + '</div>').join('');
-
-    for (let i = 0; i < calendarData.firstDayWeekday; i++) html += '<div class="cal-cell empty-cell"></div>';
-
-    for (let d = 1; d <= calendarData.daysInMonth; d++) {
-      const dayEntries = calendarData.entries[d] || [];
-      const uniqueTypes = [...new Set(dayEntries.map(e => e.leaveType))];
-      const dots = uniqueTypes.map(t => '<span class="cal-dot" style="background:' + typeDotColor[t] + '"></span>').join('');
-      const isToday = isCurrentMonth && now.getDate() === d;
-      const isSelected = selectedDay === d;
-      html += '<div class="cal-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '') + '" onclick="selectCalDay(' + d + ')">' +
-        '<span class="cal-daynum">' + d + '</span>' +
-        '<div class="cal-dots">' + dots + '</div>' +
-      '</div>';
-    }
-    grid.innerHTML = html;
-
-    if (selectedDay) renderCalDetail(selectedDay);
-  }
-
-  function selectCalDay(d) {
-    selectedDay = d;
-    renderCalendar();
-    renderCalDetail(d);
-  }
-
-  function renderCalDetail(d) {
-    const dateStr = calYear + '-' + String(calMonth).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    document.getElementById('calDetailTitle').textContent = 'รายละเอียดวันที่ ' + d + ' ' + thaiMonthsFull[calMonth-1] + ' ' + (calYear+543);
-    const entries = (calendarData.entries[d] || []);
-    const area = document.getElementById('calDetailArea');
-    if (!entries.length) { area.innerHTML = '<div class="empty">วันนี้ไม่มีใครลา</div>'; return; }
-    area.innerHTML = entries.map(e =>
-      '<div class="cal-detail-item">' +
-        '<span class="c-name">' + e.staffName + '</span> — ' +
-        '<span class="c-type">' + e.leaveType + (e.isHalfDay ? ' (ครึ่งวัน)' : '') + '</span>' +
-      '</div>'
-    ).join('');
-  }
-
-  function typeCellHtml(t) {
-    if (t.status === 'no_quota') {
-      return '<div class="type-cell"><span class="t-used">' + t.usedDays.toFixed(1) + '</span><br>' +
-        '<span class="chip nopay">' + (t.paidStatus || 'ไม่มีสิทธิ์') + '</span></div>';
-    }
-    let chipClass = 'ok', chipText = 'ปกติ';
-    if (t.status === 'near') { chipClass = 'near'; chipText = 'ใกล้เต็ม'; }
-    if (t.status === 'over') { chipClass = 'over'; chipText = 'เกิน ' + Math.abs(t.remainingDays).toFixed(1); }
-    return '<div class="type-cell"><span class="t-used">' + t.usedDays.toFixed(1) + '</span>' +
-      '<span class="t-quota">/' + t.quotaDays + '</span><br><span class="chip ' + chipClass + '">' + chipText + '</span></div>';
-  }
-
-  function renderSummary(result) {
-    currentSummaryData = result;
-    document.getElementById('summaryYearLabel').textContent = 'ปี พ.ศ. ' + (Number(result.year) + 543);
-    document.getElementById('registerFoot').textContent = 'ออกรายงาน ณ วันที่ ' + new Date().toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
-    applyJobGroupFilter();
-  }
-
-  function applyJobGroupFilter() {
-    if (!currentSummaryData) return;
-    const filterVal = document.getElementById('jobGroupFilter').value;
-    const filtered = filterVal === 'all'
-      ? currentSummaryData.data
-      : currentSummaryData.data.filter(row => row.jobGroup === filterVal);
-    renderSummaryRows(filtered);
-  }
-
-  function renderSummaryRows(rows) {
-    const body = document.getElementById('summaryBody');
-    if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">ไม่พบเจ้าหน้าที่ตามเงื่อนไขที่เลือก</td></tr>'; return; }
-
-    body.innerHTML = rows.map((row, idx) => {
-      const byTypeMap = {};
-      row.byType.forEach(t => byTypeMap[t.leaveType] = t);
-
-      const mainRow = '<tr>' +
-        '<td class="name">' + row.name + '<span class="name-sub">' + (row.jobGroup||'') + (row.personnelType ? ' · ' + row.personnelType : '') + '</span></td>' +
-        '<td class="num">' + typeCellHtml(byTypeMap['ลาป่วย']) + '</td>' +
-        '<td class="num">' + typeCellHtml(byTypeMap['ลากิจส่วนตัว']) + '</td>' +
-        '<td class="num">' + typeCellHtml(byTypeMap['ลาพักผ่อน']) + '</td>' +
-        '<td class="num">' + typeCellHtml(byTypeMap['ลาคลอดบุตร']) + '</td>' +
-        '<td class="hist-col"><button type="button" class="hist-toggle" id="caret-' + idx + '" onclick="toggleDetail(' + idx + ')">▾</button></td>' +
-        '</tr>';
-
-      let detailContent;
-      if (!row.records.length) {
-        detailContent = '<div class="detail-empty">ยังไม่มีประวัติการลาปีนี้</div>';
-      } else {
-        detailContent = row.records.map(r => {
-          const isHalf = (r.startDate === r.endDate && r.totalDays === 0.5);
-          return '<div class="detail-item">' +
-            '<span><span class="d-main">' + r.leaveType + ' · ' + r.startDate + (r.endDate !== r.startDate ? ' ถึง ' + r.endDate : '') + ' (' + r.totalDays + ' วัน)</span>' +
-            '<span class="d-sub">บันทึกโดย ' + r.recordedBy + (r.reason ? ' · ' + escapeHtml(r.reason) : '') + '</span></span>' +
-            '<span style="display:flex;gap:4px;flex-shrink:0">' +
-              '<button type="button" class="detail-del" style="color:var(--ink);border-color:var(--ink)" onclick="openEditRecordModal(\'' + r.id + '\',\'' + r.leaveType + '\',\'' + r.startDate + '\',\'' + r.endDate + '\',' + isHalf + ',\'' + escapeHtml(r.reason).replace(/'/g,"\\'").replace(/"/g,'&quot;') + '\')">แก้ไข</button>' +
-              '<button type="button" class="detail-del" onclick="openDeleteRecordModal(\'' + r.id + '\')">ลบ</button>' +
-            '</span>' +
-          '</div>';
-        }).join('');
-      }
-      const detailRow = '<tr class="detail-row" id="detail-' + idx + '"><td colspan="6"><div class="detail-inner">' + detailContent + '</div></td></tr>';
-      return mainRow + detailRow;
-    }).join('');
-  }
-
-  function toggleDetail(idx) {
-    const row = document.getElementById('detail-' + idx);
-    const caret = document.getElementById('caret-' + idx);
-    const isOpen = row.classList.contains('open');
-    row.classList.toggle('open', !isOpen);
-    if (caret) caret.textContent = isOpen ? '▾' : '▴';
-  }
-
-  function captureSummary() {
-    const el = document.getElementById('captureArea');
-    html2canvas(el, {backgroundColor:'#ffffff', scale:2}).then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'สรุปการลา-' + (currentSummaryData ? currentSummaryData.year : 'summary') + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      showToast('บันทึกภาพแล้ว นำไปแชร์ในกลุ่มได้เลย');
+    // รายการที่มีปัญหาบ่อย
+    const issueCounts = {};
+    records.forEach(s => {
+      Object.keys(s.snap).forEach(k => {
+        const st = s.snap[k].status;
+        const pt = s.ptEvals && s.ptEvals[k];
+        if (pt==='fail' || st==='na' || st!=='done') {
+          const parts = k.split('-'); const g = parts[0]; const i = parts[1];
+          if (CL[g] && CL[g].items[i]) {
+            let text = CL[g].items[i].replace(/\([^)]+\)/g,'').trim();
+            if (text.length > 30) text = text.substring(0,30)+'...';
+            issueCounts[text] = (issueCounts[text]||0)+1;
+          }
+        }
+      });
     });
-  }
+    const topIssues = Object.entries(issueCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
 
-  let pendingDeleteId = null;
-  function openDeleteRecordModal(recordId) { pendingDeleteId = recordId; openPinModal('deleteRecord'); }
+    const rateColor = passRate>=80?'var(--g)':passRate>=60?'var(--o)':'var(--r)';
 
-  // ===== แก้ไขรายการลา =====
-  let pendingEditRecordId = null;
-  function openEditRecordModal(recordId, leaveType, startDate, endDate, isHalfDay, reason) {
-    pendingEditRecordId = recordId;
-    document.getElementById('editLeaveType').value = leaveType;
-    document.getElementById('editStart').value = startDate;
-    document.getElementById('editEnd').value = endDate;
-    document.getElementById('editHalfDay').checked = isHalfDay;
-    document.getElementById('editReason').value = reason || '';
-    onEditDateChange();
-    document.getElementById('editModal').classList.add('show');
+    return `<div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:var(--bd)">${name}</div>
+            <div style="font-size:12px;color:var(--g6)">ส่ง Checklist ทั้งหมด ${total} ครั้ง</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:28px;font-weight:800;color:${rateColor}">${passRate}%</div>
+          <div style="font-size:12px;color:var(--g6)">อัตราผ่าน</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px">
+        <div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--bd)">${avgComplete}%</div>
+          <div style="font-size:11px;color:var(--g6)">เฉลี่ยสมบูรณ์</div>
+        </div>
+        <div style="background:var(--gb);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--g)">${passed}</div>
+          <div style="font-size:11px;color:var(--g6)">ผ่าน</div>
+        </div>
+        <div style="background:var(--rb);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--r)">${failed}</div>
+          <div style="font-size:11px;color:var(--g6)">ไม่ผ่าน</div>
+        </div>
+        <div style="background:var(--yb);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#856404">${pending}</div>
+          <div style="font-size:11px;color:var(--g6)">รอประเมิน</div>
+        </div>
+      </div>
+
+      ${topIssues.length > 0 ? `
+      <div style="background:var(--g1);border-radius:8px;padding:10px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">⚠️ รายการที่มีปัญหาบ่อย</div>
+        ${topIssues.map(([text, count]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g2);font-size:13px">
+          <span>${text}</span>
+          <span style="background:var(--rb);color:var(--r);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">${count} ครั้ง</span>
+        </div>`).join('')}
+      </div>` : '<div style="font-size:13px;color:var(--g);text-align:center;padding:8px">✅ ไม่พบรายการที่มีปัญหา</div>'}
+
+      ${(() => {
+        const notes = records.filter(r => r.ptSupervisorNote && r.ptSupervisorNote.trim());
+        if(notes.length === 0) return '';
+        return `<div style="background:#F3E5F5;border:1.5px solid #9C27B0;border-radius:8px;padding:12px;margin-top:8px">
+          <div style="font-size:12px;font-weight:800;color:#9C27B0;margin-bottom:10px">🔒 หมายเหตุจาก PT ถึงหัวหน้างาน (${notes.length} รายการ)</div>
+          ${notes.map(r => `
+            <div style="border-bottom:1px solid rgba(156,39,176,.2);padding:8px 0;font-size:13px">
+              <div style="font-size:11.5px;color:#9C27B0;font-weight:700;margin-bottom:4px">
+                📅 ${r.date} | ${r.shift==='morning'?'🌅 เวรเช้า':'🌙 เวรบ่าย'} — ประเมินโดย ${r.ptReviewer||'—'}
+              </div>
+              <div style="color:#4A148C;line-height:1.6">${r.ptSupervisorNote}</div>
+            </div>`).join('')}
+        </div>`;
+      })()}
+    </div>`;
+  }).join('');
+}
+
+
+
+// PWA Service Worker
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+
+// แสดง install prompt (Android Chrome)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // แสดง banner
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'none';
+  deferredPrompt = null;
+});
+
+function installApp() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
   }
-  function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
-  function onEditDateChange() {
-    const start = document.getElementById('editStart').value;
-    const end = document.getElementById('editEnd').value;
-    const halfRow = document.getElementById('editHalfDayRow');
-    const preview = document.getElementById('editDaysPreview');
-    if (!start || !end) { preview.textContent = ''; return; }
-    if (end < start) { preview.textContent = '⚠️ วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม'; halfRow.style.display = 'none'; return; }
-    if (start === end) {
-      halfRow.style.display = 'block';
-      const isHalf = document.getElementById('editHalfDay').checked;
-      preview.textContent = 'รวม ' + (isHalf ? '0.5' : '1') + ' วัน';
-    } else {
-      halfRow.style.display = 'none';
-      document.getElementById('editHalfDay').checked = false;
-      preview.textContent = 'รวม ' + countWeekdaysClient(start, end) + ' วันทำการ (ประมาณการ ยังไม่หักวันหยุดนักขัตฤกษ์ ค่าจริงจะคำนวณตอนบันทึก)';
+}
+
+// ══ SETTINGS LOGIN ══
+let isSettingsLoggedIn = false;
+function settingsLogin() {
+  const email = document.getElementById('settingsEmail').value.trim();
+  const pwd   = document.getElementById('settingsPwd').value.trim();
+  const ADMIN_EMAIL='ptkth11199@gmail.com',ADMIN_PWD='PT1119911199';
+  if(email===ADMIN_EMAIL && pwd===ADMIN_PWD) {
+    isSettingsLoggedIn = true;
+    document.getElementById('settingsLoginSec').style.display = 'none';
+    document.getElementById('settingsMainSec').style.display = 'block';
+    renderSettings();
+    showToast('✅ เข้าสู่โหมดแอดมินแล้ว','success');
+  } else {
+    showToast('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง','error');
+  }
+}
+function settingsLogout() {
+  isSettingsLoggedIn = false;
+  document.getElementById('settingsLoginSec').style.display = 'block';
+  document.getElementById('settingsMainSec').style.display = 'none';
+  document.getElementById('settingsEmail').value = '';
+  document.getElementById('settingsPwd').value = '';
+  showToast('🚪 ออกจากโหมดแอดมินแล้ว','success');
+}
+
+// ══ SHOW SUP NOTE ══
+function showSupNote(id) {
+  const s = submissions.find(x => x.id === id);
+  if(!s || !s.ptSupervisorNote) return;
+  const el = document.getElementById('supNoteContent');
+  if(el) {
+    el.innerHTML = `
+      <div style="margin-bottom:10px;font-size:12px;color:#9C27B0;font-weight:700">
+        📋 ${s.staffName} — ${thaiDate(s.date)} | ${shiftLabel(s.shift||'morning')}
+      </div>
+      <div style="white-space:pre-wrap">${s.ptSupervisorNote}</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--g4)">ประเมินโดย: ${s.ptReviewer||'—'} เมื่อ ${s.ptReviewTimeDisplay||'—'}</div>`;
+  }
+  document.getElementById('supNoteModal').classList.add('open');
+}
+
+// ══ FINE SYSTEM ══
+function showFineReport() {
+  const el = document.getElementById('fineReportContent');
+  if(!el) return;
+  const fStart = (document.getElementById('supStartDate')?.value || fmtDate(new Date()).slice(0,7)+'-01');
+  const rows = [['ประเภท','วันที่','จำนวนเงิน']];
+  rows.push(['รายงานปรับเงิน','ดูในแอป','Export จากหน้าค่าปรับ']);
+  const csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c)+'"'; }).join(','); }).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Fine_Report.csv';
+  a.click();
+  showToast('📥 Export CSV แล้ว','success');
+}
+
+function checkFineAlert() {
+  // เช็คเฉพาะวันนี้
+  const today = fmtDate(new Date());
+  const hasTodaySubmit  = submissions.some(s => s.date === today);
+  const hasTodayReview  = submissions.some(s => s.date === today && s.status !== 'pending');
+
+  const banner = document.getElementById('fineBanner');
+  const msg    = document.getElementById('fineBannerMsg');
+  if(!banner || !msg) return;
+
+  const alerts = [];
+  if(!hasTodaySubmit) alerts.push('⚠️ วันนี้ยังไม่มีการบันทึก Checklist');
+  if(hasTodaySubmit && !hasTodayReview) alerts.push('⏳ มี Checklist รอ PT ประเมินอยู่');
+
+  if(alerts.length > 0) {
+    msg.textContent = alerts.join(' | ') + ' — หากไม่ดำเนินการ ปรับ 10 บาท/คน';
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function exportFineCSV() {
+  const el = document.getElementById('fineReportContent');
+  if(!el) return;
+  const fStart = document.getElementById('supStartDate')?.value || fmtDate(new Date()).slice(0,7)+'-01';
+  const rows = [['ประเภท','วันที่','จำนวนเงิน']];
+  const missingDays = submissions; // simplified
+  rows.push(['รายงานปรับเงิน','ดูในแอป','Export จากหน้าหัวหน้างาน']);
+  const csv = rows.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `Fine_Report_${fStart}.csv`; a.click();
+  showToast('📥 Export CSV แล้ว','success');
+}
+
+
+// ══ PIN MANAGEMENT ══
+let supervisorPin = localStorage.getItem('sup_pin') || '2412';
+
+function changeSupervisorPin() {
+  const newPin     = (document.getElementById('newPinInput')?.value||'').trim();
+  const confirmPin = (document.getElementById('confirmPinInput')?.value||'').trim();
+  if(!newPin || newPin.length < 4) return showToast('⚠️ รหัส PIN ต้องมีอย่างน้อย 4 ตัว','warning');
+  if(newPin !== confirmPin) return showToast('⚠️ รหัสทั้งสองช่องไม่ตรงกัน','error');
+  localStorage.setItem('sup_pin', newPin);
+  const el1=document.getElementById('newPinInput');
+  const el2=document.getElementById('confirmPinInput');
+  const elD=document.getElementById('currentPinDisplay');
+  if(el1) el1.value='';
+  if(el2) el2.value='';
+  if(elD) elD.textContent=newPin;
+  showToast('✅ เปลี่ยนรหัส PIN สำเร็จ! รหัสใหม่: '+newPin,'success');
+}
+
+
+// ══ FINE SYSTEM ══
+let isFineLoggedIn = false;
+
+function checkFineLogin() {
+  const pin = (document.getElementById('finePinInput')?.value||'').trim();
+  const supPin   = localStorage.getItem('sup_pin')||'2412';
+  const adminPwd = 'PT1119911199';
+  if(pin === supPin || pin === adminPwd) {
+    isFineLoggedIn = true;
+    document.getElementById('fineLoginSec').style.display = 'none';
+    document.getElementById('fineMainSec').style.display  = 'block';
+    document.getElementById('finePinError').style.display = 'none';
+    fineRecords = JSON.parse(localStorage.getItem('fine_records')||'[]');
+    setFineThisMonth();
+    renderFineRecords();
+    // sync Firebase
+    if(window.FB && window.FB.fbGetFineRecords) {
+      window.FB.fbGetFineRecords().then(fbRecs => {
+        if(fbRecs && fbRecs.length > 0) {
+          fineRecords = fbRecs.sort((a,b) => b.id - a.id);
+          localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+          renderFineRecords();
+        }
+      }).catch(()=>{});
     }
+  } else {
+    document.getElementById('finePinError').style.display = 'block';
+    document.getElementById('finePinInput').value = '';
+    showToast('❌ รหัสไม่ถูกต้อง','error');
   }
-  function submitEditRecord() {
-    const start = document.getElementById('editStart').value;
-    const end = document.getElementById('editEnd').value;
-    if (!start || !end || end < start) { showToast('กรุณาตรวจสอบวันที่ให้ถูกต้อง'); return; }
-    closeEditModal();
-    openPinModal('editRecord');
-  }
+}
 
-  // ===== จัดการเจ้าหน้าที่ =====
-  function renderStaffList(list) {
-    const area = document.getElementById('staffListArea');
-    if (!list.length) { area.innerHTML = '<div class="empty">ยังไม่มีเจ้าหน้าที่</div>'; return; }
-    area.innerHTML = list.map(s => {
-      const jobOpts = referenceData.jobGroups.map(g => '<option value="'+g+'"'+(g===s.jobGroup?' selected':'')+'>'+g+'</option>').join('');
-      const typeOpts = referenceData.personnelTypes.map(p => '<option value="'+p+'"'+(p===s.personnelType?' selected':'')+'>'+p+'</option>').join('');
-      return '<div class="staff-list-item">' +
-        '<div class="staff-list-top">' +
-          '<span>' + s.name + (s.active ? '' : ' <span class="chip nopay">ปิดใช้งาน</span>') +
-            (s.hasPin ? ' <span class="chip ok">ตั้ง PIN แล้ว</span>' : ' <span class="chip near">ยังไม่มี PIN</span>') + '</span>' +
-          '<button class="' + (s.active ? 'danger' : 'secondary') + '" style="padding:5px 12px;font-size:12px;width:auto" onclick="toggleStaff(this,\'' + s.id + '\')">' + (s.active ? 'ปิดใช้งาน' : 'เปิดใช้งาน') + '</button>' +
-        '</div>' +
-        '<div class="row" style="margin-top:6px">' +
-          '<select id="jobsel-' + s.id + '" style="font-size:12px;padding:5px 8px">' + jobOpts + '</select>' +
-          '<select id="typesel-' + s.id + '" style="font-size:12px;padding:5px 8px;flex:1">' + typeOpts + '</select>' +
-        '</div>' +
-        '<div class="row" style="margin-top:6px">' +
-          '<input type="text" id="pinsel-' + s.id + '" placeholder="ตั้ง PIN ใหม่ (เว้นว่าง=ไม่เปลี่ยน)" style="font-size:12px;padding:5px 8px;flex:1" inputmode="numeric">' +
-          '<button class="secondary" style="font-size:12px;padding:5px 10px;width:auto" onclick="saveStaffInfo(this,\'' + s.id + '\')">บันทึก</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
+function fineLogout() {
+  isFineLoggedIn = false;
+  document.getElementById('fineLoginSec').style.display = 'block';
+  document.getElementById('fineMainSec').style.display  = 'none';
+  document.getElementById('finePinInput').value = '';
+}
 
-  function toggleStaff(btnEl, staffId) {
-    if (!lastAdminPin) { showToast('กรุณาโหลดรายชื่อใหม่อีกครั้ง'); return; }
-    setLoading(btnEl, true, '...');
-    google.script.run.withSuccessHandler(res => {
-      showToast(res.message);
-      google.script.run.withSuccessHandler(renderStaffList).withFailureHandler(onServerError).getAllStaffList();
-      loadStaffDropdown();
-    }).withFailureHandler(err => { setLoading(btnEl, false); onServerError(err); }).toggleStaffActive(staffId, lastAdminPin);
+function setFineThisMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const first = new Date(y, m, 1);
+  const last  = new Date(y, m+1, 0);
+  const sd = document.getElementById('fineStartDate');
+  const ed = document.getElementById('fineEndDate');
+  if(sd) sd.value = fmtDate(first);
+  if(ed) ed.value = fmtDate(last);
+  calcFine();
+}
+
+function calcFine() {
+  const fStart = document.getElementById('fineStartDate')?.value;
+  const fEnd   = document.getElementById('fineEndDate')?.value;
+  const rate   = parseInt(document.getElementById('finePerPerson')?.value||'10');
+  if(!fStart || !fEnd) return showToast('⚠️ เลือกช่วงวันที่ก่อน','warning');
+
+  // สร้าง list วันทำงาน (จันทร์-เสาร์ ยกเว้นอาทิตย์)
+  const workDays = [];
+  const cur = new Date(fStart+'T00:00:00');
+  const endD= new Date(fEnd+'T00:00:00');
+  while(cur <= endD) {
+    if(cur.getDay() !== 0) workDays.push(fmtDate(new Date(cur))); // ไม่นับวันอาทิตย์
+    cur.setDate(cur.getDate()+1);
   }
 
-  function saveStaffInfo(btnEl, staffId) {
-    if (!lastAdminPin) { showToast('กรุณาโหลดรายชื่อใหม่อีกครั้ง'); return; }
-    const jobGroup = document.getElementById('jobsel-' + staffId).value;
-    const personnelType = document.getElementById('typesel-' + staffId).value;
-    const newPin = document.getElementById('pinsel-' + staffId).value;
-    setLoading(btnEl, true, '...');
-    google.script.run.withSuccessHandler(res => {
-      setLoading(btnEl, false);
-      showToast(res.message);
-      document.getElementById('pinsel-' + staffId).value = '';
-    }).withFailureHandler(err => { setLoading(btnEl, false); onServerError(err); }).updateStaffInfo(staffId, jobGroup, personnelType, newPin, lastAdminPin);
+  const subDates      = new Set(submissions.map(s=>s.date));
+  const reviewedDates = new Set(submissions.filter(s=>s.status!=='pending').map(s=>s.date));
+  const sc = staffList.length || 1;
+  const pc = ptList.length   || 1;
+
+  const missingSubmit = workDays.filter(d => !subDates.has(d));
+  const missingReview = workDays.filter(d => subDates.has(d) && !reviewedDates.has(d));
+  const fineStaff     = missingSubmit.length * sc * rate;
+  const finePT        = missingReview.length * pc * rate;
+  const totalFine     = fineStaff + finePT;
+
+  // KPI
+  const kpi = document.getElementById('fineKpi');
+  if(kpi) kpi.innerHTML = `
+    <div class="kc r" style="margin:0"><div class="kn">${missingSubmit.length}</div><div class="kl">วันขาด Checklist</div></div>
+    <div class="kc y" style="margin:0"><div class="kn" style="color:#856404">${missingReview.length}</div><div class="kl">วัน PT ไม่ประเมิน</div></div>
+    <div class="kc" style="margin:0;border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0">฿${fineStaff}</div><div class="kl">ค่าปรับผู้ช่วย</div></div>
+    <div class="kc" style="margin:0;border-left-color:#1565C0"><div class="kn" style="color:#1565C0">฿${finePT}</div><div class="kl">ค่าปรับ PT</div></div>
+    <div class="kc r" style="margin:0;border-left-color:var(--r)"><div class="kn">฿${totalFine}</div><div class="kl">รวมทั้งหมด</div></div>`;
+
+  // Detail
+  const detail = document.getElementById('fineDetail');
+  if(detail) {
+    const moNames = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    detail.innerHTML = `
+    ${missingSubmit.length===0 ?
+      '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:12px">✅ ผู้ช่วยบันทึก Checklist ครบทุกวันทำงาน!</div>' :
+      `<div style="margin-bottom:16px">
+        <h4 style="color:var(--r);margin-bottom:8px;font-size:13.5px">❌ วันที่ผู้ช่วยไม่บันทึก Checklist (${missingSubmit.length} วัน)</h4>
+        <div style="background:var(--rb);border-radius:8px;padding:12px">
+          ${missingSubmit.map(d=>{
+            const dt=new Date(d+'T00:00:00');
+            const dayName=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][dt.getDay()];
+            return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(220,53,69,.15);font-size:13px">
+              <span>${dayName} ${dt.getDate()} ${moNames[dt.getMonth()+1]}</span>
+              <span style="color:var(--r);font-weight:700">฿${sc*rate} (${sc} คน × ${rate}฿)</span>
+            </div>`;}).join('')}
+          <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-weight:700;font-size:13.5px">
+            <span>รวมค่าปรับผู้ช่วย</span><span style="color:var(--r)">฿${fineStaff}</span>
+          </div>
+        </div>
+      </div>`}
+
+    ${missingReview.length===0 ?
+      '<div style="background:var(--gb);padding:12px;border-radius:8px;font-size:13px;color:#155724;margin-bottom:12px">✅ PT ประเมิน Checklist ครบทุกวัน!</div>' :
+      `<div style="margin-bottom:16px">
+        <h4 style="color:var(--o);margin-bottom:8px;font-size:13.5px">⏳ วันที่ PT ยังไม่ประเมิน (${missingReview.length} วัน)</h4>
+        <div style="background:var(--ob);border-radius:8px;padding:12px">
+          ${missingReview.map(d=>{
+            const dt=new Date(d+'T00:00:00');
+            const dayName=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][dt.getDay()];
+            return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(253,126,20,.15);font-size:13px">
+              <span>${dayName} ${dt.getDate()} ${moNames[dt.getMonth()+1]}</span>
+              <span style="color:var(--o);font-weight:700">฿${pc*rate} (${pc} PT × ${rate}฿)</span>
+            </div>`;}).join('')}
+          <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-weight:700;font-size:13.5px">
+            <span>รวมค่าปรับ PT</span><span style="color:var(--o)">฿${finePT}</span>
+          </div>
+        </div>
+      </div>`}
+
+    <div style="background:var(--bd);color:#fff;border-radius:8px;padding:16px;text-align:center;margin-top:4px">
+      <div style="font-size:13px;opacity:.8">💰 ยอดค่าปรับรวมทั้งหมด</div>
+      <div style="font-size:32px;font-weight:800;margin:6px 0">฿${totalFine.toLocaleString()}</div>
+      <div style="font-size:12px;opacity:.7">${fStart} ถึง ${fEnd} | วันทำงาน ${workDays.length} วัน</div>
+    </div>`;
   }
 
-  function loadStaffDropdown() {
-    google.script.run.withSuccessHandler(fillStaffDropdown).withFailureHandler(onServerError).getActiveStaffList();
+  // เก็บ data สำหรับ export
+  window._fineData = { missingSubmit, missingReview, fineStaff, finePT, totalFine, fStart, fEnd, rate, sc, pc };
+}
+
+function exportFineReport() {
+  const d = window._fineData;
+  if(!d) return showToast('⚠️ กด คำนวณ ก่อนนะ','warning');
+  const rows = [
+    ['ประเภท','วันที่','จำนวนคน','อัตรา(฿/คน)','ยอดรวม(฿)'],
+    ...d.missingSubmit.map(date => ['ผู้ช่วยขาดบันทึก',date,d.sc,d.rate,d.sc*d.rate]),
+    ...d.missingReview.map(date => ['PT ไม่ประเมิน',date,d.pc,d.rate,d.pc*d.rate]),
+    ['','','','รวมทั้งหมด',d.totalFine],
+  ];
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Fine_Report_${d.fStart}_to_${d.fEnd}.csv`;
+  a.click();
+  showToast('📥 Export สำเร็จ','success');
+}
+
+// ══ COPYRIGHT ══
+// แสดง copyright ใน footer ของทุกหน้า (ใส่ใน sidebar)
+
+
+// ══ FINE RECORDS (Admin บันทึกเอง) ══
+let fineRecords = JSON.parse(localStorage.getItem('fine_records')||'[]');
+
+function updateFinePersonSel() {
+  const sel = document.getElementById('finePersonSel');
+  if(!sel) return;
+  const all = [...staffList, ...ptList];
+  sel.innerHTML = '<option value="">— เลือกชื่อ —</option>' +
+    all.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function addFineRecord() {
+  const person = document.getElementById('finePersonSel')?.value;
+  const reason = document.getElementById('fineReason')?.value.trim();
+  const amount = parseInt(document.getElementById('fineAmount')?.value||'10');
+  if(!person) return showToast('⚠️ เลือกชื่อก่อน','warning');
+  if(!reason) return showToast('⚠️ ใส่เหตุผลก่อน','warning');
+  const rec = { id: Date.now(), date: fmtDate(new Date()), person, reason, amount, addedBy: 'admin', time: getThaiTimestamp(new Date()) };
+  fineRecords.push(rec);
+  localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+  // ลอง save ไป Firebase ด้วย
+  if(window.FB) {
+    window.FB.fbSaveFineRecord(rec).catch(e => console.log('fine save:', e));
   }
+  document.getElementById('fineReason').value = '';
+  renderFineRecords();
+  showToast('✅ บันทึกค่าปรับแล้ว','success');
+}
 
-  // ===== วันหยุดนักขัตฤกษ์ =====
-  function loadHolidays() {
-    const yearStr = String(document.getElementById('holidayYearPicker').value);
-    document.getElementById('holidayListArea').innerHTML = '<div class="empty">กำลังโหลด...</div>';
-    google.script.run.withSuccessHandler(renderHolidayList).withFailureHandler(onServerError).getHolidaysForYear(yearStr);
+function deleteFineRecord(id) {
+  showConfirm('ต้องการลบรายการค่าปรับนี้?', () => {
+    fineRecords = fineRecords.filter(r => r.id !== id);
+    localStorage.setItem('fine_records', JSON.stringify(fineRecords));
+    renderFineRecords();
+    showToast('🗑️ ลบแล้ว','success');
+  });
+}
+
+function renderFineRecords() {
+  updateFinePersonSel();
+  const wrap = document.getElementById('fineRecordsList');
+  if(!wrap) return;
+  if(fineRecords.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--g4);padding:16px;font-size:13px">ยังไม่มีรายการค่าปรับ</div>';
+    return;
   }
-  function renderHolidayList(list) {
-    const area = document.getElementById('holidayListArea');
-    if (!list.length) { area.innerHTML = '<div class="empty">ไม่มีวันหยุดในปีนี้</div>'; return; }
-    area.innerHTML = list.map(h =>
-      '<div class="staff-list-item"><div class="staff-list-top">' +
-        '<span>' + h.date + ' — ' + escapeHtml(h.name) + '</span>' +
-        '<button class="danger" style="padding:5px 12px;font-size:12px;width:auto" onclick="openDeleteHolidayModal(\'' + h.date + '\')">ลบ</button>' +
-      '</div></div>'
-    ).join('');
+  // คำนวณยอดรวมรายบุคคล
+  const byPerson = {};
+  fineRecords.forEach(r => {
+    if(!byPerson[r.person]) byPerson[r.person] = 0;
+    byPerson[r.person] += r.amount;
+  });
+
+  // แสดง summary
+  const summaryHtml = Object.entries(byPerson).length > 0 ?
+    `<div style="background:var(--g1);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">💰 ยอดสะสมรายบุคคล</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${Object.entries(byPerson).sort((a,b)=>b[1]-a[1]).map(([n,sum])=>
+          `<div style="background:#fff;border:1.5px solid var(--g2);border-radius:8px;padding:6px 12px;font-size:13px">
+            <span style="font-weight:600">${n}</span>
+            <span style="color:var(--r);font-weight:800;margin-left:8px">฿${sum}</span>
+          </div>`
+        ).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:14px;font-weight:800;color:var(--r)">รวมทั้งหมด: ฿${fineRecords.reduce((s,r)=>s+r.amount,0)}</div>
+    </div>` : '';
+
+  // แสดงรายการ
+  const listHtml = `<div class="tw" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>วันที่</th><th>ชื่อ</th><th>เหตุผล</th><th>จำนวน</th><th></th></tr></thead>
+      <tbody>${[...fineRecords].reverse().map(r=>`
+        <tr>
+          <td style="font-size:12px;white-space:nowrap">${r.date}</td>
+          <td style="font-weight:600">${r.person}</td>
+          <td style="font-size:12.5px">${r.reason}</td>
+          <td style="color:var(--r);font-weight:700">฿${r.amount}</td>
+          <td><button class="btn btn-out" style="padding:3px 8px;font-size:12px;color:var(--r)" onclick="deleteFineRecord(${r.id})">🗑️</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  wrap.innerHTML = summaryHtml + listHtml;
+}
+
+
+// ══ CHECKLIST MANAGEMENT ══
+let currentClShift = 'morning';
+// โหลด custom checklist จาก localStorage ถ้ามี
+function getClItems(shift) {
+  const key = 'custom_cl_' + shift;
+  const saved = localStorage.getItem(key);
+  if(saved) {
+    try { return JSON.parse(saved); } catch(e) {}
   }
-  let pendingDeleteHolidayDate = null;
-  function openDeleteHolidayModal(dateStr) { pendingDeleteHolidayDate = dateStr; openPinModal('deleteHoliday'); }
+  return CL[shift === 'morning' ? 'morning' : 'evening']?.items || [];
+}
 
-  // ===== PIN Modal =====
-  function openPinModal(action) {
-    pendingAction = action;
-    const titles = {
-      record: 'ใส่ PIN ของท่านเอง หรือ PIN แอดมิน/หัวหน้างาน เพื่อบันทึกลา',
-      addStaff: 'ใส่ PIN แอดมิน เพื่อเพิ่มเจ้าหน้าที่',
-      loadStaff: 'ใส่ PIN แอดมิน เพื่อดูรายชื่อทั้งหมด',
-      deleteRecord: 'ใส่ PIN แอดมิน เพื่อลบรายการลานี้',
-      editRecord: 'ใส่ PIN แอดมิน เพื่อบันทึกการแก้ไข',
-      addHoliday: 'ใส่ PIN แอดมิน เพื่อเพิ่มวันหยุด',
-      deleteHoliday: 'ใส่ PIN แอดมิน เพื่อลบวันหยุด',
-      updateLine: 'ใส่ PIN แอดมิน เพื่อบันทึกการตั้งค่า LINE',
-      testLine: 'ใส่ PIN แอดมิน เพื่อส่งข้อความทดสอบ'
-    };
-    document.getElementById('pinModalTitle').textContent = titles[action] || 'กรุณาใส่ PIN';
-    document.getElementById('pinInput').value = '';
-    setLoading(document.getElementById('pinConfirmBtn'), false);
-    document.getElementById('pinModal').classList.add('show');
-    setTimeout(() => { document.getElementById('pinInput').focus(); }, 50);
+function setClShift(shift) {
+  currentClShift = shift;
+  const tm = document.getElementById('clTabMorning');
+  const te = document.getElementById('clTabEvening');
+  if(tm) { tm.className = shift==='morning' ? 'btn btn-pri' : 'btn btn-out'; tm.style.padding='5px 12px'; tm.style.fontSize='12.5px'; }
+  if(te) { te.className = shift==='evening' ? 'btn btn-pri' : 'btn btn-out'; te.style.padding='5px 12px'; te.style.fontSize='12.5px'; }
+  renderClItems();
+}
+
+function renderClItems() {
+  const wrap = document.getElementById('clItemList');
+  if(!wrap) return;
+  const items = getClItems(currentClShift);
+  if(items.length === 0) {
+    wrap.innerHTML = '<div style="color:var(--g4);font-size:13px;padding:8px">ยังไม่มีรายการ</div>';
+    return;
   }
-  function closePinModal() { document.getElementById('pinModal').classList.remove('show'); pendingAction = null; }
+  wrap.innerHTML = items.map((text, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">
+      <span style="color:var(--g4);font-size:12px;min-width:22px;text-align:center">${i+1}</span>
+      <span style="flex:1;font-size:13.5px">${text}</span>
+      <div style="display:flex;gap:4px">
+        ${i>0?`<button onclick="moveClItem(${i},-1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↑</button>`:'<span style="width:29px"></span>'}
+        ${i<items.length-1?`<button onclick="moveClItem(${i},1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↓</button>`:'<span style="width:29px"></span>'}
+        <button onclick="deleteClItem(${i})" style="background:none;border:1px solid var(--rb);color:var(--r);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">🗑️</button>
+      </div>
+    </div>`).join('');
+}
 
-  function confirmPin() {
-    const pin = document.getElementById('pinInput').value;
-    if (!pin) { showToast('กรุณากรอก PIN'); return; }
-    const confirmBtn = document.getElementById('pinConfirmBtn');
-    setLoading(confirmBtn, true, 'กำลังบันทึก...');
+function addClItem() {
+  const inp = document.getElementById('newClItem');
+  const text = inp?.value.trim();
+  if(!text) return;
+  const key = 'custom_cl_' + currentClShift;
+  const items = getClItems(currentClShift);
+  items.push(text);
+  localStorage.setItem(key, JSON.stringify(items));
+  // อัปเดต CL object ด้วย
+  _applyCLCustom();
+  inp.value = '';
+  renderClItems();
+  showToast('✅ เพิ่มรายการแล้ว','success');
+}
 
-    if (pendingAction === 'record') {
-      const staffName = document.getElementById('recStaff').value;
-      const leaveType = document.getElementById('recType').value;
-      const start = document.getElementById('recStart').value;
-      const end = document.getElementById('recEnd').value;
-      const isHalfDay = document.getElementById('recHalfDay').checked;
-      const reason = document.getElementById('recReason').value;
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal();
-        document.getElementById('recordMsg').textContent = res.message; showToast(res.message);
-        if (res.success) { document.getElementById('recReason').value=''; loadSummary(); }
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).recordLeave(staffName, leaveType, start, end, isHalfDay, reason, pin);
+function deleteClItem(idx) {
+  showConfirm('ต้องการลบรายการนี้?', () => {
+    const key = 'custom_cl_' + currentClShift;
+    const items = getClItems(currentClShift);
+    items.splice(idx, 1);
+    localStorage.setItem(key, JSON.stringify(items));
+    _applyCLCustom();
+    renderClItems();
+    showToast('🗑️ ลบแล้ว','success');
+  });
+}
 
-    } else if (pendingAction === 'addStaff') {
-      const name = document.getElementById('newStaffName').value;
-      const jobGroup = document.getElementById('newStaffJobGroup').value;
-      const personnelType = document.getElementById('newStaffPersonnelType').value;
-      const personalPin = document.getElementById('newStaffPin').value;
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal(); showToast(res.message);
-        if (res.success) { document.getElementById('newStaffName').value=''; document.getElementById('newStaffPin').value=''; loadStaffDropdown(); }
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).addStaff(name, jobGroup, personnelType, personalPin, pin);
+function moveClItem(idx, dir) {
+  const key = 'custom_cl_' + currentClShift;
+  const items = getClItems(currentClShift);
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= items.length) return;
+  [items[idx], items[newIdx]] = [items[newIdx], items[idx]];
+  localStorage.setItem(key, JSON.stringify(items));
+  _applyCLCustom();
+  renderClItems();
+}
 
-    } else if (pendingAction === 'loadStaff') {
-      lastAdminPin = pin;
-      google.script.run.withSuccessHandler(list => { setLoading(confirmBtn, false); closePinModal(); renderStaffList(list); })
-        .withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).getAllStaffList(pin);
+function saveClItems() {
+  _applyCLCustom();
+  buildChecklist();
+  showToast('💾 บันทึก Checklist แล้ว — มีผลทันที!','success');
+}
 
-    } else if (pendingAction === 'deleteRecord') {
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal(); showToast(res.message);
-        if (res.success) loadSummary();
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).deleteLeaveRecord(pendingDeleteId, pin);
+function resetClItems() {
+  showConfirm('คืนค่า Checklist กลับเป็นค่าเริ่มต้นใช่หรือไม่?', () => {
+    localStorage.removeItem('custom_cl_morning');
+    localStorage.removeItem('custom_cl_evening');
+    _applyCLCustom();
+    renderClItems();
+    buildChecklist();
+    showToast('↩ คืนค่าเดิมแล้ว','success');
+  });
+}
 
-    } else if (pendingAction === 'editRecord') {
-      const leaveType = document.getElementById('editLeaveType').value;
-      const start = document.getElementById('editStart').value;
-      const end = document.getElementById('editEnd').value;
-      const isHalfDay = document.getElementById('editHalfDay').checked;
-      const reason = document.getElementById('editReason').value;
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal(); showToast(res.message);
-        if (res.success) loadSummary();
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).updateLeaveRecord(pendingEditRecordId, leaveType, start, end, isHalfDay, reason, pin);
+function _applyCLCustom() {
+  // apply custom items เข้า CL object
+  const mItems = getClItems('morning');
+  const eItems = getClItems('evening');
+  if(mItems.length > 0) CL.morning.items = mItems;
+  if(eItems.length > 0) CL.evening.items = eItems;
+}
 
-    } else if (pendingAction === 'addHoliday') {
-      const date = document.getElementById('newHolidayDate').value;
-      const name = document.getElementById('newHolidayName').value;
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal(); showToast(res.message);
-        if (res.success) { document.getElementById('newHolidayDate').value=''; document.getElementById('newHolidayName').value=''; loadHolidays(); }
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).addHoliday(date, name, pin);
+// โหลด custom checklist ตอนเริ่มแอป
+_applyCLCustom();
 
-    } else if (pendingAction === 'deleteHoliday') {
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal(); showToast(res.message);
-        if (res.success) loadHolidays();
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).deleteHoliday(pendingDeleteHolidayDate, pin);
-
-    } else if (pendingAction === 'updateLine') {
-      const token = document.getElementById('lineToken').value;
-      const days = document.getElementById('lineReminderDays').value;
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal();
-        document.getElementById('lineMsg').textContent = res.message; showToast(res.message);
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).updateLineSettings(token, days, pin);
-
-    } else if (pendingAction === 'testLine') {
-      google.script.run.withSuccessHandler(res => {
-        setLoading(confirmBtn, false); closePinModal();
-        document.getElementById('lineMsg').textContent = res.message; showToast(res.message);
-      }).withFailureHandler(err => { setLoading(confirmBtn, false); onServerError(err); }).sendTestLineMessage(pin);
-    }
-  }
 </script>
 </body>
 </html>
