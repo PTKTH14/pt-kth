@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Checklist PT">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260714-firebase-auth-secure-reports">
+<meta name="version" content="v20260714-trend-supervisor-approval">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -65,12 +65,39 @@
       fbSignIn: async function(email, password) {
         return auth.signInWithEmailAndPassword(email, password);
       },
+      fbCreateAccount: async function(email, password) {
+        return auth.createUserWithEmailAndPassword(email, password);
+      },
       fbSignOut: async function() {
         await auth.signOut();
       },
       fbGetUserRole: async function(uid) {
         const snap = await db.collection('users').doc(String(uid)).get();
         return snap.exists ? snap.data() : null;
+      },
+      fbCreateSupervisorRequest: async function(record) {
+        await db.collection('supervisor_requests').doc(String(record.uid)).set(record, { merge:true });
+      },
+      fbGetSupervisorRequests: async function() {
+        const snap = await db.collection('supervisor_requests').get();
+        return snap.docs.map(function(d) { return Object.assign({ uid:d.id }, d.data()); });
+      },
+      fbApproveSupervisorRequest: async function(record, approverEmail) {
+        const now = new Date();
+        const batch = db.batch();
+        batch.set(db.collection('users').doc(String(record.uid)), {
+          role:'supervisor', active:true, displayName:String(record.displayName||'หัวหน้างาน'),
+          email:String(record.email||''), approvedAt:now.toISOString(), approvedBy:String(approverEmail||'')
+        }, { merge:true });
+        batch.set(db.collection('supervisor_requests').doc(String(record.uid)), {
+          status:'approved', reviewedAt:now.toISOString(), reviewedBy:String(approverEmail||'')
+        }, { merge:true });
+        await batch.commit();
+      },
+      fbRejectSupervisorRequest: async function(record, approverEmail) {
+        await db.collection('supervisor_requests').doc(String(record.uid)).set({
+          status:'rejected', reviewedAt:new Date().toISOString(), reviewedBy:String(approverEmail||'')
+        }, { merge:true });
       },
       fbSendPasswordReset: async function(email) {
         await auth.sendPasswordResetEmail(email);
@@ -329,6 +356,24 @@ body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-hei
 .dashboard-reading-guide{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-2px 0 12px;padding:9px 12px;border:1px solid #D7E7F4;border-radius:9px;background:#F7FBFF;color:var(--g6);font-size:11.5px}
 .dashboard-reading-guide strong{color:var(--bd)}
 .dashboard-reading-guide .guide-arrow{color:#8EABC2;font-weight:800}
+.trend-card{overflow:hidden;background:linear-gradient(155deg,#fff 0%,#F8FBFE 100%)}
+.trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.trend-head h3{margin:0}
+.trend-legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--g6)}
+.trend-legend span{display:flex;align-items:center;gap:4px}.trend-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.trend-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.trend-stat{border:1px solid #DCE8F1;border-radius:10px;background:rgba(255,255,255,.88);padding:10px 12px}
+.trend-stat-label{font-size:10.5px;color:var(--g6);margin-bottom:2px}.trend-stat-value{font-size:20px;font-weight:800;color:var(--bd)}
+.trend-scroll{overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.trend-stage{position:relative;min-width:680px;height:245px;border:1px solid #DFE9F1;border-radius:12px;background:linear-gradient(180deg,#FAFDFF,#fff);overflow:hidden}
+.trend-stage svg{width:100%;height:100%;display:block}
+.trend-point{cursor:pointer;outline:none}.trend-point .point-halo{opacity:0;transition:opacity .15s,r .15s}.trend-point:hover .point-halo,.trend-point:focus .point-halo,.trend-point.active .point-halo{opacity:.18;r:11px}
+.trend-point .point-core{transition:r .15s,stroke-width .15s}.trend-point:hover .point-core,.trend-point:focus .point-core,.trend-point.active .point-core{r:6px;stroke-width:3px}
+.trend-detail{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:10px;background:#EEF6FC;border:1px solid #D2E5F3;color:var(--g6);font-size:12px}
+.trend-detail strong{color:var(--bd);font-size:13px}.trend-detail-score{font-size:18px!important}
+.supervisor-request{border:1px solid #DCE5ED;border-radius:10px;padding:12px 13px;margin-bottom:9px;background:#fff}
+.supervisor-request-meta{font-size:11.5px;color:var(--g6);margin-top:3px;overflow-wrap:anywhere}
+.supervisor-request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .shift-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .admin-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--g2);overflow-x:auto}
 .admin-tab{white-space:nowrap;flex-shrink:0}
@@ -436,6 +481,12 @@ tr:hover td{background:var(--g1)}
 .fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .15s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bm)}
 .fg textarea{min-height:75px;resize:vertical}
+.password-wrap{position:relative;width:100%}
+.password-wrap input{padding-right:44px!important}
+.password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#617487;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s;z-index:2}
+.password-toggle:hover,.password-toggle:focus-visible{background:#EAF2F8;color:var(--bd);outline:none}
+.password-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.password-toggle.is-visible::after{content:'';position:absolute;width:23px;height:2px;background:currentColor;border-radius:2px;transform:rotate(-42deg);pointer-events:none}
 .link-box{display:flex;align-items:center;gap:8px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r8);padding:9px 12px}
 .link-box span{flex:1;font-size:12px;color:var(--g6);word-break:break-all;font-family:monospace}
 .link-copy{background:var(--bd);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
@@ -472,6 +523,8 @@ tr:hover td{background:var(--g1)}
   .filter-toolbar input,.filter-toolbar select{max-width:100%}
   .mf .btn{flex:1;justify-content:center;min-width:120px}
   .audit-summary{grid-template-columns:1fr}
+  .trend-summary{grid-template-columns:1fr 1fr}.trend-stat:last-child{grid-column:1/-1}
+  .trend-stage{min-width:720px}
   .ph h1{font-size:17px}
   .mobile-controls{display:flex !important}
   .live,.sync-badge,.clock{display:none}
@@ -694,11 +747,15 @@ tr:hover td{background:var(--g1)}
     </div>
   </div>
 
-  <!-- CHART: อัตราความสมบูรณ์รายวัน (แบบ bar ง่ายๆ ไม่ใช้ Chart.js) -->
-  <div class="card" style="margin-bottom:16px">
-    <h3>📈 ความสมบูรณ์ 14 บันทึกล่าสุด <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย กราฟความสมบูรณ์" data-help="หนึ่งแท่งแทน Checklist หนึ่งบันทึก เรียงจากเก่าไปใหม่ ความสูงคือร้อยละความสมบูรณ์ สีเขียวตั้งแต่ 80% สีเหลือง 60–79% และสีแดงต่ำกว่า 60%">i</button></h3>
-    <div id="barChart" style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px"></div>
-    <div id="barChartLabels" style="display:flex;gap:4px;padding:4px 4px 0;margin-top:4px"></div>
+  <div class="card trend-card" style="margin-bottom:16px">
+    <div class="trend-head">
+      <h3>แนวโน้มความสมบูรณ์ 14 บันทึกล่าสุด <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย กราฟความสมบูรณ์" data-help="แต่ละจุดแทน Checklist หนึ่งบันทึก เรียงจากเก่าไปใหม่ แตะจุดเพื่อดูวันที่ ผู้ช่วย เวร และความสมบูรณ์ สีเขียวตั้งแต่ 80% สีเหลือง 60–79% และสีแดงต่ำกว่า 60%">i</button></h3>
+      <div class="trend-legend"><span><i style="background:var(--g)"></i>ดี 80–100%</span><span><i style="background:var(--y)"></i>เฝ้าระวัง 60–79%</span><span><i style="background:var(--r)"></i>ต้องติดตาม ต่ำกว่า 60%</span></div>
+    </div>
+    <div id="trendSummary" class="trend-summary"></div>
+    <div class="trend-scroll"><div id="barChart" class="trend-stage"></div></div>
+    <div id="trendDetail" class="trend-detail"><span>เลือกจุดบนกราฟเพื่อดูรายละเอียด</span></div>
+    <div id="barChartLabels" style="display:none"></div>
   </div>
 
   <!-- ตารางรายการปัญหาบ่อย -->
@@ -839,19 +896,36 @@ tr:hover td{background:var(--g1)}
   <div class="ph"><h1>👔 หัวหน้างาน — ภาพรวมการทำงาน</h1><p>ติดตามการทำงานของผู้ช่วยรายวัน และประเมินรายบุคคล</p></div>
 
   <!-- FIREBASE AUTH LOGIN -->
-  <div id="supLoginSec" class="card" style="max-width:360px;margin:30px auto;text-align:center;padding:28px 20px">
+  <div id="supLoginSec" class="card" style="max-width:400px;margin:30px auto;text-align:center;padding:28px 24px">
     <div style="font-size:40px;margin-bottom:10px">🔐</div>
     <h3 style="margin-bottom:6px;font-size:16px">เข้าสู่หน้าหัวหน้างาน</h3>
-    <p style="font-size:12.5px;color:var(--g6);margin-bottom:18px">กรุณาใส่รหัสหัวหน้างาน</p>
-    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
-      <input type="password" id="supPin" maxlength="64" autocomplete="current-password" placeholder="••••••••"
-        style="width:220px;padding:12px;text-align:center;font-size:18px;letter-spacing:3px;border:2px solid var(--g2);border-radius:var(--r8);font-family:inherit;outline:none"
-        onkeydown="if(event.key==='Enter')checkSupPin()"
-        oninput="this.style.borderColor=this.value?'var(--bm)':'var(--g2)'">
+    <p style="font-size:12.5px;color:var(--g6);margin-bottom:18px">ใช้บัญชีที่แอดมินอนุมัติแล้ว</p>
+    <div class="fg" style="text-align:left"><label>อีเมล</label><input type="email" id="supEmail" autocomplete="username" placeholder="name@example.com"></div>
+    <div class="fg" style="text-align:left;margin-bottom:16px"><label>รหัสผ่าน</label>
+      <div class="password-wrap">
+        <input type="password" id="supPin" maxlength="64" autocomplete="current-password" placeholder="••••••••"
+          style="width:100%;padding:11px 44px 11px 12px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:14px;outline:none"
+          onkeydown="if(event.key==='Enter')checkSupPin()"
+          oninput="this.style.borderColor=this.value?'var(--bm)':'var(--g2)'">
+        <button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('supPin',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button>
+      </div>
     </div>
     <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="checkSupPin()">เข้าสู่ระบบ</button>
     <button class="btn" style="width:100%;justify-content:center;background:none;color:var(--bm);margin-top:7px" onclick="sendSupervisorPasswordReset()">ลืมรหัสผ่าน</button>
-    <div id="supPinError" style="color:var(--r);font-size:12.5px;margin-top:10px;display:none">❌ รหัสหัวหน้างานไม่ถูกต้อง</div>
+    <div style="border-top:1px solid var(--g2);margin:8px 0 2px"></div>
+    <button class="btn btn-out" style="width:100%;justify-content:center;margin-top:10px" onclick="toggleSupervisorRegistration(true)">ขอสมัครบัญชีหัวหน้างาน</button>
+    <div id="supPinError" style="color:var(--r);font-size:12.5px;margin-top:10px;display:none">เข้าสู่ระบบไม่สำเร็จ</div>
+  </div>
+
+  <div id="supRegistrationSec" class="card" style="max-width:440px;margin:30px auto;padding:26px 24px;display:none;border-top:4px solid var(--bm)">
+    <h3 style="margin-bottom:5px">ขอสมัครบัญชีหัวหน้างาน</h3>
+    <p style="font-size:12px;color:var(--g6);line-height:1.6;margin-bottom:16px">กรอกข้อมูลและตั้งรหัสผ่าน จากนั้นรอแอดมินตรวจสอบและอนุมัติก่อนเข้าใช้งาน</p>
+    <div class="fg"><label>ชื่อผู้สมัคร</label><input type="text" id="supRegName" maxlength="120" autocomplete="name" placeholder="ชื่อหัวหน้างาน"></div>
+    <div class="fg"><label>อีเมล</label><input type="email" id="supRegEmail" autocomplete="email" placeholder="name@example.com"></div>
+    <div class="fg"><label>ตั้งรหัสผ่าน <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 6 ตัว)</span></label><div class="password-wrap"><input type="password" id="supRegPassword" minlength="6" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('supRegPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+    <div class="fg"><label>ยืนยันรหัสผ่าน</label><div class="password-wrap"><input type="password" id="supRegConfirm" minlength="6" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')submitSupervisorRegistration()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('supRegConfirm',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="submitSupervisorRegistration()">ส่งคำขอให้แอดมินอนุมัติ</button>
+    <button class="btn" style="width:100%;justify-content:center;background:none;color:var(--g6);margin-top:7px" onclick="toggleSupervisorRegistration(false)">กลับหน้าเข้าสู่ระบบ</button>
   </div>
 
   <!-- MAIN CONTENT (hidden until PIN) -->
@@ -919,9 +993,9 @@ tr:hover td{background:var(--g1)}
   <div class="card" id="supervisorPasswordCard" style="max-width:460px;margin-top:18px;border-left:4px solid #6A1B9A">
     <h3 style="margin-bottom:6px">🔐 เปลี่ยนรหัสหัวหน้างาน</h3>
     <p style="font-size:12px;color:var(--g6);margin-bottom:12px">รหัสใหม่มีผลกับทุกอุปกรณ์ผ่าน Firebase Authentication</p>
-    <div class="fg"><label>รหัสปัจจุบัน</label><input type="password" id="currentSupervisorPassword" autocomplete="current-password" placeholder="••••••••"></div>
-    <div class="fg"><label>รหัสใหม่ <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 6 ตัว)</span></label><input type="password" id="newSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••"></div>
-    <div class="fg"><label>ยืนยันรหัสใหม่</label><input type="password" id="confirmSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeSupervisorPassword()"></div>
+    <div class="fg"><label>รหัสปัจจุบัน</label><div class="password-wrap"><input type="password" id="currentSupervisorPassword" autocomplete="current-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('currentSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+    <div class="fg"><label>รหัสใหม่ <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 6 ตัว)</span></label><div class="password-wrap"><input type="password" id="newSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('newSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+    <div class="fg"><label>ยืนยันรหัสใหม่</label><div class="password-wrap"><input type="password" id="confirmSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeSupervisorPassword()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('confirmSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
     <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeSupervisorPassword()">เปลี่ยนรหัสหัวหน้างาน</button>
   </div>
 </div>
@@ -956,7 +1030,7 @@ tr:hover td{background:var(--g1)}
     <div style="font-size:40px;margin-bottom:10px">🔐</div>
     <h3 style="margin-bottom:20px">เข้าสู่ระบบแอดมิน</h3>
     <div class="fg" style="text-align:left"><label>อีเมล</label><input type="email" id="admEmail" value="ptkth11199@gmail.com" autocomplete="username" placeholder="admin@example.com"></div>
-    <div class="fg" style="text-align:left"><label>รหัสผ่าน</label><input type="password" id="admPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div class="fg" style="text-align:left"><label>รหัสผ่าน</label><div class="password-wrap"><input type="password" id="admPwd" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('admPwd',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
     <button class="btn btn-pri" style="width:100%;justify-content:center;margin-top:10px" onclick="adminLogin()">เข้าสู่ระบบ</button>
     <button class="btn" style="width:100%;justify-content:center;background:none;color:var(--bm);margin-top:7px" onclick="sendAdminPasswordReset()">ลืมรหัสผ่าน</button>
   </div>
@@ -1054,10 +1128,13 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-out" onclick="resetClItems()">↩ คืนค่าเดิม</button>
         </div>
       </div>
-      <div class="card" style="max-width:440px;margin-top:20px">
-        <h3 style="margin-bottom:8px">🔑 บัญชีหัวหน้างาน</h3>
-        <p style="font-size:12.5px;color:var(--g6);line-height:1.7;margin-bottom:12px">บัญชี Firebase: <strong>ptkth11199+supervisor@gmail.com</strong><br>หน้าเข้าสู่ระบบจะแสดงเฉพาะช่องรหัสผ่าน ไม่ต้องกรอกอีเมล</p>
-        <button class="btn btn-out" style="width:100%;justify-content:center" onclick="sendSupervisorPasswordReset()">📧 ส่งอีเมลตั้งรหัสหัวหน้าใหม่</button>
+      <div class="card" style="max-width:720px;margin-top:20px;border-left:4px solid var(--bm)">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
+          <div><h3 style="margin-bottom:4px">คำขอสมัครบัญชีหัวหน้างาน</h3><p style="font-size:12px;color:var(--g6);line-height:1.6">ตรวจสอบชื่อและอีเมลก่อนอนุมัติ ผู้สมัครจะเข้าใช้งานได้หลังได้รับอนุมัติเท่านั้น</p></div>
+          <button class="btn btn-out" style="padding:6px 11px;font-size:12px" onclick="loadSupervisorRequests()">รีเฟรช</button>
+        </div>
+        <div id="supervisorRequestSummary" style="font-size:12px;color:var(--g6);margin-bottom:9px">กำลังโหลดคำขอ...</div>
+        <div id="supervisorRequestList"><div style="text-align:center;color:var(--g4);padding:18px">กำลังโหลด...</div></div>
       </div>
       <div class="card" style="max-width:440px;margin-top:20px;border-left:4px solid #6A1B9A">
         <h3 style="margin-bottom:6px">🔐 เปลี่ยนรหัสผ่านแอดมิน</h3>
@@ -1065,15 +1142,15 @@ tr:hover td{background:var(--g1)}
         <p style="font-size:11.5px;color:#7B1FA2;background:#F3E5F5;border-radius:8px;padding:8px 10px;margin-bottom:12px">รหัสผ่านใหม่มีผลกับทุกอุปกรณ์ผ่าน Firebase Authentication</p>
         <div class="fg">
           <label>รหัสผ่านปัจจุบัน</label>
-          <input type="password" id="currentAdminPassword" autocomplete="current-password" placeholder="••••••••">
+          <div class="password-wrap"><input type="password" id="currentAdminPassword" autocomplete="current-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('currentAdminPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div>
         </div>
         <div class="fg">
           <label>รหัสผ่านใหม่ <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 8 ตัว)</span></label>
-          <input type="password" id="newAdminPassword" minlength="8" autocomplete="new-password" placeholder="••••••••">
+          <div class="password-wrap"><input type="password" id="newAdminPassword" minlength="8" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('newAdminPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div>
         </div>
         <div class="fg">
           <label>ยืนยันรหัสผ่านใหม่</label>
-          <input type="password" id="confirmAdminPassword" minlength="8" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeAdminPassword()">
+          <div class="password-wrap"><input type="password" id="confirmAdminPassword" minlength="8" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeAdminPassword()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('confirmAdminPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div>
         </div>
         <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeAdminPassword()">🔐 เปลี่ยนรหัสผ่านแอดมิน</button>
       </div>
@@ -1288,10 +1365,9 @@ const CL = {
 };
 
 // ══ STATE ══
-let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], missedEvaluations=[], auditLogs=[];
+let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[];
 let activeRevIdx=null, reviewEvals={}, isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
-const SUPERVISOR_AUTH_EMAIL='ptkth11199+supervisor@gmail.com';
 let lastWebAlertMinute='';
 
 function setSyncBadge(state,text){const b=document.getElementById('syncBadge');if(!b)return;b.className='sync-badge '+state;b.textContent=text;}
@@ -1309,11 +1385,21 @@ function waitForFirebase(){
 function firebaseAuthErrorMessage(error){
   const code=String(error?.code||'');
   if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))return'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+  if(code.includes('email-already-in-use'))return'อีเมลนี้มีบัญชีแล้ว กรุณาเข้าสู่ระบบหรือใช้ลืมรหัสผ่าน';
+  if(code.includes('invalid-email'))return'รูปแบบอีเมลไม่ถูกต้อง';
+  if(code.includes('unauthorized-domain'))return'โดเมนเว็บไซต์ยังไม่ได้รับอนุญาตใน Firebase Authentication';
+  if(code.includes('operation-not-allowed'))return'Firebase ยังไม่ได้เปิดการเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน';
   if(code.includes('too-many-requests'))return'ลองเข้าสู่ระบบหลายครั้งเกินไป กรุณารอสักครู่';
   if(code.includes('network-request-failed'))return'เชื่อมต่อ Firebase ไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ต';
   if(code.includes('weak-password'))return'รหัสผ่านใหม่สั้นหรือเดาง่ายเกินไป';
   if(code.includes('requires-recent-login'))return'กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่ก่อนเปลี่ยนรหัส';
   return error?.message||'Firebase Authentication ทำงานไม่สำเร็จ';
+}
+function togglePasswordVisibility(inputId,button){
+  const input=document.getElementById(inputId);if(!input)return;
+  const visible=input.type==='password';input.type=visible?'text':'password';
+  button.classList.toggle('is-visible',visible);button.setAttribute('aria-pressed',String(visible));
+  button.setAttribute('aria-label',visible?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน');button.title=visible?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน';input.focus();
 }
 async function applyAuthenticatedUser(user){
   let profile=null;
@@ -2047,6 +2133,18 @@ function calcCompletion(s) {
   return tot > 0 ? Math.round(dn/tot*100) : 0;
 }
 
+function smoothTrendPath(points){
+  if(!points.length)return'';let path=`M ${points[0].x} ${points[0].y}`;
+  for(let index=1;index<points.length;index+=1){const previous=points[index-1];const point=points[index];const middle=(previous.x+point.x)/2;path+=` C ${middle} ${previous.y}, ${middle} ${point.y}, ${point.x} ${point.y}`;}
+  return path;
+}
+function showTrendPoint(index){
+  const point=dashboardTrendPoints[index];const detail=document.getElementById('trendDetail');if(!point||!detail)return;
+  document.querySelectorAll('.trend-point').forEach((element,pointIndex)=>element.classList.toggle('active',pointIndex===index));
+  const shift=point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย';
+  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>ความสมบูรณ์ของ Checklist</div></div>`;
+}
+
 function loadDashboard() {
   updateDashFilter();
   const fStart = document.getElementById('dashStartDate')?.value;
@@ -2091,26 +2189,24 @@ function loadDashboard() {
   set('shiftEveningPass',  ePass + '%');
   set('shiftEveningAvg',   eAvg + '%');
 
-  // ══ BAR CHART รายวัน (CSS-based ไม่ใช้ Chart.js) ══
+  // ══ TREND CHART ══
   const recent = [...data].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
   const barWrap = document.getElementById('barChart');
   const labelWrap = document.getElementById('barChartLabels');
+  const trendSummary = document.getElementById('trendSummary');
   if(barWrap && recent.length > 0) {
-    const barW = Math.floor(100 / recent.length);
-    barWrap.innerHTML = recent.map(s => {
-      const pct = calcCompletion(s);
-      const color = pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)';
-      const pointLabel = `${thaiDate(s.date)} • ${s.staffName||'ไม่ระบุชื่อ'} • ${shiftLabel(s.shift||'morning')} • สมบูรณ์ ${pct}%`;
-      return `<div tabindex="0" aria-label="${escapeHtml(pointLabel)}" title="${escapeHtml(pointLabel)}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;cursor:help">
-        <span style="font-size:9px;color:var(--g6);font-weight:700">${pct}%</span>
-        <div style="width:100%;background:${color};border-radius:4px 4px 0 0;height:${Math.max(pct*1.4,4)}px;transition:height .3s"></div>
-      </div>`;
-    }).join('');
-    labelWrap.innerHTML = recent.map(s =>
-      `<div style="flex:1;text-align:center;font-size:9px;color:var(--g6);overflow:hidden">${s.date.slice(5)}</div>`
-    ).join('');
+    const width=Math.max(680,recent.length*74);const height=245;const left=45;const right=22;const top=24;const bottom=45;const plotWidth=width-left-right;const plotHeight=height-top-bottom;
+    dashboardTrendPoints=recent.map((record,index)=>{const pct=calcCompletion(record);const x=recent.length===1?left+plotWidth/2:left+(plotWidth/(recent.length-1))*index;const y=top+((100-pct)/100)*plotHeight;return{record,pct,x,y,color:pct>=80?'#28A745':pct>=60?'#E5A900':'#E63946'};});
+    const linePath=smoothTrendPath(dashboardTrendPoints);const baseY=top+plotHeight;const areaPath=`${linePath} L ${dashboardTrendPoints[dashboardTrendPoints.length-1].x} ${baseY} L ${dashboardTrendPoints[0].x} ${baseY} Z`;
+    const grids=[100,50,0].map(value=>{const y=top+((100-value)/100)*plotHeight;return`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="#DDE8F0" stroke-dasharray="4 5"/><text x="${left-9}" y="${y+4}" text-anchor="end" font-size="10" fill="#7A8997">${value}%</text>`;}).join('');
+    const points=dashboardTrendPoints.map((point,index)=>{const label=`${thaiDate(point.record.date)} ${point.record.staffName||'ไม่ระบุชื่อ'} ${point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย'} ${point.pct}%`;return`<g class="trend-point" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="showTrendPoint(${index})" onmouseenter="showTrendPoint(${index})" onkeydown="if(event.key==='Enter'||event.key===' ')showTrendPoint(${index})"><circle class="point-halo" cx="${point.x}" cy="${point.y}" r="8" fill="${point.color}"/><circle class="point-core" cx="${point.x}" cy="${point.y}" r="5" fill="#fff" stroke="${point.color}" stroke-width="2.5"/><text x="${point.x}" y="${Math.max(point.y-11,12)}" text-anchor="middle" font-size="10" font-weight="700" fill="${point.color}">${point.pct}%</text><text x="${point.x}" y="${height-23}" text-anchor="middle" font-size="10" fill="#647585">${escapeHtml(point.record.date.slice(5).replace('-','/'))}</text><text x="${point.x}" y="${height-9}" text-anchor="middle" font-size="9" fill="#8A98A5">${point.record.shift==='morning'?'เช้า':'บ่าย'}</text></g>`;}).join('');
+    barWrap.style.width=width+'px';barWrap.innerHTML=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="กราฟแนวโน้มความสมบูรณ์"><defs><linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4AA3DF" stop-opacity=".28"/><stop offset="100%" stop-color="#4AA3DF" stop-opacity=".02"/></linearGradient><filter id="trendShadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0F4C81" flood-opacity=".16"/></filter></defs>${grids}<path d="${areaPath}" fill="url(#trendArea)"/><path d="${linePath}" fill="none" stroke="#1A6BAA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#trendShadow)"/>${points}</svg>`;
+    const latest=dashboardTrendPoints[dashboardTrendPoints.length-1].pct;const average=Math.round(dashboardTrendPoints.reduce((sum,point)=>sum+point.pct,0)/dashboardTrendPoints.length);const previous=dashboardTrendPoints.length>1?dashboardTrendPoints[dashboardTrendPoints.length-2].pct:null;const delta=previous===null?null:latest-previous;const deltaText=delta===null?'—':`${delta>0?'↑ ':delta<0?'↓ ':''}${Math.abs(delta)}%`;const deltaColor=delta===null?'var(--g6)':delta>0?'var(--g)':delta<0?'var(--r)':'var(--bd)';
+    if(trendSummary)trendSummary.innerHTML=`<div class="trend-stat"><div class="trend-stat-label">บันทึกล่าสุด</div><div class="trend-stat-value">${latest}%</div></div><div class="trend-stat"><div class="trend-stat-label">ค่าเฉลี่ย 14 บันทึก</div><div class="trend-stat-value">${average}%</div></div><div class="trend-stat"><div class="trend-stat-label">เทียบกับครั้งก่อน</div><div class="trend-stat-value" style="color:${deltaColor}">${deltaText}</div></div>`;
+    if(labelWrap)labelWrap.innerHTML='';showTrendPoint(dashboardTrendPoints.length-1);
   } else if(barWrap) {
-    barWrap.innerHTML = '<div style="width:100%;text-align:center;color:var(--g4);font-size:13px;padding:40px 0">ยังไม่มีข้อมูล</div>';
+    dashboardTrendPoints=[];barWrap.style.width='100%';barWrap.innerHTML = '<div style="width:100%;text-align:center;color:var(--g4);font-size:13px;padding:90px 0">ยังไม่มีข้อมูลสำหรับสร้างแนวโน้ม</div>';
+    if(trendSummary)trendSummary.innerHTML='';const detail=document.getElementById('trendDetail');if(detail)detail.innerHTML='<span>เมื่อมี Checklist ระบบจะแสดงแนวโน้มให้อัตโนมัติ</span>';
     if(labelWrap) labelWrap.innerHTML = '';
   }
 
@@ -2281,7 +2377,28 @@ function renderAuditLogs(){
 function setAdminTab(tab) {
   currentAdminTab=['data','audit','settings','backup'].includes(tab)?tab:'data';
   ['data','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings')renderSettings();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup')renderBackupPanelSummary();
+  if(currentAdminTab==='settings'){renderSettings();loadSupervisorRequests();}if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup')renderBackupPanelSummary();
+}
+
+async function loadSupervisorRequests(){
+  if(!isAdminLoggedIn||!window.FB?.fbGetSupervisorRequests)return;
+  const list=document.getElementById('supervisorRequestList');const summary=document.getElementById('supervisorRequestSummary');if(list)list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">กำลังโหลด...</div>';
+  try{const records=await window.FB.fbGetSupervisorRequests();supervisorRequests=(Array.isArray(records)?records:[]).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));renderSupervisorRequests();}
+  catch(error){if(list)list.innerHTML='<div style="text-align:center;color:var(--r);padding:18px">โหลดคำขอไม่สำเร็จ: '+escapeHtml(firebaseAuthErrorMessage(error))+'</div>';if(summary)summary.textContent='—';}
+}
+function renderSupervisorRequests(){
+  const list=document.getElementById('supervisorRequestList');const summary=document.getElementById('supervisorRequestSummary');if(!list)return;
+  const pending=supervisorRequests.filter(record=>(record.status||'pending')==='pending');if(summary)summary.innerHTML=`รออนุมัติ <strong style="color:var(--bd)">${pending.length}</strong> รายการ • ทั้งหมด ${supervisorRequests.length} รายการ`;
+  if(!supervisorRequests.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:20px">ยังไม่มีคำขอสมัครหัวหน้างาน</div>';return;}
+  list.innerHTML=supervisorRequests.map((record,index)=>{const status=record.status||'pending';const statusTag=status==='approved'?'<span class="tag tp">อนุมัติแล้ว</span>':status==='rejected'?'<span class="tag tf">ไม่อนุมัติ</span>':'<span class="tag tw2">รอตรวจสอบ</span>';return`<div class="supervisor-request"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(record.displayName||'ไม่ระบุชื่อ')}</strong><div class="supervisor-request-meta">${escapeHtml(record.email||'—')} • ${escapeHtml(record.timeDisplay||record.createdAt||'—')}</div></div>${statusTag}</div>${status==='pending'?`<div class="supervisor-request-actions"><button class="btn btn-suc" style="padding:6px 12px;font-size:12px" onclick="approveSupervisorRequest(${index})">อนุมัติ</button><button class="btn btn-out" style="padding:6px 12px;font-size:12px;color:var(--r);border-color:#F2B9BF" onclick="rejectSupervisorRequest(${index})">ไม่อนุมัติ</button></div>`:''}</div>`;}).join('');
+}
+function approveSupervisorRequest(index){
+  const record=supervisorRequests[index];if(!record||!isAdminLoggedIn)return;
+  showConfirm(`อนุมัติ ${record.displayName||record.email} เป็นหัวหน้างานใช่หรือไม่?`,async()=>{try{await window.FB.fbApproveSupervisorRequest(record,currentAdminEmail());await writeAuditLog('add','security',`อนุมัติบัญชีหัวหน้างาน ${record.email}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});showToast('✅ อนุมัติบัญชีหัวหน้างานแล้ว','success');await loadSupervisorRequests();}catch(error){showToast('❌ อนุมัติไม่สำเร็จ: '+firebaseAuthErrorMessage(error),'error');}});
+}
+function rejectSupervisorRequest(index){
+  const record=supervisorRequests[index];if(!record||!isAdminLoggedIn)return;
+  showConfirm(`ไม่อนุมัติคำขอของ ${record.displayName||record.email} ใช่หรือไม่?`,async()=>{try{await window.FB.fbRejectSupervisorRequest(record,currentAdminEmail());await writeAuditLog('update','security',`ไม่อนุมัติบัญชีหัวหน้างาน ${record.email}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});showToast('ดำเนินการเรียบร้อย','success');await loadSupervisorRequests();}catch(error){showToast('❌ ดำเนินการไม่สำเร็จ: '+firebaseAuthErrorMessage(error),'error');}});
 }
 
 let pendingFirebaseRestore=null;
@@ -2377,7 +2494,8 @@ async function sendAdminPasswordReset(){
   try{await window.FB.fbSendPasswordReset(email);showToast('📧 ส่งอีเมลตั้งรหัสผ่านใหม่แล้ว','success');}catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 async function sendSupervisorPasswordReset(){
-  try{await window.FB.fbSendPasswordReset(SUPERVISOR_AUTH_EMAIL);showToast('📧 ส่งอีเมลตั้งรหัสหัวหน้าใหม่แล้ว','success');}catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
+  const email=(document.getElementById('supEmail')?.value||document.getElementById('supRegEmail')?.value||'').trim();if(!email)return showToast('⚠️ กรุณากรอกอีเมลหัวหน้างานก่อน','warning');
+  try{await window.FB.fbSendPasswordReset(email);showToast('📧 ส่งอีเมลตั้งรหัสหัวหน้าใหม่แล้ว','success');}catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 async function changeAdminPassword(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
@@ -2421,15 +2539,27 @@ function shareToLine() {
 
 // ══ SUPERVISOR ══
 let currentSupTab = 'daily';
+function toggleSupervisorRegistration(show){
+  const login=document.getElementById('supLoginSec');const registration=document.getElementById('supRegistrationSec');if(login)login.style.display=show?'none':'block';if(registration)registration.style.display=show?'block':'none';
+}
+function buildSupervisorRequest(user,displayName){const now=new Date();return{uid:String(user.uid),email:String(user.email||'').toLowerCase(),displayName:String(displayName||'หัวหน้างาน').trim(),status:'pending',createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)};}
+async function submitSupervisorRegistration(){
+  const displayName=(document.getElementById('supRegName')?.value||'').trim();const email=(document.getElementById('supRegEmail')?.value||'').trim().toLowerCase();const password=document.getElementById('supRegPassword')?.value||'';const confirm=document.getElementById('supRegConfirm')?.value||'';
+  if(!displayName)return showToast('⚠️ กรุณากรอกชื่อผู้สมัคร','warning');if(!email)return showToast('⚠️ กรุณากรอกอีเมล','warning');if(password.length<6)return showToast('⚠️ รหัสผ่านต้องมีอย่างน้อย 6 ตัว','warning');if(password!==confirm)return showToast('❌ ยืนยันรหัสผ่านไม่ตรงกัน','error');if(!window.FB?.fbCreateAccount||!window.FB?.fbCreateSupervisorRequest)return showToast('⚠️ Firebase Authentication ยังไม่พร้อม','warning');
+  let credential=null;
+  try{if(authUser){await window.FB.fbSignOut();await applyAuthenticatedUser(null);}credential=await window.FB.fbCreateAccount(email,password);await window.FB.fbCreateSupervisorRequest(buildSupervisorRequest(credential.user,displayName));await window.FB.fbSignOut();await applyAuthenticatedUser(null);document.getElementById('supEmail').value=email;['supRegName','supRegEmail','supRegPassword','supRegConfirm'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});toggleSupervisorRegistration(false);showToast('✅ ส่งคำขอแล้ว กรุณารอแอดมินอนุมัติ','success');}
+  catch(error){try{if(window.FB?.fbSignOut)await window.FB.fbSignOut();}catch(signOutError){}await applyAuthenticatedUser(null);toggleSupervisorRegistration(true);showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
+}
 async function checkSupPin() {
-  const password = document.getElementById('supPin').value;
+  const email=(document.getElementById('supEmail')?.value||'').trim().toLowerCase();const password = document.getElementById('supPin').value;
   const errEl = document.getElementById('supPinError');
-  if(!password)return showToast('⚠️ กรุณากรอกรหัสหัวหน้างาน','warning');
+  if(!email||!password)return showToast('⚠️ กรุณากรอกอีเมลและรหัสผ่าน','warning');
   if(!window.FB?.fbSignIn)return showToast('⚠️ Firebase Authentication ยังไม่พร้อม','warning');
   try {
     if(authUser){await window.FB.fbSignOut();await applyAuthenticatedUser(null);}
-    const credential=await window.FB.fbSignIn(SUPERVISOR_AUTH_EMAIL,password);const profile=await window.FB.fbGetUserRole(credential.user.uid);
-    if(!profile||profile.active!==true||profile.role!=='supervisor'){await window.FB.fbSignOut();throw new Error('บัญชีนี้ไม่มีสิทธิ์หัวหน้างาน');}
+    const credential=await window.FB.fbSignIn(email,password);const profile=await window.FB.fbGetUserRole(credential.user.uid);
+    if(!profile){await window.FB.fbCreateSupervisorRequest(buildSupervisorRequest(credential.user,email.split('@')[0]));await window.FB.fbSignOut();await applyAuthenticatedUser(null);errEl.style.display='block';errEl.textContent='⏳ ส่งคำขอแล้ว กรุณารอแอดมินอนุมัติ';showToast('⏳ บัญชียังรอแอดมินอนุมัติ','warning');return;}
+    if(profile.active!==true||profile.role!=='supervisor'){await window.FB.fbSignOut();throw new Error('บัญชีนี้ยังไม่ได้รับอนุมัติเป็นหัวหน้างาน');}
     await applyAuthenticatedUser(credential.user);
     document.getElementById('supLoginSec').style.display = 'none';
     document.getElementById('supMainSec').style.display = 'block';
@@ -2442,13 +2572,14 @@ async function checkSupPin() {
   } catch(error) {
     await applyAuthenticatedUser(null);
     errEl.style.display = 'block';
+    errEl.textContent = '❌ '+firebaseAuthErrorMessage(error);
     document.getElementById('supPin').value = '';
     document.getElementById('supPin').style.borderColor = 'var(--r)';
     showToast('❌ '+firebaseAuthErrorMessage(error),'error');
   }
 }
 async function supervisorLogout(){
-  const actor=authUser?.email||SUPERVISOR_AUTH_EMAIL;try{await writeAuditLog('logout','security','ออกจากระบบหัวหน้างาน',{actor,actorRole:'หัวหน้างาน'});if(window.FB?.fbSignOut)await window.FB.fbSignOut();}catch(error){console.warn('Supervisor logout:',error);}await applyAuthenticatedUser(null);document.getElementById('supLoginSec').style.display='block';document.getElementById('supMainSec').style.display='none';showToast('🚪 ออกจากระบบหัวหน้างานแล้ว','success');
+  const actor=authUser?.email||'หัวหน้างาน';try{await writeAuditLog('logout','security','ออกจากระบบหัวหน้างาน',{actor,actorRole:'หัวหน้างาน'});if(window.FB?.fbSignOut)await window.FB.fbSignOut();}catch(error){console.warn('Supervisor logout:',error);}await applyAuthenticatedUser(null);document.getElementById('supLoginSec').style.display='block';document.getElementById('supRegistrationSec').style.display='none';document.getElementById('supMainSec').style.display='none';showToast('🚪 ออกจากระบบหัวหน้างานแล้ว','success');
 }
 
 function setSupTab(tab) {
@@ -2688,7 +2819,7 @@ function loadSupPerson(data) {
 // PWA Service Worker
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260714-auth', { updateViaCache:'none' })
+    navigator.serviceWorker.register('sw.js?v=20260714-trend-approval', { updateViaCache:'none' })
       .then(registration => registration.update())
       .then(() => console.log('SW registered and updated'))
       .catch(e => console.log('SW error:', e));
@@ -2741,7 +2872,7 @@ async function changeSupervisorPassword() {
   if(next.length<6)return showToast('⚠️ รหัสใหม่ต้องมีอย่างน้อย 6 ตัว','warning');
   if(next!==confirm)return showToast('⚠️ รหัสใหม่ทั้งสองช่องไม่ตรงกัน','error');
   if(next===current)return showToast('⚠️ กรุณาตั้งรหัสใหม่ที่ไม่ซ้ำรหัสเดิม','warning');
-  try{await window.FB.fbChangePassword(current,next);['currentSupervisorPassword','newSupervisorPassword','confirmSupervisorPassword'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});await writeAuditLog('security','security','เปลี่ยนรหัสผ่านหัวหน้างาน',{actor:authUser?.email||SUPERVISOR_AUTH_EMAIL,actorRole:'หัวหน้างาน'});showToast('✅ เปลี่ยนรหัสหัวหน้างานทุกอุปกรณ์แล้ว','success');}
+  try{await window.FB.fbChangePassword(current,next);['currentSupervisorPassword','newSupervisorPassword','confirmSupervisorPassword'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});await writeAuditLog('security','security','เปลี่ยนรหัสผ่านหัวหน้างาน',{actor:authUser?.email||'หัวหน้างาน',actorRole:'หัวหน้างาน'});showToast('✅ เปลี่ยนรหัสหัวหน้างานทุกอุปกรณ์แล้ว','success');}
   catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 
