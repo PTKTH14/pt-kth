@@ -9,8 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT">
 <link rel="apple-touch-icon" href="icon-512.svg">
+<link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260714-trend-supervisor-approval">
+<meta name="version" content="v20260714-modern-header-icon">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -276,29 +277,29 @@
   --o:#FD7E14;--r:#DC3545;--rb:#F8D7DA;
   --g1:#F8F9FA;--g2:#E9ECEF;--g4:#9CA3AF;--g6:#6C757D;--g8:#343A40;
   --sh1:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 12px rgba(15,76,129,.12);--sh3:0 8px 32px rgba(15,76,129,.18);
-  --r8:8px;--r12:12px;--mobile-nav-h:60px;
+  --r8:8px;--r12:12px;--mobile-nav-h:60px;--topbar-h:68px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-height:100vh}
-.topbar{background:var(--bd);color:#fff;padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh2)}
-.tl{display:flex;align-items:center;gap:10px}
-.tlogo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center}
-.ttitle{font-size:16px;font-weight:700}
+.topbar{background:linear-gradient(118deg,#0A3B66 0%,#0F4C81 52%,#17679D 100%);color:#fff;padding:0 22px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 6px 22px rgba(9,48,82,.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.tl{display:flex;align-items:center;gap:11px;min-width:0}
+.tlogo{width:44px;height:44px;padding:3px;background:#fff;border:1px solid rgba(255,255,255,.72);border-radius:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(4,31,55,.2);flex-shrink:0}.tlogo img{display:block;width:100%;height:100%;border-radius:10px}
+.tbrand{min-width:0}.ttitle{font-size:17px;font-weight:800;letter-spacing:.2px;line-height:1.15}.tsubtitle{font-size:11px;color:rgba(255,255,255,.72);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tr{display:flex;align-items:center;gap:8px}
-.live{background:var(--g);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
-.sync-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.15)}
-.sync-badge.syncing{background:#FFC107;color:#343A40}
-.sync-badge.synced{background:var(--g)}
-.sync-badge.error{background:var(--r)}
-.clock{font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
-.alert-bell{position:relative;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
-.alert-bell:hover{background:rgba(255,255,255,.22)}
+.live,.sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.1);backdrop-filter:blur(6px)}
+.live::before,.sync-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:#43D36B;box-shadow:0 0 0 3px rgba(67,211,107,.14)}
+.sync-badge.syncing::before{background:#FFC107;box-shadow:0 0 0 3px rgba(255,193,7,.14);animation:statusPulse 1.3s ease-in-out infinite}
+.sync-badge.error::before{background:#FF6978;box-shadow:0 0 0 3px rgba(255,105,120,.14)}
+@keyframes statusPulse{50%{opacity:.45}}
+.clock{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 10px;border-radius:9px;background:rgba(5,31,53,.22);border:1px solid rgba(255,255,255,.12)}
+.alert-bell{position:relative;width:38px;height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}.alert-bell svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.alert-bell:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}
 .alert-bell.has-alerts{background:rgba(255,193,7,.22);border-color:#FFD76A;animation:alertPulse 1.8s ease-in-out infinite}
 @keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,193,7,0)}50%{box-shadow:0 0 0 6px rgba(255,193,7,.18)}}
 .alert-badge{display:none;position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:12px;background:#DC3545;color:#fff;border:2px solid var(--bd);font-size:10px;font-weight:800;align-items:center;justify-content:center}
 .web-alert-card{border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid var(--g2);background:#fff;box-shadow:var(--sh1)}
 .web-alert-card.danger{border-left-color:#DC3545;background:#FFF8F8}.web-alert-card.warning{border-left-color:#FD7E14;background:#FFFBF4}.web-alert-card.success{border-left-color:#28A745;background:#F7FFF9}.web-alert-card.info{border-left-color:#1A6BAA;background:#F6FBFF}
-.app{display:flex;height:calc(100vh - 64px)}
+.app{display:flex;height:calc(100vh - var(--topbar-h))}
 .sidebar{width:230px;background:#fff;border-right:1px solid var(--g2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .sb-sec{padding:12px 14px;border-bottom:1px solid var(--g2)}
 .sb-sec label{font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px}
@@ -371,6 +372,9 @@ body{font-family:'Sarabun',sans-serif;background:#F0F4F8;color:var(--g8);min-hei
 .trend-point .point-core{transition:r .15s,stroke-width .15s}.trend-point:hover .point-core,.trend-point:focus .point-core,.trend-point.active .point-core{r:6px;stroke-width:3px}
 .trend-detail{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:10px;background:#EEF6FC;border:1px solid #D2E5F3;color:var(--g6);font-size:12px}
 .trend-detail strong{color:var(--bd);font-size:13px}.trend-detail-score{font-size:18px!important}
+.trend-review{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin-top:4px}.trend-review-label{font-size:11px;color:var(--g6)}
+.supervisor-account-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#fff;border:1px solid var(--g2);border-radius:10px;box-shadow:var(--sh1)}
+.supervisor-account-info{display:flex;align-items:center;gap:9px;min-width:0}.supervisor-account-avatar{width:34px;height:34px;border-radius:50%;background:#F3E5F5;color:#6A1B9A;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.supervisor-account-name{font-size:13px;font-weight:800;color:var(--bd);overflow:hidden;text-overflow:ellipsis}.supervisor-account-caption{font-size:10.5px;color:var(--g6)}
 .supervisor-request{border:1px solid #DCE5ED;border-radius:10px;padding:12px 13px;margin-bottom:9px;background:#fff}
 .supervisor-request-meta{font-size:11.5px;color:var(--g6);margin-top:3px;overflow-wrap:anywhere}
 .supervisor-request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
@@ -527,9 +531,11 @@ tr:hover td{background:var(--g1)}
   .trend-stage{min-width:720px}
   .ph h1{font-size:17px}
   .mobile-controls{display:flex !important}
-  .live,.sync-badge,.clock{display:none}
-  .ttitle{font-size:13px;max-width:225px;line-height:1.2}
-  .topbar{padding:0 12px}
+  :root{--topbar-h:62px}
+  .live,.sync-badge,.clock,.tsubtitle{display:none}
+  .ttitle{font-size:15px;max-width:185px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tlogo{width:39px;height:39px;border-radius:11px}.tlogo img{border-radius:8px}
+  .topbar{padding:0 12px}.alert-bell{width:36px;height:36px}
 }
 .toast{position:fixed;bottom:calc(var(--mobile-nav-h) + 12px);right:22px;background:var(--g8);color:#fff;padding:11px 18px;border-radius:var(--r8);font-size:13.5px;box-shadow:var(--sh3);z-index:9999;display:flex;align-items:center;gap:9px;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
@@ -547,15 +553,13 @@ tr:hover td{background:var(--g1)}
 
 <div class="topbar">
   <div class="tl">
-    <div class="tlogo">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    </div>
-    <div class="ttitle">PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</div>
+    <div class="tlogo"><img src="icon-512.svg" alt="โลโก้ PT KTH"></div>
+    <div class="tbrand"><div class="ttitle">PT KTH</div><div class="tsubtitle">ระบบงานผู้ช่วยนักกายภาพบำบัด</div></div>
   </div>
   <div class="tr">
-    <span class="live">● LIVE</span>
-    <span class="sync-badge synced" id="syncBadge">🔥 Firebase</span>
-    <button class="alert-bell" id="webAlertBell" onclick="openWebAlerts()" title="เปิดการแจ้งเตือน" aria-label="เปิดการแจ้งเตือน">🔔<span class="alert-badge" id="webAlertBadge">0</span></button>
+    <span class="live">ออนไลน์</span>
+    <span class="sync-badge synced" id="syncBadge">Firebase</span>
+    <button class="alert-bell" id="webAlertBell" onclick="openWebAlerts()" title="เปิดการแจ้งเตือน" aria-label="เปิดการแจ้งเตือน"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg><span class="alert-badge" id="webAlertBadge">0</span></button>
     <span class="clock" id="clock">--:--:--</span>
   </div>
 </div>
@@ -931,9 +935,15 @@ tr:hover td{background:var(--g1)}
   <!-- MAIN CONTENT (hidden until PIN) -->
   <div id="supMainSec" style="display:none">
 
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-    <div style="font-size:12px;color:var(--g6)">เข้าสู่ระบบด้วย Firebase: <strong id="supAccountDisplay">หัวหน้างาน</strong></div>
-    <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="supervisorLogout()">🚪 ออกจากระบบ</button>
+  <div class="supervisor-account-bar">
+    <div class="supervisor-account-info">
+      <div class="supervisor-account-avatar">👤</div>
+      <div style="min-width:0"><div class="supervisor-account-caption">บัญชีหัวหน้างาน</div><div class="supervisor-account-name" id="supAccountDisplay">หัวหน้างาน</div></div>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn btn-out" id="supervisorAccountButton" style="padding:6px 12px;font-size:12px" onclick="openSupervisorAccountModal()">⚙️ บัญชีและรหัสผ่าน</button>
+      <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="supervisorLogout()">🚪 ออกจากระบบ</button>
+    </div>
   </div>
 
   <div class="report-entry-bar">
@@ -990,14 +1000,6 @@ tr:hover td{background:var(--g1)}
     <div id="supPersonCards"></div>
   </div>
 
-  <div class="card" id="supervisorPasswordCard" style="max-width:460px;margin-top:18px;border-left:4px solid #6A1B9A">
-    <h3 style="margin-bottom:6px">🔐 เปลี่ยนรหัสหัวหน้างาน</h3>
-    <p style="font-size:12px;color:var(--g6);margin-bottom:12px">รหัสใหม่มีผลกับทุกอุปกรณ์ผ่าน Firebase Authentication</p>
-    <div class="fg"><label>รหัสปัจจุบัน</label><div class="password-wrap"><input type="password" id="currentSupervisorPassword" autocomplete="current-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('currentSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
-    <div class="fg"><label>รหัสใหม่ <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 6 ตัว)</span></label><div class="password-wrap"><input type="password" id="newSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('newSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
-    <div class="fg"><label>ยืนยันรหัสใหม่</label><div class="password-wrap"><input type="password" id="confirmSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeSupervisorPassword()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('confirmSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
-    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeSupervisorPassword()">เปลี่ยนรหัสหัวหน้างาน</button>
-  </div>
 </div>
 
 </div><!-- /supMainSec -->
@@ -1268,6 +1270,23 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<!-- MODAL: SUPERVISOR ACCOUNT -->
+<div class="mo" id="supervisorAccountModal">
+  <div class="modal">
+    <div class="mh"><h2>⚙️ บัญชีหัวหน้างาน</h2><button class="mc-btn" onclick="closeModal('supervisorAccountModal')">✕</button></div>
+    <div class="mb">
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:#F6F1FA;border:1px solid #E3D3EC;border-radius:10px;margin-bottom:16px"><div class="supervisor-account-avatar">👤</div><div><div style="font-size:11px;color:var(--g6)">เข้าสู่ระบบด้วย</div><strong id="supervisorAccountEmail" style="color:#6A1B9A">—</strong></div></div>
+      <h3 style="margin-bottom:5px">🔐 เปลี่ยนรหัสผ่าน</h3>
+      <p style="font-size:12px;color:var(--g6);margin-bottom:12px">รหัสใหม่มีผลกับทุกอุปกรณ์ผ่าน Firebase Authentication</p>
+      <div class="fg"><label>รหัสปัจจุบัน</label><div class="password-wrap"><input type="password" id="currentSupervisorPassword" autocomplete="current-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('currentSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+      <div class="fg"><label>รหัสใหม่ <span style="font-size:11px;color:var(--g6)">(อย่างน้อย 6 ตัว)</span></label><div class="password-wrap"><input type="password" id="newSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('newSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+      <div class="fg"><label>ยืนยันรหัสใหม่</label><div class="password-wrap"><input type="password" id="confirmSupervisorPassword" minlength="6" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')changeSupervisorPassword()"><button type="button" class="password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน" onclick="togglePasswordVisibility('confirmSupervisorPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg></button></div></div>
+      <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="changeSupervisorPassword()">บันทึกรหัสผ่านใหม่</button>
+    </div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('supervisorAccountModal')">ปิด</button></div>
+  </div>
+</div>
+
 <!-- MODAL: รายงานรายเดือน -->
 <div class="mo" id="monthlyReportModal">
   <div class="modal wide">
@@ -1370,7 +1389,7 @@ let activeRevIdx=null, reviewEvals={}, isAdminLoggedIn=false, isSupLoggedIn=fals
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='';
 
-function setSyncBadge(state,text){const b=document.getElementById('syncBadge');if(!b)return;b.className='sync-badge '+state;b.textContent=text;}
+function setSyncBadge(state,text){const b=document.getElementById('syncBadge');if(!b)return;const labels={'🔥 Firebase':'Firebase','⏳ Loading...':'กำลังโหลด','⚠️ Offline':'ออฟไลน์','⏳ Saving...':'กำลังบันทึก','⚠️ Error':'ผิดพลาด','⏳ Backup...':'กำลังสำรอง','⏳ Restore...':'กำลังกู้คืน'};b.className='sync-badge '+state;b.textContent=labels[text]||text;}
 function setLoadingDetail(t){const el=document.getElementById('loadingDetail');if(el)el.textContent=t;}
 
 // ══ WAIT FOR FIREBASE ══
@@ -1411,7 +1430,7 @@ async function applyAuthenticatedUser(user){
   if(!isSupLoggedIn){evaluationRecords=[];supervisorNotes=[];const pendingReports=JSON.parse(localStorage.getItem('assistant_evaluations')||'[]').filter(record=>record&&record.syncPending);localStorage.setItem('assistant_evaluations',JSON.stringify(pendingReports));}
   if(!isAdminLoggedIn){auditLogs=[];localStorage.removeItem('pt_audit_logs');}
   const supDisplay=document.getElementById('supAccountDisplay');if(supDisplay)supDisplay.textContent=authProfile?.displayName||authUser?.email||'หัวหน้างาน';
-  const supPasswordCard=document.getElementById('supervisorPasswordCard');if(supPasswordCard)supPasswordCard.style.display=authRole==='supervisor'?'block':'none';
+  const supAccountButton=document.getElementById('supervisorAccountButton');if(supAccountButton)supAccountButton.style.display=authRole==='supervisor'?'inline-flex':'none';
   const adminDisplay=document.getElementById('currentAdminEmailDisplay');if(adminDisplay)adminDisplay.textContent=authUser?.email||'—';
   updateMissedEvalAdminPanel();
   if(document.getElementById('view-admin')?.classList.contains('active'))checkAdminAuth();
@@ -2142,7 +2161,11 @@ function showTrendPoint(index){
   const point=dashboardTrendPoints[index];const detail=document.getElementById('trendDetail');if(!point||!detail)return;
   document.querySelectorAll('.trend-point').forEach((element,pointIndex)=>element.classList.toggle('active',pointIndex===index));
   const shift=point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย';
-  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>ความสมบูรณ์ของ Checklist</div></div>`;
+  const verdict=point.record.ptVerdict||point.record.status||'pending';
+  const verdictInfo=verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
+  const reviewer=point.record.ptReviewer?`<span class="trend-review-label">โดย ${escapeHtml(point.record.ptReviewer)}</span>`:'';
+  const comment=point.record.ptComment?`<div style="font-size:11px;color:var(--g6);margin-top:4px;max-width:360px">“${escapeHtml(point.record.ptComment)}”</div>`:'';
+  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">ผลประเมินจาก PT</div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label}</span>${reviewer}</div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>ความสมบูรณ์ของ Checklist</div></div>`;
 }
 
 function loadDashboard() {
@@ -2819,7 +2842,7 @@ function loadSupPerson(data) {
 // PWA Service Worker
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260714-trend-approval', { updateViaCache:'none' })
+  navigator.serviceWorker.register('sw.js?v=20260714-modern-header-icon', { updateViaCache:'none' })
       .then(registration => registration.update())
       .then(() => console.log('SW registered and updated'))
       .catch(e => console.log('SW error:', e));
@@ -2865,6 +2888,12 @@ function showSupNote(id) {
 }
 
 // ══ SUPERVISOR PASSWORD MANAGEMENT ══
+function openSupervisorAccountModal(){
+  if(authRole!=='supervisor')return showToast('⛔ เมนูนี้สำหรับบัญชีหัวหน้างาน','error');
+  const email=document.getElementById('supervisorAccountEmail');if(email)email.textContent=authUser?.email||'—';
+  ['currentSupervisorPassword','newSupervisorPassword','confirmSupervisorPassword'].forEach(id=>{const input=document.getElementById(id);if(input){input.value='';input.type='password';}});
+  document.getElementById('supervisorAccountModal').classList.add('open');
+}
 async function changeSupervisorPassword() {
   if(authRole!=='supervisor')return showToast('⛔ กรุณาเข้าสู่ระบบด้วยบัญชีหัวหน้างาน','error');
   const current=(document.getElementById('currentSupervisorPassword')?.value||'').trim();const next=(document.getElementById('newSupervisorPassword')?.value||'').trim();const confirm=(document.getElementById('confirmSupervisorPassword')?.value||'').trim();
@@ -2872,7 +2901,7 @@ async function changeSupervisorPassword() {
   if(next.length<6)return showToast('⚠️ รหัสใหม่ต้องมีอย่างน้อย 6 ตัว','warning');
   if(next!==confirm)return showToast('⚠️ รหัสใหม่ทั้งสองช่องไม่ตรงกัน','error');
   if(next===current)return showToast('⚠️ กรุณาตั้งรหัสใหม่ที่ไม่ซ้ำรหัสเดิม','warning');
-  try{await window.FB.fbChangePassword(current,next);['currentSupervisorPassword','newSupervisorPassword','confirmSupervisorPassword'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});await writeAuditLog('security','security','เปลี่ยนรหัสผ่านหัวหน้างาน',{actor:authUser?.email||'หัวหน้างาน',actorRole:'หัวหน้างาน'});showToast('✅ เปลี่ยนรหัสหัวหน้างานทุกอุปกรณ์แล้ว','success');}
+  try{await window.FB.fbChangePassword(current,next);['currentSupervisorPassword','newSupervisorPassword','confirmSupervisorPassword'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});await writeAuditLog('security','security','เปลี่ยนรหัสผ่านหัวหน้างาน',{actor:authUser?.email||'หัวหน้างาน',actorRole:'หัวหน้างาน'});closeModal('supervisorAccountModal');showToast('✅ เปลี่ยนรหัสหัวหน้างานทุกอุปกรณ์แล้ว','success');}
   catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 
