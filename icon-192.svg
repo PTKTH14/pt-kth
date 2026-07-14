@@ -1,13 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Background -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="PT KTH">
   <rect width="512" height="512" rx="100" fill="#0F4C81"/>
-  <!-- กากบาท / cross medical -->
-  <rect x="210" y="100" width="92" height="312" rx="20" fill="rgba(255,255,255,0.15)"/>
-  <rect x="100" y="210" width="312" height="92" rx="20" fill="rgba(255,255,255,0.15)"/>
-  <!-- ECG line -->
-  <polyline points="60,280 130,280 160,180 195,370 225,240 255,240 275,200 295,320 320,280 450,280"
-    fill="none" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Checklist dots -->
+  <rect x="210" y="100" width="92" height="312" rx="20" fill="#FFFFFF" fill-opacity=".15"/>
+  <rect x="100" y="210" width="312" height="92" rx="20" fill="#FFFFFF" fill-opacity=".15"/>
+  <polyline points="60,280 130,280 160,180 195,370 225,240 255,240 275,200 295,320 320,280 450,280" fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="160" cy="390" r="18" fill="#28A745"/>
   <circle cx="256" cy="390" r="18" fill="#28A745"/>
   <circle cx="352" cy="390" r="18" fill="#FFC107"/>
