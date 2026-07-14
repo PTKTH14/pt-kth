@@ -2688,8 +2688,9 @@ function loadSupPerson(data) {
 // PWA Service Worker
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('SW registered'))
+    navigator.serviceWorker.register('sw.js?v=20260714-auth', { updateViaCache:'none' })
+      .then(registration => registration.update())
+      .then(() => console.log('SW registered and updated'))
       .catch(e => console.log('SW error:', e));
   });
 }
