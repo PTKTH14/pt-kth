@@ -1,24 +1,15 @@
 {
-  "name": "Checklist PT",
-  "short_name": "Checklist PT",
-  "description": "ระบบงานผู้ช่วยนักกายภาพบำบัด รพ.ขุนตาล",
-  "start_url": "/pt-kth/",
+  "name": "PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด",
+  "short_name": "PT KTH",
+  "description": "ระบบ Checklist และประเมินงานผู้ช่วยนักกายภาพบำบัด",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0F4C81",
+  "background_color": "#F0F4F8",
   "theme_color": "#0F4C81",
-  "orientation": "portrait",
   "icons": [
-    {
-      "src": "icon-192.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    {"src": "icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable"},
+    {"src": "icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable"}
   ]
 }
