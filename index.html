@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260715-review-photos-v3">
+<meta name="version" content="v20260715-review-photos-v4">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -790,7 +790,7 @@ tr:hover td{background:var(--g1)}
   <!-- ตารางรายการปัญหาบ่อย -->
   <div class="card" style="margin-bottom:16px">
     <h3>⚠️ 5 อันดับรายการที่ทำไม่ครบบ่อย</h3>
-    <p style="font-size:12px;color:var(--g6);margin-top:-8px;margin-bottom:12px">นับจากรายการที่ N/A, ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน</p>
+    <p style="font-size:12px;color:var(--g6);margin-top:-8px;margin-bottom:12px">นับจากรายการที่ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน</p>
     <div id="issueTable"></div>
   </div>
 
@@ -2310,7 +2310,7 @@ function loadDashboard() {
     Object.keys(s.snap).forEach(k => {
       const st = s.snap[k].status;
       const pt = s.ptEvals && s.ptEvals[k];
-      if(pt === 'fail' || st === 'na' || st !== 'done') {
+      if(pt === 'fail' || (st !== 'done' && st !== 'na')) {
         const parts = k.split('-'); const g = parts[0]; const i = parts[1];
         if(CL[g] && CL[g].items[i]) {
           let text = CL[g].items[i].replace(/\([^)]+\)/g,'').trim();
@@ -2912,7 +2912,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260715-review-photos-v3';
+  const APP_VERSION = 'v20260715-review-photos-v4';
   let refreshing = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
