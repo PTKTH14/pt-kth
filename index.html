@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260714-header-typography-v2">
+<meta name="version" content="v20260715-review-photos-v3">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -487,6 +487,16 @@ tr:hover td{background:var(--g1)}
 .fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .15s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bm)}
 .fg textarea{min-height:75px;resize:vertical}
+.photo-box{border:1.5px dashed #9BC4DF;border-radius:var(--r8);background:#F7FBFF;padding:12px}
+.photo-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.photo-input{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.photo-hint{font-size:11.5px;color:var(--g6);margin-top:7px;line-height:1.45}
+.photo-grid,.detail-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
+.photo-card,.detail-photo-card{position:relative;border:1px solid var(--g2);border-radius:var(--r8);overflow:hidden;background:#fff;box-shadow:var(--sh1)}
+.photo-card img,.detail-photo-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--g1)}
+.photo-remove{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(0,0,0,.68);color:#fff;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.photo-caption{padding:6px 8px;font-size:11px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-photo-title{font-size:12px;font-weight:800;color:var(--bd);margin:10px 0 6px}
 .password-wrap{position:relative;width:100%}
 .password-wrap input{padding-right:44px!important}
 .password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#617487;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s;z-index:2}
@@ -681,6 +691,18 @@ tr:hover td{background:var(--g1)}
       <div class="fg">
         <label>🔒 หมายเหตุถึงหัวหน้างาน <span style="font-size:11px;color:var(--g4);font-weight:400">(เฉพาะหัวหน้างานเท่านั้นที่เห็น)</span></label>
         <textarea id="ptSupervisorNote" placeholder="บันทึกข้อมูลสำหรับหัวหน้างาน เช่น พฤติกรรม ปัญหาเฉพาะ ข้อเสนอแนะพิเศษ..." style="border-color:#9C27B0;background:#F3E5F5"></textarea>
+      </div>
+      <div class="fg">
+        <label>📷 รูปประกอบการประเมิน</label>
+        <div class="photo-box">
+          <input class="photo-input" type="file" id="ptPhotoInput" accept="image/*" capture="environment" multiple onchange="handleReviewPhotos(event)">
+          <div class="photo-actions">
+            <button type="button" class="btn btn-pri" style="padding:7px 12px;font-size:12.5px" onclick="document.getElementById('ptPhotoInput').click()">📷 ถ่ายรูป / เลือกรูป</button>
+            <button type="button" class="btn btn-out" style="padding:7px 12px;font-size:12.5px" onclick="clearReviewPhotos()">ล้างรูป</button>
+          </div>
+          <div class="photo-hint">แนบได้สูงสุด 3 รูป ระบบจะย่อรูปให้อัตโนมัติก่อนบันทึก</div>
+          <div id="ptPhotoPreview" class="photo-grid"></div>
+        </div>
       </div>
       <div class="fg">
         <label>📌 ผลการประเมินโดยรวม <span style="color:var(--r)">*</span> <span style="font-size:11px;color:var(--g4);font-weight:400">(คำนวณอัตโนมัติ)</span></label>
@@ -1388,7 +1410,7 @@ const CL = {
 
 // ══ STATE ══
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[];
-let activeRevIdx=null, reviewEvals={}, isAdminLoggedIn=false, isSupLoggedIn=false;
+let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='';
 
@@ -1844,6 +1866,7 @@ function openReview(idx){
   document.getElementById('ptComment').value='';
   document.getElementById('ptVerdict').value='';
   document.getElementById('ptSupervisorNote').value='';
+  clearReviewPhotos();
   const badge=document.getElementById('autoVerdictBadge');if(badge)badge.style.display='none';
   document.getElementById('reviewFormWrap').style.display='block';
   // scroll removed to prevent dashboard jump
@@ -1877,7 +1900,48 @@ function autoCalcVerdict(){
   }
 }
 function setEvalDefault(key,val,container){reviewEvals[key]=val;const cls=val==='pass'?'pass':val==='fail'?'fail':'nab';const btn=container.querySelector(`.rb.${cls}`);if(btn)btn.classList.add('sel');}
-function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;}
+function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;clearReviewPhotos();}
+
+function renderReviewPhotos(){
+  const box=document.getElementById('ptPhotoPreview');if(!box)return;
+  if(!reviewPhotos.length){box.innerHTML='';return;}
+  box.innerHTML=reviewPhotos.map((photo,i)=>`<div class="photo-card"><img src="${photo.dataUrl}" alt="รูปประกอบ ${i+1}"><button type="button" class="photo-remove" onclick="removeReviewPhoto(${i})" aria-label="ลบรูป">×</button><div class="photo-caption">${escapeHtml(photo.name||('รูปที่ '+(i+1)))}</div></div>`).join('');
+}
+function removeReviewPhoto(index){reviewPhotos.splice(index,1);renderReviewPhotos();}
+function clearReviewPhotos(){reviewPhotos=[];const input=document.getElementById('ptPhotoInput');if(input)input.value='';renderReviewPhotos();}
+function resizeReviewPhoto(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=900;let w=img.width,h=img.height;
+        if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
+        resolve({name:file.name||'photo.jpg',dataUrl:canvas.toDataURL('image/jpeg',0.68),createdAt:new Date().toISOString()});
+      };
+      img.onerror=()=>reject(new Error('อ่านรูปไม่สำเร็จ'));
+      img.src=reader.result;
+    };
+    reader.onerror=()=>reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'));
+    reader.readAsDataURL(file);
+  });
+}
+async function handleReviewPhotos(event){
+  const files=Array.from(event.target.files||[]).filter(file=>file.type&&file.type.startsWith('image/'));
+  if(!files.length)return;
+  const room=Math.max(0,3-reviewPhotos.length);
+  if(room===0){showToast('แนบรูปได้สูงสุด 3 รูป','warning');event.target.value='';return;}
+  try{
+    const picked=files.slice(0,room);
+    const resized=await Promise.all(picked.map(resizeReviewPhoto));
+    reviewPhotos=reviewPhotos.concat(resized).slice(0,3);
+    renderReviewPhotos();
+    if(files.length>room)showToast('แนบได้สูงสุด 3 รูป ระบบเลือกให้เท่าที่ใส่ได้','warning');
+  }catch(e){showToast('⚠️ เพิ่มรูปไม่สำเร็จ: '+e.message,'warning');}
+  event.target.value='';
+}
 
 async function submitReview(){
   if(activeRevIdx===null)return;
@@ -1888,7 +1952,7 @@ async function submitReview(){
   const supervisorNote = document.getElementById('ptSupervisorNote')?.value.trim() || String(rec.ptSupervisorNote||'').trim();
   rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
   delete rec.ptSupervisorNote;
-  rec.ptEvals={...reviewEvals};rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
+  rec.ptEvals={...reviewEvals};rec.ptPhotos=reviewPhotos.map(photo=>({...photo}));rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
   const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:rec.shift==='afternoon'?'afternoon':'morning',ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
   setSyncBadge('syncing','⏳ Saving...');
   try{
@@ -1902,6 +1966,7 @@ async function submitReview(){
     showToast('✅ บันทึกผลการประเมินแล้ว','success');
     document.getElementById('reviewFormWrap').style.display='none';
     activeRevIdx=null;
+    clearReviewPhotos();
     loadReviewView();
     refreshWebAlerts(false);
     updateHistoryFilters();
@@ -2094,6 +2159,9 @@ function showDetail(id){
   const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;
   document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
   let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${Math.round(dn/tot*100)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
+  if(Array.isArray(s.ptPhotos)&&s.ptPhotos.length){
+    html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${s.ptPhotos.map((photo,i)=>`<a class="detail-photo-card" href="${photo.dataUrl}" target="_blank" rel="noopener"><img src="${photo.dataUrl}" alt="รูปประกอบการประเมิน ${i+1}"></a>`).join('')}</div>`;
+  }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
     html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
     CL[g].items.forEach((text,i)=>{const st=s.snap[`${g}-${i}`]?.status||'';const ptE=s.ptEvals?.[`${g}-${i}`]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${text}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
@@ -2842,35 +2910,91 @@ function loadSupPerson(data) {
 
 
 
-// PWA Service Worker
+// PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
+  const APP_VERSION = 'v20260715-review-photos-v3';
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(refreshing) return;
+    refreshing = true;
+    sessionStorage.setItem('pt-kth-updated-version', APP_VERSION);
+    window.location.reload();
+  });
+
+  function activateWaitingWorker(registration) {
+    if(registration && registration.waiting) {
+      registration.waiting.postMessage('SKIP_WAITING');
+      return true;
+    }
+    return false;
+  }
+
+  function watchServiceWorker(registration) {
+    activateWaitingWorker(registration);
+    registration.addEventListener('updatefound', () => {
+      const worker = registration.installing;
+      if(!worker) return;
+      worker.addEventListener('statechange', () => {
+        if(worker.state === 'installed' && navigator.serviceWorker.controller) {
+          worker.postMessage('SKIP_WAITING');
+        }
+      });
+    });
+  }
+
   window.addEventListener('load', () => {
-  navigator.serviceWorker.register('sw.js?v=20260714-header-typography-v2', { updateViaCache:'none' })
-      .then(registration => registration.update())
-      .then(() => console.log('SW registered and updated'))
+    navigator.serviceWorker.register('sw.js?v=' + APP_VERSION, { updateViaCache:'none' })
+      .then(registration => {
+        watchServiceWorker(registration);
+        registration.update();
+        setInterval(() => registration.update(), 10 * 60 * 1000);
+      })
       .catch(e => console.log('SW error:', e));
   });
 }
 
-// แสดง install prompt (Android Chrome)
+// แสดง install prompt / fallback guide
 let deferredPrompt;
+function isAppInstalledMode(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function showInstallBanner(){
+  const banner = document.getElementById('installBanner');
+  if(banner && !isAppInstalledMode()) banner.style.display = 'flex';
+}
+function hideInstallBanner(){
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'none';
+}
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // แสดง banner
-  const banner = document.getElementById('installBanner');
-  if(banner) banner.style.display = 'flex';
+  showInstallBanner();
 });
 window.addEventListener('appinstalled', () => {
-  const banner = document.getElementById('installBanner');
-  if(banner) banner.style.display = 'none';
+  hideInstallBanner();
   deferredPrompt = null;
+});
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if(!deferredPrompt && !isAppInstalledMode()) showInstallBanner();
+  }, 1800);
 });
 
 function installApp() {
   if(deferredPrompt) {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    return;
+  }
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  if(isIOS || isSafari) {
+    showToast('📱 iPhone/iPad: กดปุ่มแชร์ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”','info');
+  } else {
+    showToast('💻 ถ้าไม่มีหน้าต่างติดตั้ง ให้กดเมนูของเบราว์เซอร์ แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอหลัก”','info');
   }
 }
 
