@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json">
+<title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
+<link rel="manifest" href="manifest.json?v=20260715-header-title-v6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Checklist PT">
+<meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260715-review-photos-v4">
+<meta name="version" content="v20260715-header-title-v6">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -543,9 +543,11 @@ tr:hover td{background:var(--g1)}
   .trend-stage{min-width:720px}
   .ph h1{font-size:17px}
   .mobile-controls{display:flex !important}
-  :root{--topbar-h:68px}
-  .live,.sync-badge,.clock,.tsubtitle{display:none}
-  .ttitle{font-size:18px;max-width:185px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  :root{--topbar-h:78px}
+  .live,.sync-badge,.clock{display:none}
+  .tbrand{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .ttitle{font-size:17px;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tsubtitle{display:block;font-size:10.5px;max-width:210px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.84)}
   .tl{gap:10px}.tlogo{width:45px;height:45px;padding:3px;border-radius:13px}.tlogo img{border-radius:10px}
   .topbar{padding:0 13px}.alert-bell{width:38px;height:38px}
 }
@@ -566,8 +568,8 @@ tr:hover td{background:var(--g1)}
 
 <div class="topbar">
   <div class="tl">
-    <div class="tlogo"><img src="icon-512.svg" alt="โลโก้ PT KTH"></div>
-    <div class="tbrand"><div class="ttitle">PT KTH</div><div class="tsubtitle">ระบบงานผู้ช่วยนักกายภาพบำบัด</div></div>
+    <div class="tlogo"><img src="icon-512.svg" alt="โลโก้ Checklist PT KTH"></div>
+    <div class="tbrand"><div class="ttitle">Checklist PT KTH</div><div class="tsubtitle">ระบบงานผู้ช่วยนักกายภาพบำบัด</div></div>
   </div>
   <div class="tr">
     <span class="live">ออนไลน์</span>
@@ -2912,7 +2914,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260715-review-photos-v4';
+  const APP_VERSION = 'v20260715-header-title-v6';
   let refreshing = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
