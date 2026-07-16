@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-time-checklist-dashboard-v8">
+<link rel="manifest" href="manifest.json?v=20260716-line-share-v11">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-time-checklist-dashboard-v8">
+<meta name="version" content="v20260716-line-share-v11">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -703,9 +703,10 @@ tr:hover td{background:var(--g1)}
           <input class="photo-input" type="file" id="ptPhotoInput" accept="image/*" capture="environment" multiple onchange="handleReviewPhotos(event)">
           <div class="photo-actions">
             <button type="button" class="btn btn-pri" style="padding:7px 12px;font-size:12.5px" onclick="document.getElementById('ptPhotoInput').click()">📷 ถ่ายรูป / เลือกรูป</button>
+            <button type="button" class="btn btn-out" style="padding:7px 12px;font-size:12.5px;color:#06C755;border-color:#06C755" onclick="shareReviewPhotosToLine()">💬 ส่งรูปเข้า LINE</button>
             <button type="button" class="btn btn-out" style="padding:7px 12px;font-size:12.5px" onclick="clearReviewPhotos()">ล้างรูป</button>
           </div>
-          <div class="photo-hint">แนบได้สูงสุด 3 รูป ระบบจะย่อรูปให้อัตโนมัติก่อนบันทึก</div>
+          <div class="photo-hint">แนบได้สูงสุด 3 รูป ระบบจะย่อรูปให้อัตโนมัติ และสามารถกดส่งเข้า LINE กลุ่มจากมือถือได้</div>
           <div id="ptPhotoPreview" class="photo-grid"></div>
         </div>
       </div>
@@ -1916,17 +1917,69 @@ function renderReviewPhotos(){
 }
 function removeReviewPhoto(index){reviewPhotos.splice(index,1);renderReviewPhotos();}
 function clearReviewPhotos(){reviewPhotos=[];const input=document.getElementById('ptPhotoInput');if(input)input.value='';renderReviewPhotos();}
+function reviewPhotoStorageKey(id){return'pt_review_photos_'+String(id);}
+function saveReviewPhotosLocal(id,photos){
+  try{
+    if(photos&&photos.length)localStorage.setItem(reviewPhotoStorageKey(id),JSON.stringify(photos));
+    else localStorage.removeItem(reviewPhotoStorageKey(id));
+  }catch(e){showToast('⚠️ บันทึกรูปในเครื่องไม่สำเร็จ พื้นที่เครื่องอาจเต็ม','warning');}
+}
+async function getReviewPhotosForRecord(record){
+  if(Array.isArray(record?.ptPhotos)&&record.ptPhotos.length)return record.ptPhotos;
+  try{return JSON.parse(localStorage.getItem(reviewPhotoStorageKey(record?.id))||'[]');}
+  catch(e){return[];}
+}
+function dataUrlToFile(dataUrl,filename){
+  const parts=String(dataUrl).split(',');const mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/jpeg';
+  const bin=atob(parts[1]||'');const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new File([bytes],filename,{type:mime});
+}
+function reviewShareText(){
+  const reviewer=document.getElementById('ptReviewerSel')?.value||'';
+  const verdict=document.getElementById('ptVerdict')?.value||'';
+  const verdictLabel=verdict==='pass'?'ผ่าน':verdict==='partial'?'ผ่านบางส่วน':verdict==='fail'?'ไม่ผ่าน':'ยังไม่เลือกผล';
+  const comment=document.getElementById('ptComment')?.value.trim()||'';
+  const rec=activeRevIdx!==null?submissions[activeRevIdx]:null;
+  return [
+    '📷 รูปประกอบการประเมิน Checklist PT KTH',
+    rec?`ผู้ช่วย: ${rec.staffName||'-'}`:'',
+    rec?`วันที่: ${thaiDate(rec.date)} | ${shiftLabel(rec.shift||'morning')}`:'',
+    `ผลประเมิน: ${verdictLabel}`,
+    reviewer?`PT ผู้ประเมิน: ${reviewer}`:'',
+    comment?`ข้อสังเกต: ${comment}`:''
+  ].filter(Boolean).join('\n');
+}
+async function shareReviewPhotosToLine(){
+  if(!reviewPhotos.length)return showToast('⚠️ เลือกรูปก่อนส่งเข้า LINE','warning');
+  const files=reviewPhotos.map((photo,i)=>dataUrlToFile(photo.dataUrl,photo.name||`review-photo-${i+1}.jpg`));
+  const shareData={title:'Checklist PT KTH',text:reviewShareText(),files};
+  try{
+    if(navigator.canShare&&navigator.canShare({files})){
+      await navigator.share(shareData);
+      showToast('✅ เลือก LINE แล้วส่งรูปได้เลย','success');
+    }else if(navigator.share){
+      await navigator.share({title:shareData.title,text:shareData.text});
+      showToast('⚠️ เครื่องนี้แชร์รูปตรง ๆ ไม่ได้ ส่งข้อความสรุปแล้ว กรุณาแนบรูปใน LINE เพิ่มเอง','warning');
+    }else{
+      showToast('⚠️ เครื่องนี้ไม่รองรับปุ่มแชร์ กรุณาบันทึกรูปแล้วส่งใน LINE ด้วยตนเอง','warning');
+    }
+  }catch(e){
+    if(String(e.name)==='AbortError')return;
+    showToast('⚠️ แชร์เข้า LINE ไม่สำเร็จ: '+e.message,'warning');
+  }
+}
 function resizeReviewPhoto(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=()=>{
       const img=new Image();
       img.onload=()=>{
-        const max=900;let w=img.width,h=img.height;
+        const max=640;let w=img.width,h=img.height;
         if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
         const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
         const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
-        resolve({name:file.name||'photo.jpg',dataUrl:canvas.toDataURL('image/jpeg',0.68),createdAt:new Date().toISOString()});
+        resolve({name:file.name||'photo.jpg',dataUrl:canvas.toDataURL('image/jpeg',0.55),createdAt:new Date().toISOString()});
       };
       img.onerror=()=>reject(new Error('อ่านรูปไม่สำเร็จ'));
       img.src=reader.result;
@@ -1962,8 +2015,7 @@ async function submitReview(){
   rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
   delete rec.ptSupervisorNote;
   rec.ptEvals={...reviewEvals};
-  if(reviewPhotos.length)rec.ptPhotos=reviewPhotos.map(photo=>({...photo}));
-  else delete rec.ptPhotos;
+  delete rec.ptPhotos;
   rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
   const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:rec.shift==='afternoon'?'afternoon':'morning',ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
   setSyncBadge('syncing','⏳ Saving...');
@@ -1971,17 +2023,9 @@ async function submitReview(){
     // อัปเดต local array ก่อน
     submissions[activeRevIdx] = rec;
     // บันทึก Firebase
-    try{
-      if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(rec,privateNote);
-      else{await window.FB.fbUpdateSubmission(rec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
-    }catch(saveError){
-      const canRetryWithoutPhotos=Array.isArray(rec.ptPhotos)&&rec.ptPhotos.length&&/permission|insufficient/i.test(String(saveError&&saveError.message||''));
-      if(!canRetryWithoutPhotos)throw saveError;
-      const retryRec={...rec};delete retryRec.ptPhotos;submissions[activeRevIdx]=retryRec;
-      if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(retryRec,privateNote);
-      else{await window.FB.fbUpdateSubmission(retryRec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
-      showToast('⚠️ บันทึกผลแล้ว แต่รูปยังไม่ถูกส่ง เพราะ Firebase ยังไม่อนุญาตฟิลด์รูป','warning');
-    }
+    if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(rec,privateNote);
+    else{await window.FB.fbUpdateSubmission(rec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
+    saveReviewPhotosLocal(rec.id,reviewPhotos.map(photo=>({...photo})));
     await writeAuditLog('update','system_data',`บันทึกผลประเมิน Checklist ของ ${rec.staffName} — ${rec.date} ${shiftLabel(rec.shift)}`,{actor:reviewer,actorRole:'PT'});
     setSyncBadge('synced','🔥 Firebase');
     showToast('✅ บันทึกผลการประเมินแล้ว','success');
@@ -2175,13 +2219,14 @@ function loadHistory(){
   }).join('');
 }
 
-function showDetail(id){
+async function showDetail(id){
   const s=submissions.find(x=>x.id===id);if(!s)return;
   const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;
   document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
   let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${Math.round(dn/tot*100)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
-  if(Array.isArray(s.ptPhotos)&&s.ptPhotos.length){
-    html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${s.ptPhotos.map((photo,i)=>`<a class="detail-photo-card" href="${photo.dataUrl}" target="_blank" rel="noopener"><img src="${photo.dataUrl}" alt="รูปประกอบการประเมิน ${i+1}"></a>`).join('')}</div>`;
+  const detailPhotos=await getReviewPhotosForRecord(s);
+  if(detailPhotos.length){
+    html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${detailPhotos.map((photo,i)=>{const src=photo.url||photo.dataUrl;return`<a class="detail-photo-card" href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="รูปประกอบการประเมิน ${i+1}"></a>`;}).join('')}</div>`;
   }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
     html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
@@ -2933,7 +2978,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-time-checklist-dashboard-v8';
+  const APP_VERSION = 'v20260716-line-share-v11';
   let refreshing = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
