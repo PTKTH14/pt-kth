@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260715-header-title-v6">
+<link rel="manifest" href="manifest.json?v=20260716-time-checklist-dashboard-v8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260715-header-title-v6">
+<meta name="version" content="v20260716-time-checklist-dashboard-v8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -112,11 +112,14 @@
       },
       fbGetConfig: async function() {
         const snap = await db.collection('config').doc('main').get();
-        if (!snap.exists) return { staffList: [], ptList: [] };
-        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[] };
+        if (!snap.exists) return { staffList: [], ptList: [], checklistItems: null };
+        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[], checklistItems: snap.data().checklistItems||null };
       },
       fbSaveConfig: async function(staffList, ptList) {
-        await db.collection('config').doc('main').set({ staffList, ptList });
+        await db.collection('config').doc('main').set({ staffList, ptList }, { merge:true });
+      },
+      fbSaveChecklistConfig: async function(checklistItems) {
+        await db.collection('config').doc('main').set({ checklistItems }, { merge:true });
       },
       fbGetSubmissions: async function() {
         const snap = await db.collection('submissions').get();
@@ -1385,7 +1388,8 @@ const CL = {
       'เปิดเครื่องมือกายภาพทุกเครื่อง + เช็ดทำความสะอาดเครื่อง',
       'เตรียมน้ำ + ขั้วกระตุ้นไฟฟ้า (ทำทันทีที่มา)',
       'พับเตรียมผ้าห่อแผ่นร้อนให้พร้อมใช้',
-      'พับเตรียมผ้ารองหมอน / รองไหล่ให้พร้อมใช้'
+      'พับเตรียมผ้ารองหมอน / รองไหล่ให้พร้อมใช้',
+      'เก็บ, และจัดเรียงรองเท้าผู้รับบริการให้เป็นระเบียบ'
     ]
   },
   evening: {
@@ -1408,6 +1412,10 @@ const CL = {
       'นำส่งสลิปรูดบัตรที่ห้องการเงิน'
     ]
   }
+};
+const DEFAULT_CL_ITEMS = {
+  morning: [...CL.morning.items],
+  evening: [...CL.evening.items]
 };
 
 // ══ STATE ══
@@ -1513,6 +1521,11 @@ async function init(){
       const config = await withTimeout(window.FB.fbGetConfig());
       staffList = (config && config.staffList) ? config.staffList : [];
       ptList    = (config && config.ptList)    ? config.ptList    : [];
+      if(config && config.checklistItems) {
+        localStorage.setItem('custom_cl_morning', JSON.stringify(Array.isArray(config.checklistItems.morning)?config.checklistItems.morning:DEFAULT_CL_ITEMS.morning));
+        localStorage.setItem('custom_cl_evening', JSON.stringify(Array.isArray(config.checklistItems.evening)?config.checklistItems.evening:DEFAULT_CL_ITEMS.evening));
+      }
+      _applyCLCustom();
       setLoadingDetail('โหลด submissions...');
       const subs = await withTimeout(window.FB.fbGetSubmissions());
       submissions = Array.isArray(subs) ? subs : [];
@@ -1713,34 +1726,16 @@ function buildChecklist(){
     'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์ ⭐)'
   ];
 
-  // แสดง time warning เวรเช้า
-  if(currentShift === 'morning') {
-    const now = new Date();
-    const activeDate = getActiveDate();
-    const isToday = activeDate === fmtDate(now);
-    if(isToday) {
-      const h = now.getHours(), m = now.getMinutes();
-      const totalMin = h*60+m;
-      const deadlineMin = 8*60+30;
-      const remaining = deadlineMin - totalMin;
-      let timeBanner = document.getElementById('timeLockBanner');
-      if(!timeBanner) {
-        timeBanner = document.createElement('div');
-        timeBanner.id = 'timeLockBanner';
-        wrap.parentNode.insertBefore(timeBanner, wrap);
-      }
-      if(totalMin >= deadlineMin) {
-        timeBanner.innerHTML = `<div style="background:var(--rb);border:1.5px solid var(--r);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:var(--r);font-weight:700;font-size:13.5px">⛔ เลยเวลา 08:30 น. แล้ว — ไม่สามารถบันทึกเวรเช้าได้อีก กรุณาติดต่อแอดมิน</div>`;
-      } else if(remaining <= 30) {
-        timeBanner.innerHTML = `<div style="background:var(--yb);border:1.5px solid var(--y);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:#856404;font-weight:700;font-size:13.5px">⏰ เหลือเวลาอีก ${remaining} นาที ก่อนถึงเวลา 08:30 น. — รีบบันทึกด่วน!</div>`;
-      } else {
-        timeBanner.innerHTML = '';
-      }
-    }
-  } else {
-    const timeBanner = document.getElementById('timeLockBanner');
-    if(timeBanner) timeBanner.innerHTML = '';
-  }
+  // แสดง time warning ตามเวร
+  const activeDateForLock=getActiveDate();const timeLock=getTimeLockInfo(activeDateForLock,currentShift,'assistant');
+  let timeBanner=document.getElementById('timeLockBanner');
+  if(!timeBanner){timeBanner=document.createElement('div');timeBanner.id='timeLockBanner';wrap.parentNode.insertBefore(timeBanner,wrap);}
+  if(timeLock.locked){
+    timeBanner.innerHTML=`<div style="background:var(--rb);border:1.5px solid var(--r);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:var(--r);font-weight:700;font-size:13.5px">${timeLock.message} กรุณาติดต่อแอดมิน</div>`;
+  }else if(activeDateForLock===fmtDate(new Date())){
+    const now=new Date();const remaining=SHIFT_DEADLINES.assistant[currentShift]-((now.getHours()*60)+now.getMinutes());
+    timeBanner.innerHTML=remaining>0&&remaining<=30?`<div style="background:var(--yb);border:1.5px solid var(--y);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:#856404;font-weight:700;font-size:13.5px">⏰ เหลือเวลาอีก ${remaining} นาที ก่อนถึงเวลา ${timeLock.deadlineText} น. — รีบบันทึกด่วน!</div>`:'';
+  }else timeBanner.innerHTML='';
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
     // คำนวณจำนวนรายการรวมเสาร์
@@ -1788,23 +1783,31 @@ function updateProgress(){
 
 function getActiveStaff(){const isMobile=window.innerWidth<=768;const sel=isMobile?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
 function getActiveDate(){const isMobile=window.innerWidth<=768;return isMobile?document.getElementById('dateInputMobile').value:document.getElementById('dateInput').value;}
+const SHIFT_DEADLINES = {
+  assistant: { morning: 8*60+30, afternoon: 20*60 },
+  pt: { morning: 9*60+30, afternoon: 20*60+30 }
+};
+function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
+function getTimeLockInfo(date,shift,role){
+  if(!date)return{locked:false,message:'',deadlineText:''};
+  const normalizedShift=shift==='afternoon'?'afternoon':'morning';
+  const deadline=SHIFT_DEADLINES[role]?.[normalizedShift];
+  const deadlineText=minutesToTimeText(deadline||0);
+  const today=fmtDate(new Date());
+  if(date<today)return{locked:true,deadlineText,message:`⛔ เลยวันที่บันทึกแล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}ย้อนหลังได้`};
+  if(date>today)return{locked:false,deadlineText,message:''};
+  const now=new Date();const current=now.getHours()*60+now.getMinutes();
+  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${normalizedShift==='morning'?'เวรเช้า':'เวรบ่าย'}ได้`};
+  return{locked:false,deadlineText,message:''};
+}
 
 function openSubmitModal(){
   const st=getActiveStaff();const date=getActiveDate();
   if(!st.text||st.text==='— เลือกชื่อ —'||st.text==='— เลือกชื่อผู้ช่วย —')return showToast('⚠️ เลือกชื่อผู้ช่วยก่อน','warning');
   if(!date)return showToast('⚠️ เลือกวันที่ก่อน','warning');
 
-  // เช็คเวลา: เวรเช้าต้องส่งก่อน 08:30 น.
-  if(currentShift === 'morning'){
-    const now=new Date(); const isToday=date===fmtDate(now);
-    if(isToday){
-      const h=now.getHours(),m=now.getMinutes();
-      if(h>8||(h===8&&m>=30)){
-        showToast('⛔ เลยเวลา 08:30 น. แล้ว ไม่สามารถบันทึกเวรเช้าได้','error');
-        return;
-      }
-    }
-  }
+  const timeLock=getTimeLockInfo(date,currentShift,'assistant');
+  if(timeLock.locked)return showToast(timeLock.message,'error');
 
   let tDone=0,tNA=0,tMiss=0,tAll=0;
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
@@ -1839,11 +1842,13 @@ function loadReviewView(){
   const pending=submissions.filter(s=>s.status==='pending');
   const pl=document.getElementById('pendingList');if(!pl)return;
   if(pending.length===0){pl.innerHTML=`<div style="background:#fff;border-radius:var(--r12);padding:30px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:34px;margin-bottom:8px">📭</div><div style="font-size:15px;color:var(--g6)">ไม่มี Checklist ที่รอประเมิน</div></div>`;document.getElementById('reviewFormWrap').style.display='none';return;}
-  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pending.map(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);const idx=submissions.indexOf(s);return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${s.staffName}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${s.submitTimeDisplay||''}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})">🔍 ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pending.map(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${s.staffName}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${s.submitTimeDisplay||''}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 
 function openReview(idx){
   activeRevIdx=idx;reviewEvals={};const rec=submissions[idx];
+  const ptLock=getTimeLockInfo(rec.date,rec.shift||'morning','pt');
+  if(ptLock.locked){activeRevIdx=null;return showToast(ptLock.message,'error');}
   document.getElementById('rvDateChip').textContent=rec.date;
   document.getElementById('rvStaffLabel').textContent=rec.staffName;
   document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
@@ -1869,7 +1874,7 @@ function openReview(idx){
   document.getElementById('ptVerdict').value='';
   document.getElementById('ptSupervisorNote').value='';
   clearReviewPhotos();
-  const badge=document.getElementById('autoVerdictBadge');if(badge)badge.style.display='none';
+  autoCalcVerdict();
   document.getElementById('reviewFormWrap').style.display='block';
   // scroll removed to prevent dashboard jump
 }
@@ -1951,18 +1956,32 @@ async function submitReview(){
   if(!reviewer)return showToast('⚠️ เลือกชื่อนักกายภาพบำบัดก่อน','warning');
   if(!verdict)return showToast('⚠️ เลือกผลการประเมินก่อน','warning');
   const now=new Date();const rec=submissions[activeRevIdx];
+  const ptLock=getTimeLockInfo(rec.date,rec.shift||'morning','pt');
+  if(ptLock.locked)return showToast(ptLock.message,'error');
   const supervisorNote = document.getElementById('ptSupervisorNote')?.value.trim() || String(rec.ptSupervisorNote||'').trim();
   rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
   delete rec.ptSupervisorNote;
-  rec.ptEvals={...reviewEvals};rec.ptPhotos=reviewPhotos.map(photo=>({...photo}));rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
+  rec.ptEvals={...reviewEvals};
+  if(reviewPhotos.length)rec.ptPhotos=reviewPhotos.map(photo=>({...photo}));
+  else delete rec.ptPhotos;
+  rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
   const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:rec.shift==='afternoon'?'afternoon':'morning',ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
   setSyncBadge('syncing','⏳ Saving...');
   try{
     // อัปเดต local array ก่อน
     submissions[activeRevIdx] = rec;
     // บันทึก Firebase
-    if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(rec,privateNote);
-    else{await window.FB.fbUpdateSubmission(rec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
+    try{
+      if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(rec,privateNote);
+      else{await window.FB.fbUpdateSubmission(rec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
+    }catch(saveError){
+      const canRetryWithoutPhotos=Array.isArray(rec.ptPhotos)&&rec.ptPhotos.length&&/permission|insufficient/i.test(String(saveError&&saveError.message||''));
+      if(!canRetryWithoutPhotos)throw saveError;
+      const retryRec={...rec};delete retryRec.ptPhotos;submissions[activeRevIdx]=retryRec;
+      if(window.FB.fbSaveSubmissionReview)await window.FB.fbSaveSubmissionReview(retryRec,privateNote);
+      else{await window.FB.fbUpdateSubmission(retryRec);if(privateNote&&window.FB.fbSaveSupervisorNote)await window.FB.fbSaveSupervisorNote(privateNote);}
+      showToast('⚠️ บันทึกผลแล้ว แต่รูปยังไม่ถูกส่ง เพราะ Firebase ยังไม่อนุญาตฟิลด์รูป','warning');
+    }
     await writeAuditLog('update','system_data',`บันทึกผลประเมิน Checklist ของ ${rec.staffName} — ${rec.date} ${shiftLabel(rec.shift)}`,{actor:reviewer,actorRole:'PT'});
     setSyncBadge('synced','🔥 Firebase');
     showToast('✅ บันทึกผลการประเมินแล้ว','success');
@@ -2236,7 +2255,7 @@ function showTrendPoint(index){
   const shift=point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย';
   const verdict=point.record.ptVerdict||point.record.status||'pending';
   const verdictInfo=verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
-  const reviewer=point.record.ptReviewer?`<span class="trend-review-label">โดย ${escapeHtml(point.record.ptReviewer)}</span>`:'';
+  const reviewer=(isAdminLoggedIn||isSupLoggedIn)&&point.record.ptReviewer?`<span class="trend-review-label">โดย ${escapeHtml(point.record.ptReviewer)}</span>`:'';
   const comment=point.record.ptComment?`<div style="font-size:11px;color:var(--g6);margin-top:4px;max-width:360px">“${escapeHtml(point.record.ptComment)}”</div>`:'';
   detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">ผลประเมินจาก PT</div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label}</span>${reviewer}</div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>ความสมบูรณ์ของ Checklist</div></div>`;
 }
@@ -2914,7 +2933,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260715-header-title-v6';
+  const APP_VERSION = 'v20260716-time-checklist-dashboard-v8';
   let refreshing = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -3011,7 +3030,7 @@ function showSupNote(id) {
         📋 ${escapeHtml(s.staffName)} — ${escapeHtml(thaiDate(s.date))} | ${shiftLabel(s.shift||'morning')}
       </div>
       <div style="white-space:pre-wrap">${escapeHtml(s.ptSupervisorNote)}</div>
-      <div style="margin-top:10px;font-size:11.5px;color:var(--g4)">ประเมินโดย: ${escapeHtml(s.ptReviewer||'—')} เมื่อ ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>`;
+      ${(isAdminLoggedIn||isSupLoggedIn)?`<div style="margin-top:10px;font-size:11.5px;color:var(--g4)">ประเมินโดย: ${escapeHtml(s.ptReviewer||'—')} เมื่อ ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>`:''}`;
   }
   document.getElementById('supNoteModal').classList.add('open');
 }
@@ -3326,7 +3345,12 @@ function getClItems(shift) {
   if(saved) {
     try { return JSON.parse(saved); } catch(e) {}
   }
-  return CL[shift === 'morning' ? 'morning' : 'evening']?.items || [];
+  return shift === 'morning' ? [...DEFAULT_CL_ITEMS.morning] : [...DEFAULT_CL_ITEMS.evening];
+}
+
+async function saveChecklistItemsToFirebase(){
+  const checklistItems={morning:getClItems('morning'),evening:getClItems('evening')};
+  if(window.FB?.fbSaveChecklistConfig)await window.FB.fbSaveChecklistConfig(checklistItems);
 }
 
 function setClShift(shift) {
@@ -3358,7 +3382,7 @@ function renderClItems() {
     </div>`).join('');
 }
 
-function addClItem() {
+async function addClItem() {
   const inp = document.getElementById('newClItem');
   const text = inp?.value.trim();
   if(!text) return;
@@ -3368,6 +3392,7 @@ function addClItem() {
   localStorage.setItem(key, JSON.stringify(items));
   // อัปเดต CL object ด้วย
   _applyCLCustom();
+  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ เพิ่มในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
   inp.value = '';
   renderClItems();
   showToast('✅ เพิ่มรายการแล้ว','success');
@@ -3380,12 +3405,13 @@ function deleteClItem(idx) {
     items.splice(idx, 1);
     localStorage.setItem(key, JSON.stringify(items));
     _applyCLCustom();
+    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+e.message,'warning'));
     renderClItems();
     showToast('🗑️ ลบแล้ว','success');
   });
 }
 
-function moveClItem(idx, dir) {
+async function moveClItem(idx, dir) {
   const key = 'custom_cl_' + currentClShift;
   const items = getClItems(currentClShift);
   const newIdx = idx + dir;
@@ -3393,13 +3419,15 @@ function moveClItem(idx, dir) {
   [items[idx], items[newIdx]] = [items[newIdx], items[idx]];
   localStorage.setItem(key, JSON.stringify(items));
   _applyCLCustom();
+  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ ย้ายในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
   renderClItems();
 }
 
-function saveClItems() {
+async function saveClItems() {
   _applyCLCustom();
+  try{await saveChecklistItemsToFirebase();showToast('💾 บันทึก Checklist แล้ว — sync ทุกเครื่องแล้ว','success');}
+  catch(e){showToast('⚠️ บันทึกในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
   buildChecklist();
-  showToast('💾 บันทึก Checklist แล้ว — มีผลทันที!','success');
 }
 
 function resetClItems() {
@@ -3407,6 +3435,7 @@ function resetClItems() {
     localStorage.removeItem('custom_cl_morning');
     localStorage.removeItem('custom_cl_evening');
     _applyCLCustom();
+    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+e.message,'warning'));
     renderClItems();
     buildChecklist();
     showToast('↩ คืนค่าเดิมแล้ว','success');
@@ -3417,8 +3446,8 @@ function _applyCLCustom() {
   // apply custom items เข้า CL object
   const mItems = getClItems('morning');
   const eItems = getClItems('evening');
-  if(mItems.length > 0) CL.morning.items = mItems;
-  if(eItems.length > 0) CL.evening.items = eItems;
+  CL.morning.items = mItems.length ? mItems : [...DEFAULT_CL_ITEMS.morning];
+  CL.evening.items = eItems.length ? eItems : [...DEFAULT_CL_ITEMS.evening];
 }
 
 // โหลด custom checklist ตอนเริ่มแอป
