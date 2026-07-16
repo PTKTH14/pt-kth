@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-qc-fixes-v12">
+<link rel="manifest" href="manifest.json?v=20260716-mobile-history-fix-v13">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-qc-fixes-v12">
+<meta name="version" content="v20260716-mobile-history-fix-v13">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1228,9 +1228,9 @@ tr:hover td{background:var(--g1)}
   <button class="mn-item active" id="mnav-checklist" onclick="switchView('checklist',document.getElementById('nav-checklist'));setMobileNav('checklist')"><span class="mn-icon">✅</span><span class="mn-label">Checklist</span></button>
   <button class="mn-item" id="mnav-review" onclick="switchView('review',document.getElementById('nav-review'));setMobileNav('review')"><span class="mn-icon">🔍</span><span class="mn-label">ประเมิน</span></button>
   <button class="mn-item" id="mnav-dashboard" onclick="switchView('dashboard',document.getElementById('nav-dashboard'));setMobileNav('dashboard')"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></button>
+  <button class="mn-item" id="mnav-history" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
   <button class="mn-item" id="mnav-evaluation" onclick="switchView('evaluation',document.getElementById('nav-evaluation'));setMobileNav('evaluation')"><span class="mn-icon">📝</span><span class="mn-label">ประเมินส่วนตัว</span></button>
   <button class="mn-item" id="mnav-supervisor" onclick="switchView('supervisor',document.getElementById('nav-supervisor'));setMobileNav('supervisor')"><span class="mn-icon">👔</span><span class="mn-label">หัวหน้า</span></button>
-  <button class="mn-item" id="mnav-history" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
 </nav>
 
 <!-- MODALS -->
@@ -2471,14 +2471,6 @@ function loadDashboard() {
     }
   }
 
-  // restore scroll หลัง render เสร็จ
-  if(mainEl && isDashVisible) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        mainEl.scrollTop = savedTop;
-      });
-    });
-  }
 }
 
 // ══ SETTINGS ══
@@ -2977,7 +2969,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-qc-fixes-v12';
+  const APP_VERSION = 'v20260716-mobile-history-fix-v13';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
