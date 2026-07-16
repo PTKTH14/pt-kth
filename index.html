@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-mobile-history-fix-v13">
+<link rel="manifest" href="manifest.json?v=20260716-system-settings-v14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-mobile-history-fix-v13">
+<meta name="version" content="v20260716-system-settings-v14">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -113,13 +113,16 @@
       fbGetConfig: async function() {
         const snap = await db.collection('config').doc('main').get();
         if (!snap.exists) return { staffList: [], ptList: [], checklistItems: null };
-        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[], checklistItems: snap.data().checklistItems||null };
+        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[], checklistItems: snap.data().checklistItems||null, systemSettings: snap.data().systemSettings||null };
       },
       fbSaveConfig: async function(staffList, ptList) {
         await db.collection('config').doc('main').set({ staffList, ptList }, { merge:true });
       },
       fbSaveChecklistConfig: async function(checklistItems) {
         await db.collection('config').doc('main').set({ checklistItems }, { merge:true });
+      },
+      fbSaveSystemSettings: async function(systemSettings) {
+        await db.collection('config').doc('main').set({ systemSettings }, { merge:true });
       },
       fbGetSubmissions: async function() {
         const snap = await db.collection('submissions').get();
@@ -250,7 +253,9 @@
         const config = data && data.config ? data.config : {};
         await db.collection('config').doc('main').set({
           staffList: Array.isArray(config.staffList) ? config.staffList : [],
-          ptList: Array.isArray(config.ptList) ? config.ptList : []
+          ptList: Array.isArray(config.ptList) ? config.ptList : [],
+          checklistItems: config.checklistItems || null,
+          systemSettings: config.systemSettings || null
         });
         const counts = {};
         counts.submissions = await restoreCollection('submissions', data && data.submissions);
@@ -710,6 +715,10 @@ tr:hover td{background:var(--g1)}
           <div id="ptPhotoPreview" class="photo-grid"></div>
         </div>
       </div>
+      <label style="display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-size:13.5px;font-weight:700;color:var(--g8)">
+        <input type="checkbox" id="ptLineShared" style="width:18px;height:18px;accent-color:#06C755">
+        <span>ส่งรูปเข้า LINE แล้ว</span>
+      </label>
       <div class="fg">
         <label>📌 ผลการประเมินโดยรวม <span style="color:var(--r)">*</span> <span style="font-size:11px;color:var(--g4);font-weight:400">(คำนวณอัตโนมัติ)</span></label>
         <select id="ptVerdict" style="width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none">
@@ -780,6 +789,11 @@ tr:hover td{background:var(--g1)}
         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftEveningPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
       </div>
     </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;border-left:4px solid #2E7D32">
+    <h3 style="margin-bottom:10px">📌 สรุปสำหรับผู้บริหาร</h3>
+    <div id="executiveDashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
   </div>
 
   <div class="card trend-card" style="margin-bottom:16px">
@@ -1124,6 +1138,20 @@ tr:hover td{background:var(--g1)}
     </div>
 
     <div id="adminPanel-settings" style="display:none">
+      <div class="card" style="max-width:760px;border-left:4px solid var(--bd)">
+        <h3 style="margin-bottom:6px">⏰ ตั้งเวลา Cutoff การบันทึก</h3>
+        <p style="font-size:12px;color:var(--g6);margin-bottom:12px">แอดมินแก้เวลาแล้วบันทึกครั้งเดียว เครื่องอื่นจะใช้เวลาชุดนี้หลังโหลดข้อมูลจาก Firebase</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+          <div class="fg"><label>ผู้ช่วย เวรเช้า</label><input type="time" id="cutoffAssistantMorning"></div>
+          <div class="fg"><label>PT เวรเช้า</label><input type="time" id="cutoffPtMorning"></div>
+          <div class="fg"><label>ผู้ช่วย เวรบ่าย</label><input type="time" id="cutoffAssistantAfternoon"></div>
+          <div class="fg"><label>PT เวรบ่าย</label><input type="time" id="cutoffPtAfternoon"></div>
+        </div>
+        <div class="act-row" style="margin-top:10px">
+          <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
+          <button class="btn btn-out" onclick="resetSystemSettingsForm()">↩ ค่าเริ่มต้น</button>
+        </div>
+      </div>
       <div class="card" style="max-width:560px">
         <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
         <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
@@ -1450,6 +1478,15 @@ function firebaseAuthErrorMessage(error){
   if(code.includes('requires-recent-login'))return'กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่ก่อนเปลี่ยนรหัส';
   return error?.message||'Firebase Authentication ทำงานไม่สำเร็จ';
 }
+function friendlyErrorMessage(error){
+  const raw=String(error?.message||error?.code||error||'').trim();
+  const code=String(error?.code||'');
+  if(code.includes('permission-denied')||/permission|insufficient/i.test(raw))return'บัญชีนี้ยังไม่มีสิทธิ์ทำรายการนี้ กรุณาให้แอดมินตรวจสอบสิทธิ์';
+  if(/undefined|is not defined/i.test(raw))return'ระบบเจอข้อมูลบางส่วนไม่พร้อม กรุณารีเฟรชหน้าแล้วลองอีกครั้ง';
+  if(/network|offline|timeout/i.test(raw))return'เชื่อมต่อ Firebase ไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่';
+  if(/quota|storage/i.test(raw))return'พื้นที่หรือบริการเก็บข้อมูลไม่พร้อมใช้งานในตอนนี้';
+  return raw||'ทำรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+}
 function togglePasswordVisibility(inputId,button){
   const input=document.getElementById(inputId);if(!input)return;
   const visible=input.type==='password';input.type=visible?'text':'password';
@@ -1489,7 +1526,7 @@ async function migrateLegacySupervisorNotes(){
     await writeAuditLog('update','security',`ย้ายหมายเหตุถึงหัวหน้างาน ${count} รายการเข้าสู่พื้นที่ลับ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     showToast(`🔒 ย้ายหมายเหตุลับ ${count} รายการเรียบร้อย`,'success');
     return count;
-  }catch(error){console.error('Supervisor note migration failed:',error);showToast('⚠️ ย้ายหมายเหตุลับไม่สำเร็จ: '+error.message,'warning');return 0;}
+  }catch(error){console.error('Supervisor note migration failed:',error);showToast('⚠️ ย้ายหมายเหตุลับไม่สำเร็จ: '+friendlyErrorMessage(error),'warning');return 0;}
 }
 async function initializeFirebaseAuth(){
   if(!window.FB?.fbWaitForAuth)return applyAuthenticatedUser(null);
@@ -1510,6 +1547,7 @@ async function init(){
     submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
     missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
     auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
+    applySystemSettings(JSON.parse(localStorage.getItem('pt_system_settings')||'null'));
     setSyncBadge('error','⚠️ Offline');
     showToast('⚠️ ใช้ข้อมูล offline (Firebase ไม่ตอบสนอง)','warning');
   } else {
@@ -1522,6 +1560,7 @@ async function init(){
       const config = await withTimeout(window.FB.fbGetConfig());
       staffList = (config && config.staffList) ? config.staffList : [];
       ptList    = (config && config.ptList)    ? config.ptList    : [];
+      applySystemSettings(config && config.systemSettings);
       if(config && config.checklistItems) {
         localStorage.setItem('custom_cl_morning', JSON.stringify(Array.isArray(config.checklistItems.morning)?config.checklistItems.morning:DEFAULT_CL_ITEMS.morning));
         localStorage.setItem('custom_cl_evening', JSON.stringify(Array.isArray(config.checklistItems.evening)?config.checklistItems.evening:DEFAULT_CL_ITEMS.evening));
@@ -1561,8 +1600,9 @@ async function init(){
       submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
       missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
       auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
+      applySystemSettings(JSON.parse(localStorage.getItem('pt_system_settings')||'null'));
       setSyncBadge('error','⚠️ Offline');
-      showToast('⚠️ ใช้ข้อมูล offline ('+e.message+')','warning');
+      showToast('⚠️ ใช้ข้อมูล offline ('+friendlyErrorMessage(e)+')','warning');
       console.error('Firebase init error:', e);
     }
   }
@@ -1608,11 +1648,12 @@ function formatItemText(t){return t.replace(/\(([^)]+)\)/g,'(<span style="color:
 function getWebAlertStatus(now){
   const current=now||new Date();const today=localDateKey(current);const minutes=current.getHours()*60+current.getMinutes();
   const buildShiftStatus=(shift,assistantDeadline,ptDeadline)=>{const shiftSubmissions=submissions.filter(item=>item.date===today&&(item.shift||'morning')===shift);return{submissions:shiftSubmissions,assistantSubmissionMissing:minutes>=assistantDeadline&&shiftSubmissions.length===0,pendingPtReviews:minutes>=ptDeadline?shiftSubmissions.filter(item=>item.status==='pending'||!item.ptVerdict):[],afterAssistantDeadline:minutes>=assistantDeadline,afterPtDeadline:minutes>=ptDeadline};};
-  return{today,minutes,current,morning:buildShiftStatus('morning',510,570),afternoon:buildShiftStatus('afternoon',1200,1230)};
+  return{today,minutes,current,morning:buildShiftStatus('morning',SHIFT_DEADLINES.assistant.morning,SHIFT_DEADLINES.pt.morning),afternoon:buildShiftStatus('afternoon',SHIFT_DEADLINES.assistant.afternoon,SHIFT_DEADLINES.pt.afternoon)};
 }
 function getWebAlertShiftConfig(status,shift){
   const isMorning=shift==='morning';const data=status[shift];
-  return{shift,data,label:isMorning?'เวรเช้า':'เวรบ่าย',icon:isMorning?'🌅':'🌙',assistantTime:isMorning?'08:30':'20:00',ptTime:isMorning?'09:30':'20:30',assistantKey:isMorning?'assistant-0830':'assistant-2000',ptKey:isMorning?'pt-0930':'pt-2030'};
+  const assistantDeadline=SHIFT_DEADLINES.assistant[shift];const ptDeadline=SHIFT_DEADLINES.pt[shift];
+  return{shift,data,label:isMorning?'เวรเช้า':'เวรบ่าย',icon:isMorning?'🌅':'🌙',assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:'assistant-'+minutesToTimeText(assistantDeadline).replace(':',''),ptKey:'pt-'+minutesToTimeText(ptDeadline).replace(':','')};
 }
 function isWebAlertResolved(status,key,shift){
   return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
@@ -1785,10 +1826,15 @@ function updateProgress(){
 
 function getActiveStaff(){const isMobile=window.innerWidth<=768;const sel=isMobile?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
 function getActiveDate(){const isMobile=window.innerWidth<=768;return isMobile?document.getElementById('dateInputMobile').value:document.getElementById('dateInput').value;}
-const SHIFT_DEADLINES = {
+const DEFAULT_SHIFT_DEADLINES = {
   assistant: { morning: 8*60+30, afternoon: 20*60 },
   pt: { morning: 9*60+30, afternoon: 20*60+30 }
 };
+let SHIFT_DEADLINES = cloneShiftDeadlines(DEFAULT_SHIFT_DEADLINES);
+function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,afternoon:Number(source?.assistant?.afternoon)||1200},pt:{morning:Number(source?.pt?.morning)||570,afternoon:Number(source?.pt?.afternoon)||1230}};}
+function normalizeSystemSettings(settings){return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES)};}
+function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
+function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
@@ -1836,7 +1882,7 @@ async function submitChecklist(){
     showToast('✅ บันทึกลง Firebase แล้ว','success');
     updateHistoryFilters();updateDashFilter();refreshWebAlerts(false);
     document.getElementById('shareModal').classList.add('open');
-  }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}
+  }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
 }
 
 // ══ REVIEW ══
@@ -1875,6 +1921,7 @@ function openReview(idx){
   document.getElementById('ptComment').value='';
   document.getElementById('ptVerdict').value='';
   document.getElementById('ptSupervisorNote').value='';
+  setLineShared(false);
   clearReviewPhotos();
   autoCalcVerdict();
   document.getElementById('reviewFormWrap').style.display='block';
@@ -1909,7 +1956,7 @@ function autoCalcVerdict(){
   }
 }
 function setEvalDefault(key,val,container){reviewEvals[key]=val;const cls=val==='pass'?'pass':val==='fail'?'fail':'nab';const btn=container.querySelector(`.rb.${cls}`);if(btn)btn.classList.add('sel');}
-function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;clearReviewPhotos();}
+function cancelReview(){document.getElementById('reviewFormWrap').style.display='none';activeRevIdx=null;setLineShared(false);clearReviewPhotos();}
 
 function renderReviewPhotos(){
   const box=document.getElementById('ptPhotoPreview');if(!box)return;
@@ -1918,6 +1965,7 @@ function renderReviewPhotos(){
 }
 function removeReviewPhoto(index){reviewPhotos.splice(index,1);renderReviewPhotos();}
 function clearReviewPhotos(){reviewPhotos=[];const input=document.getElementById('ptPhotoInput');if(input)input.value='';renderReviewPhotos();}
+function setLineShared(value){const input=document.getElementById('ptLineShared');if(input)input.checked=!!value;}
 function reviewPhotoStorageKey(id){return'pt_review_photos_'+String(id);}
 function saveReviewPhotosLocal(id,photos){
   try{
@@ -1956,16 +2004,18 @@ async function shareReviewPhotosToLine(){
   try{
     if(navigator.canShare&&navigator.canShare({files})){
       await navigator.share(shareData);
+      setLineShared(true);
       showToast('✅ เลือก LINE แล้วส่งรูปได้เลย','success');
     }else if(navigator.share){
       await navigator.share({title:shareData.title,text:shareData.text});
+      setLineShared(true);
       showToast('⚠️ เครื่องนี้แชร์รูปตรง ๆ ไม่ได้ ส่งข้อความสรุปแล้ว กรุณาแนบรูปใน LINE เพิ่มเอง','warning');
     }else{
       showToast('⚠️ เครื่องนี้ไม่รองรับปุ่มแชร์ กรุณาบันทึกรูปแล้วส่งใน LINE ด้วยตนเอง','warning');
     }
   }catch(e){
     if(String(e.name)==='AbortError')return;
-    showToast('⚠️ แชร์เข้า LINE ไม่สำเร็จ: '+e.message,'warning');
+    showToast('⚠️ แชร์เข้า LINE ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');
   }
 }
 function resizeReviewPhoto(file){
@@ -1998,20 +2048,20 @@ async function handleReviewPhotos(event){
     reviewPhotos=reviewPhotos.concat(resized).slice(0,3);
     renderReviewPhotos();
     if(files.length>room)showToast('แนบได้สูงสุด 3 รูป ระบบเลือกให้เท่าที่ใส่ได้','warning');
-  }catch(e){showToast('⚠️ เพิ่มรูปไม่สำเร็จ: '+e.message,'warning');}
+  }catch(e){showToast('⚠️ เพิ่มรูปไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
   event.target.value='';
 }
 
 async function submitReview(){
   if(activeRevIdx===null)return;
-  const reviewer=document.getElementById('ptReviewerSel').value;const comment=document.getElementById('ptComment').value.trim();const verdict=document.getElementById('ptVerdict').value;
+  const reviewer=document.getElementById('ptReviewerSel').value;const comment=document.getElementById('ptComment').value.trim();const verdict=document.getElementById('ptVerdict').value;const lineShared=!!document.getElementById('ptLineShared')?.checked;
   if(!reviewer)return showToast('⚠️ เลือกชื่อนักกายภาพบำบัดก่อน','warning');
   if(!verdict)return showToast('⚠️ เลือกผลการประเมินก่อน','warning');
   const now=new Date();const rec=submissions[activeRevIdx];
   const ptLock=getTimeLockInfo(rec.date,rec.shift||'morning','pt');
   if(ptLock.locked)return showToast(ptLock.message,'error');
   const supervisorNote = document.getElementById('ptSupervisorNote')?.value.trim() || String(rec.ptSupervisorNote||'').trim();
-  rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;
+  rec.status=verdict;rec.ptVerdict=verdict;rec.ptReviewer=reviewer;rec.ptComment=comment;rec.ptLineShared=lineShared;rec.ptLineSharedAt=lineShared?(rec.ptLineSharedAt||now.toISOString()):'';
   delete rec.ptSupervisorNote;
   rec.ptEvals={...reviewEvals};
   delete rec.ptPhotos;
@@ -2030,6 +2080,7 @@ async function submitReview(){
     showToast('✅ บันทึกผลการประเมินแล้ว','success');
     document.getElementById('reviewFormWrap').style.display='none';
     activeRevIdx=null;
+    setLineShared(false);
     clearReviewPhotos();
     loadReviewView();
     refreshWebAlerts(false);
@@ -2038,7 +2089,7 @@ async function submitReview(){
   }catch(e){
     setSyncBadge('error','⚠️ Error');
     console.error('submitReview error:', e);
-    showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');
+    showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');
   }
 }
 
@@ -2171,7 +2222,7 @@ async function saveMissedEvaluation(){
     const completedFromAlert=Boolean(activeMissedAlertKey);
     showToast(completedFromAlert?'✅ บันทึกแล้ว — การแจ้งเตือนแสดงว่าดำเนินการแล้ว':'✅ บันทึกรายการไม่ได้ประเมินแล้ว','success');
     resetMissedEvalForm();renderMissedEvalSummary();loadHistory();refreshWebAlerts(false);
-  }catch(e){showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}
+  }catch(e){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
 }
 async function deleteMissedEvaluation(id){
   if(!isAdminLoggedIn)return showToast('⛔ ต้อง login แอดมินก่อน','error');
@@ -2182,7 +2233,7 @@ async function deleteMissedEvaluation(id){
       missedEvaluations=missedEvaluations.filter(item=>item.id!==id);localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));
       if(deletedRecord)await writeAuditLog('delete','missed_evaluation',`ลบค่าเสียหาย ${deletedRecord.date} ${shiftLabel(deletedRecord.shift||'morning')} — ${deletedRecord.amount||0} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
       if(editingMissedEvaluationId===id)resetMissedEvalForm();renderMissedEvalSummary();refreshWebAlerts(false);showToast('🗑️ ลบรายการแล้ว','success');
-    }catch(e){showToast('❌ ลบไม่สำเร็จ: '+e.message,'error');}
+    }catch(e){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
   });
 }
 function updateMissedEvalAdminPanel(){
@@ -2223,6 +2274,7 @@ async function showDetail(id){
   const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;
   document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
   let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${Math.round(dn/tot*100)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
+  html+=`<div style="margin:-6px 0 14px;padding:9px 12px;border-radius:8px;background:${s.ptLineShared?'#E8F8EE':'#FFF8E1'};color:${s.ptLineShared?'#1E7E34':'#8A5A00'};font-size:13px;font-weight:700">${s.ptLineShared?'✅ ส่งรูปเข้า LINE แล้ว':'⚠️ ยังไม่ได้ติ๊กว่าส่งรูปเข้า LINE'}</div>`;
   const detailPhotos=await getReviewPhotosForRecord(s);
   if(detailPhotos.length){
     html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${detailPhotos.map((photo,i)=>{const src=photo.url||photo.dataUrl;return`<a class="detail-photo-card" href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="รูปประกอบการประเมิน ${i+1}"></a>`;}).join('')}</div>`;
@@ -2238,7 +2290,7 @@ async function deleteRecord(id){
   const deletedRecord=submissions.find(item=>Number(item.id)===Number(id));
   showConfirm('ต้องการลบรายการนี้ใช่หรือไม่?',async()=>{
     try{await window.FB.fbDeleteSubmission(id);submissions=submissions.filter(s=>s.id!==id);if(deletedRecord)await writeAuditLog('delete','system_data',`ลบ Checklist ของ ${deletedRecord.staffName} — ${deletedRecord.date} ${shiftLabel(deletedRecord.shift||'morning')}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();if(isAdminLoggedIn)renderAdminTable();showToast('🗑️ ลบแล้ว','success');}
-    catch(e){showToast('❌ ลบไม่สำเร็จ: '+e.message,'error');}
+    catch(e){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
   });
 }
 
@@ -2278,7 +2330,7 @@ function refreshDashboard() {
     showToast('🔄 โหลดข้อมูลใหม่แล้ว','success');
   }).catch(e => {
     setSyncBadge('error','⚠️ Error');
-    showToast('❌ โหลดไม่สำเร็จ: '+e.message,'error');
+    showToast('❌ โหลดไม่สำเร็จ: '+friendlyErrorMessage(e),'error');
   });
 }
 
@@ -2286,6 +2338,24 @@ function calcCompletion(s) {
   const tot = Object.keys(s.snap).length;
   const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
   return tot > 0 ? Math.round(dn/tot*100) : 0;
+}
+
+function executiveMetric(title,value,detail,color){
+  return `<div style="border:1px solid var(--g2);border-left:4px solid ${color};border-radius:10px;padding:12px 13px;background:#fff"><div style="font-size:11.5px;color:var(--g6);font-weight:700;margin-bottom:4px">${escapeHtml(title)}</div><div style="font-size:20px;font-weight:800;color:${color};line-height:1.25;overflow-wrap:anywhere">${escapeHtml(String(value||'—'))}</div><div style="font-size:11.5px;color:var(--g6);margin-top:4px;line-height:1.45">${escapeHtml(detail||'')}</div></div>`;
+}
+function topIssueText(records){
+  const counts={};
+  (records||[]).forEach(s=>{
+    Object.keys(s.snap||{}).forEach(k=>{
+      const item=s.snap[k]||{};const st=item.status;const pt=s.ptEvals&&s.ptEvals[k];
+      if(pt==='fail'||(st!=='done'&&st!=='na')){
+        const text=String(item.text||'').replace(/\([^)]+\)/g,'').trim();
+        if(text)counts[text]=(counts[text]||0)+1;
+      }
+    });
+  });
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  return top?{text:top[0],count:top[1]}:{text:'ยังไม่พบปัญหา',count:0};
 }
 
 function smoothTrendPath(points){
@@ -2347,6 +2417,27 @@ function loadDashboard() {
   set('shiftEveningCount', evening.length);
   set('shiftEveningPass',  ePass + '%');
   set('shiftEveningAvg',   eAvg + '%');
+
+  const execEl=document.getElementById('executiveDashboard');
+  if(execEl){
+    const today=fmtDate(new Date());
+    const monthPrefix=today.slice(0,7);
+    const todayData=data.filter(s=>s.date===today);
+    const monthData=data.filter(s=>String(s.date||'').startsWith(monthPrefix));
+    const reviewedMonth=monthData.filter(s=>s.status!=='pending');
+    const failedMonth=monthData.filter(s=>s.status==='fail');
+    const pendingMonth=monthData.filter(s=>s.status==='pending');
+    const monthPassRate=reviewedMonth.length?Math.round(monthData.filter(s=>s.status==='pass'||s.status==='partial').length/reviewedMonth.length*100):0;
+    const issueTop=topIssueText(data);
+    const watchShift=mPass===ePass?(mAvg<=eAvg?'เวรเช้า':'เวรบ่าย'):(mPass<ePass?'เวรเช้า':'เวรบ่าย');
+    execEl.innerHTML=[
+      executiveMetric('วันนี้',`${todayData.length} รายการ`,`รอประเมิน ${todayData.filter(s=>s.status==='pending').length} รายการ`,'#0F4C81'),
+      executiveMetric('เดือนนี้',`${monthData.length} รายการ`,`ผ่าน/ปรับปรุง ${monthPassRate}% • ไม่ผ่าน ${failedMonth.length}`,'#2E7D32'),
+      executiveMetric('งานค้าง',`${pendingMonth.length} รายการ`,'ควรให้ PT เคลียร์ก่อนหมดเวลา','#E65100'),
+      executiveMetric('จุดที่เจอบ่อย',issueTop.text,issueTop.count?`${issueTop.count} ครั้งในช่วงที่เลือก`:'ยังไม่พบปัญหา','#C62828'),
+      executiveMetric('เวรที่ควรจับตา',watchShift,`เช้า ${mPass}% / บ่าย ${ePass}%`,'#6A1B9A')
+    ].join('');
+  }
 
   // ══ TREND CHART ══
   const recent = [...data].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
@@ -2474,21 +2565,53 @@ function loadDashboard() {
 }
 
 // ══ SETTINGS ══
+function fillSystemSettingsForm(settings){
+  const normalized=normalizeSystemSettings(settings||{deadlines:SHIFT_DEADLINES});
+  const map={
+    cutoffAssistantMorning:normalized.deadlines.assistant.morning,
+    cutoffAssistantAfternoon:normalized.deadlines.assistant.afternoon,
+    cutoffPtMorning:normalized.deadlines.pt.morning,
+    cutoffPtAfternoon:normalized.deadlines.pt.afternoon
+  };
+  Object.entries(map).forEach(([id,minutes])=>{const el=document.getElementById(id);if(el)el.value=minutesToTimeText(minutes);});
+}
+function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHIFT_DEADLINES});}
+async function saveSystemSettings(){
+  if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
+  const values={
+    assistant:{morning:timeTextToMinutes(document.getElementById('cutoffAssistantMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffAssistantAfternoon')?.value)},
+    pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value)}
+  };
+  if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
+  const settings={deadlines:values,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
+  try{
+    applySystemSettings(settings);
+    if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
+    if(window.FB?.fbSaveSystemSettings)await window.FB.fbSaveSystemSettings(settings);
+    await writeAuditLog('update','settings','แก้ไขเวลา Cutoff ระบบ',{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    buildChecklist();refreshWebAlerts(false);loadDashboard();
+    showToast('✅ บันทึกเวลาระบบแล้ว — ทุกเครื่องจะใช้เวลานี้หลังโหลดข้อมูลใหม่','success');
+  }catch(e){
+    showToast('⚠️ บันทึกเวลาในเครื่องแล้ว แต่ยังส่งขึ้น Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');
+  }
+}
 function renderSettings(){
   // ถ้าไม่ได้ login ไม่ render — ป้องกันการเห็นข้อมูล
   if(!isAdminLoggedIn) return;
   const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
+  fillSystemSettingsForm({deadlines:SHIFT_DEADLINES});
+  renderClItems();
 }
 
 async function addStaff(){
-  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newStaffName').value.trim();if(!n)return;if(staffList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');staffList.push(n);document.getElementById('newStaffName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('✅ เพิ่มผู้ช่วยแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){staffList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newStaffName').value.trim();if(!n)return;if(staffList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');staffList.push(n);document.getElementById('newStaffName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('✅ เพิ่มผู้ช่วยแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){staffList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}}
 async function removeStaff(i){
-  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${staffList[i]}" ใช่หรือไม่?`,async()=>{const removed=staffList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){staffList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${staffList[i]}" ใช่หรือไม่?`,async()=>{const removed=staffList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updateStaffDropdown();renderSettings();updateHistoryFilters();updateDashFilter();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){staffList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}});}
 async function addPT(){
-  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newPTName').value.trim();if(!n)return;if(ptList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');ptList.push(n);document.getElementById('newPTName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('✅ เพิ่มนักกายภาพแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){ptList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}}
+  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}const n=document.getElementById('newPTName').value.trim();if(!n)return;if(ptList.includes(n))return showToast('⚠️ มีชื่อนี้แล้ว','warning');ptList.push(n);document.getElementById('newPTName').value='';try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('✅ เพิ่มนักกายภาพแล้ว — sync ทุกเครื่องแล้ว','success');}catch(e){ptList.pop();showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}}
 async function removePT(i){
-  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${ptList[i]}" ใช่หรือไม่?`,async()=>{const removed=ptList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){ptList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+e.message,'error');}});}
+  if(!isAdminLoggedIn){showToast("⛔ ต้อง login แอดมินก่อน","error");return;}showConfirm(`ต้องการลบชื่อ "${ptList[i]}" ใช่หรือไม่?`,async()=>{const removed=ptList.splice(i,1);try{await window.FB.fbSaveConfig(staffList,ptList);updatePTDropdown();renderSettings();showToast('🗑️ ลบรายชื่อแล้ว','success');}catch(e){ptList.splice(i,0,...removed);showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}});}
 function updateStaffDropdown(){[document.getElementById('staffSelect'),document.getElementById('staffSelectMobile')].forEach(sel=>{if(!sel)return;const cur=sel.value;const placeholder=sel.id==='staffSelectMobile'?'— เลือกชื่อผู้ช่วย —':'— เลือกชื่อ —';sel.innerHTML=`<option value="">${placeholder}</option>`+staffList.map((n,i)=>`<option value="s${i}"${cur===`s${i}`?' selected':''}>${n}</option>`).join('');});}
 function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');if(!sel)return;sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+ptList.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');}
 function updateEvaluationDropdowns(){
@@ -2559,7 +2682,7 @@ function firebaseBackupCounts(data){
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES})},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
@@ -2574,7 +2697,7 @@ async function downloadFirebaseBackup(){
     localStorage.setItem('pt_last_firebase_backup',getThaiTimestamp(now));renderBackupPanelSummary(data);
     await writeAuditLog('add','system_data','ดาวน์โหลดข้อมูลสำรอง Firebase',{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     showToast('✅ ดาวน์โหลดข้อมูลสำรองเรียบร้อย','success');setSyncBadge('synced','🔥 Firebase');
-  }catch(error){console.error('Firebase backup error:',error);showToast('❌ สำรองข้อมูลไม่สำเร็จ: '+error.message,'error');setSyncBadge('error','⚠️ Error');}
+  }catch(error){console.error('Firebase backup error:',error);showToast('❌ สำรองข้อมูลไม่สำเร็จ: '+friendlyErrorMessage(error),'error');setSyncBadge('error','⚠️ Error');}
   finally{if(button)button.disabled=false;}
 }
 async function prepareFirebaseRestore(event){
@@ -2595,7 +2718,7 @@ async function prepareFirebaseRestore(event){
 }
 async function reloadFirebaseStateAfterRestore(){
   const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs()]);
-  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];
+  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];
   localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));
   updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderAdminTable();renderMissedEvalSummary();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
 }
@@ -2609,7 +2732,7 @@ function confirmFirebaseRestore(){
     try{
       await window.FB.fbRestoreBackup(backup.data);await reloadFirebaseStateAfterRestore();await writeAuditLog('update','system_data',`กู้คืนข้อมูล Firebase จากไฟล์สำรอง: Checklist ${counts.submissions} รายการ รายงานส่วนตัว ${counts.reports} รายการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
       pendingFirebaseRestore=null;const input=document.getElementById('backupFileInput');if(input)input.value='';const summary=document.getElementById('restoreBackupSummary');if(summary)summary.innerHTML='<span style="color:var(--g);font-weight:700">✅ กู้คืนข้อมูลเรียบร้อยแล้ว</span>';showToast('✅ กู้คืนข้อมูล Firebase สำเร็จ','success');setSyncBadge('synced','🔥 Firebase');
-    }catch(error){console.error('Firebase restore error:',error);showToast('❌ กู้คืนไม่สำเร็จ: '+error.message,'error');setSyncBadge('error','⚠️ Error');if(button)button.disabled=false;}
+    }catch(error){console.error('Firebase restore error:',error);showToast('❌ กู้คืนไม่สำเร็จ: '+friendlyErrorMessage(error),'error');setSyncBadge('error','⚠️ Error');if(button)button.disabled=false;}
   });
 }
 function checkAdminAuth(){
@@ -2659,7 +2782,7 @@ async function changeAdminPassword(){
   catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 function renderAdminTable(){const tb=document.getElementById('adminTableBody');if(!tb)return;if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}let data=[...submissions].reverse();tb.innerHTML=data.map(s=>{const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';return`<tr><td>${escapeHtml(s.date)} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${escapeHtml(s.staffName)}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;}).join('');}
-async function clearAllData(){showConfirm('🚨 ล้างข้อมูลทั้งหมดในระบบ? (กู้คืนไม่ได้!)',async()=>{try{const deletedCount=submissions.length;await window.FB.fbClearSubmissions();submissions=[];await writeAuditLog('delete','system_data',`ล้างข้อมูล Checklist ทั้งหมด ${deletedCount} รายการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderAdminTable();loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว','success');}catch(e){showToast('❌ ล้างไม่สำเร็จ: '+e.message,'error');}});}
+async function clearAllData(){showConfirm('🚨 ล้างข้อมูลทั้งหมดในระบบ? (กู้คืนไม่ได้!)',async()=>{try{const deletedCount=submissions.length;await window.FB.fbClearSubmissions();submissions=[];await writeAuditLog('delete','system_data',`ล้างข้อมูล Checklist ทั้งหมด ${deletedCount} รายการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderAdminTable();loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว','success');}catch(e){showToast('❌ ล้างไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}});}
 
 // ══ MODAL & CONFIRM ══
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -2969,7 +3092,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-mobile-history-fix-v13';
+  const APP_VERSION = 'v20260716-system-settings-v14';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -3434,7 +3557,7 @@ async function addClItem() {
   localStorage.setItem(key, JSON.stringify(items));
   // อัปเดต CL object ด้วย
   _applyCLCustom();
-  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ เพิ่มในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
+  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ เพิ่มในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
   inp.value = '';
   renderClItems();
   showToast('✅ เพิ่มรายการแล้ว','success');
@@ -3447,7 +3570,7 @@ function deleteClItem(idx) {
     items.splice(idx, 1);
     localStorage.setItem(key, JSON.stringify(items));
     _applyCLCustom();
-    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+e.message,'warning'));
+    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning'));
     renderClItems();
     showToast('🗑️ ลบแล้ว','success');
   });
@@ -3461,14 +3584,14 @@ async function moveClItem(idx, dir) {
   [items[idx], items[newIdx]] = [items[newIdx], items[idx]];
   localStorage.setItem(key, JSON.stringify(items));
   _applyCLCustom();
-  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ ย้ายในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
+  try{await saveChecklistItemsToFirebase();}catch(e){showToast('⚠️ ย้ายในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
   renderClItems();
 }
 
 async function saveClItems() {
   _applyCLCustom();
   try{await saveChecklistItemsToFirebase();showToast('💾 บันทึก Checklist แล้ว — sync ทุกเครื่องแล้ว','success');}
-  catch(e){showToast('⚠️ บันทึกในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+e.message,'warning');}
+  catch(e){showToast('⚠️ บันทึกในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
   buildChecklist();
 }
 
@@ -3477,7 +3600,7 @@ function resetClItems() {
     localStorage.removeItem('custom_cl_morning');
     localStorage.removeItem('custom_cl_evening');
     _applyCLCustom();
-    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+e.message,'warning'));
+    saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning'));
     renderClItems();
     buildChecklist();
     showToast('↩ คืนค่าเดิมแล้ว','success');
@@ -3807,3 +3930,4 @@ function generateMonthlyExcel() {
 </script>
 </body>
 </html>
+
