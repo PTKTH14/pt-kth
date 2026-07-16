@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-na-excluded-v17">
+<link rel="manifest" href="manifest.json?v=20260716-na-detail-v18">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-na-excluded-v17">
+<meta name="version" content="v20260716-na-detail-v18">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -2295,10 +2295,10 @@ async function showDetail(id){
     html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${detailPhotos.map((photo,i)=>{const src=photo.url||photo.dataUrl;return`<a class="detail-photo-card" href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="รูปประกอบการประเมิน ${i+1}"></a>`;}).join('')}</div>`;
   }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
-    const keys=Object.keys(s.snap).filter(key=>key.startsWith(g+'-')).filter(key=>{const item=s.snap[key]||{};const ptE=s.ptEvals?.[key]||'';return item.status!=='na'&&ptE!=='na';}).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1]));
+    const keys=Object.keys(s.snap).filter(key=>key.startsWith(g+'-')).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1]));
     if(!keys.length)return;
     html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
-    keys.forEach(key=>{const item=s.snap[key]||{};const st=item.status||'';const ptE=s.ptEvals?.[key]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':'❌'}</span><span style="flex:1">${escapeHtml(item.text||'')}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
+    keys.forEach(key=>{const item=s.snap[key]||{};const st=item.status||'';const ptE=s.ptEvals?.[key]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${escapeHtml(item.text||'')}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':ptE==='na'?'—':''}</span></div>`;});
   });
   document.getElementById('detailBody').innerHTML=html;document.getElementById('detailModal').classList.add('open');
 }
@@ -3119,7 +3119,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-na-excluded-v17';
+  const APP_VERSION = 'v20260716-na-detail-v18';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
