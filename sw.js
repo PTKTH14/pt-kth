@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260716-qc-fixes-v12';
+const CACHE_NAME = 'pt-kth-v20260716-mobile-history-fix-v13';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
