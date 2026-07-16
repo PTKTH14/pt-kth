@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-line-share-v11">
+<link rel="manifest" href="manifest.json?v=20260716-qc-fixes-v12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-line-share-v11">
+<meta name="version" content="v20260716-qc-fixes-v12">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1714,18 +1714,25 @@ function updateDateDisplay(){const v=document.getElementById('dateInput').value;
 document.getElementById('staffSelect').addEventListener('change',function(){const n=this.options[this.selectedIndex]?.text;document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อ —')?n:'เลือกชื่อก่อน';document.getElementById('staffSelectMobile').value=this.value;});
 
 // ══ CHECKLIST ══
+const SAT_MORNING_EXTRA = ['ทำความสะอาดห้องกายภาพบำบัดทั่วไป (พื้น ผนัง อุปกรณ์)'];
+const SAT_EVENING_EXTRA = [
+  'เปลี่ยนปลอกหมอนทุกใบ (วันเสาร์ ⭐)',
+  'ซักผ้าคลุมเตียงทุกผืน / นำส่งโรงซัก (วันเสาร์ ⭐)',
+  'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์ ⭐)'
+];
+function isSaturdayDate(date){return date ? new Date(date+'T00:00:00').getDay()===6 : new Date().getDay()===6;}
+function checklistItemsForGroup(groupKey,date){
+  const base=[...(CL[groupKey]?.items||[])];
+  if(isSaturdayDate(date)&&groupKey==='morning')return base.concat(SAT_MORNING_EXTRA);
+  if(isSaturdayDate(date)&&groupKey==='evening')return base.concat(SAT_EVENING_EXTRA);
+  return base;
+}
 function buildChecklist(){
   const wrap=document.getElementById('checklistGroups');if(!wrap)return;wrap.innerHTML='';
 
   // ตรวจวันเสาร์ — เพิ่มรายการพิเศษอัตโนมัติ
   const activeDate = getActiveDate();
-  const isSaturday = activeDate ? new Date(activeDate+'T00:00:00').getDay() === 6 : new Date().getDay() === 6;
-  const SAT_MORNING_EXTRA = ['ทำความสะอาดห้องกายภาพบำบัดทั่วไป (พื้น ผนัง อุปกรณ์)'];
-  const SAT_EVENING_EXTRA = [
-    'เปลี่ยนปลอกหมอนทุกใบ (วันเสาร์ ⭐)',
-    'ซักผ้าคลุมเตียงทุกผืน / นำส่งโรงซัก (วันเสาร์ ⭐)',
-    'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์ ⭐)'
-  ];
+  const isSaturday = isSaturdayDate(activeDate);
 
   // แสดง time warning ตามเวร
   const activeDateForLock=getActiveDate();const timeLock=getTimeLockInfo(activeDateForLock,currentShift,'assistant');
@@ -1740,15 +1747,12 @@ function buildChecklist(){
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
     // คำนวณจำนวนรายการรวมเสาร์
-    const totalItems = info.items.length + (isSaturday && g==='morning' ? SAT_MORNING_EXTRA.length : 0) + (isSaturday && g==='evening' ? SAT_EVENING_EXTRA.length : 0);
+    const totalItems = checklistItemsForGroup(g,activeDate).length;
     const satBadge = isSaturday ? ' <span style="background:#E91E63;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700">เสาร์ ⭐</span>' : '';
     gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}${satBadge}<span class="gcnt" id="cnt-${g}">0/${totalItems}</span></div><div class="ci-wrap" id="grp-${g}"></div>`;
     wrap.appendChild(gDiv);
     const container=gDiv.querySelector(`#grp-${g}`);
-    // รวมรายการพิเศษวันเสาร์
-    let allItems = [...info.items];
-    if(isSaturday && g==='morning') allItems = [...allItems, ...SAT_MORNING_EXTRA];
-    if(isSaturday && g==='evening') allItems = [...allItems, ...SAT_EVENING_EXTRA];
+    const allItems = checklistItemsForGroup(g,activeDate);
 
     allItems.forEach((text,i)=>{
       const key=`${g}-${i}`;if(!(key in checkState))checkState[key]='';const st=checkState[key];
@@ -1765,12 +1769,9 @@ function toggleNA(k){checkState[k]=checkState[k]==='na'?'':'na';buildChecklist()
 function resetChecklist(){showConfirm('ต้องการล้าง Checklist ทั้งหมดใช่หรือไม่?',()=>{checkState={};buildChecklist();showToast('🔄 ล้างข้อมูลแล้ว','success');});}
 function updateProgress(){
   const activeDate2 = getActiveDate();
-  const isSat2 = activeDate2 ? new Date(activeDate2+'T00:00:00').getDay()===6 : new Date().getDay()===6;
   const groups=Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift));let total=0,done=0;
   groups.forEach(g=>{
-    const extraM = (isSat2&&g==='morning') ? SAT_MORNING_EXTRA.length : 0;
-    const extraE = (isSat2&&g==='evening') ? SAT_EVENING_EXTRA.length : 0;
-    const n=CL[g].items.length + extraM + extraE;
+    const n=checklistItemsForGroup(g,activeDate2).length;
     let d=0;
     for(let i=0;i<n;i++){const s=checkState[`${g}-${i}`];if(s==='done'||s==='na')d++;}
     total+=n;done+=d;
@@ -1811,7 +1812,7 @@ function openSubmitModal(){
   if(timeLock.locked)return showToast(timeLock.message,'error');
 
   let tDone=0,tNA=0,tMiss=0,tAll=0;
-  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
   document.getElementById('m_staff').value=st.text;
   document.getElementById('m_date').value=thaiDate(date)+' | '+shiftLabel(currentShift);
   document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: <strong>${Math.round((tDone+tNA)/tAll*100)}%</strong>`;
@@ -1822,7 +1823,7 @@ function openSubmitModal(){
 async function submitChecklist(){
   const st=getActiveStaff();const date=getActiveDate();const note=document.getElementById('m_note').value.trim();
   const snap={};
-  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{CL[g].items.forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
   const now=new Date();
   const rec={id:Date.now(),date,staffName:st.text,shift:currentShift,note,snap,submitTime:now.toISOString(),submitTimeDisplay:getThaiTimestamp(now),status:'pending',ptVerdict:'',ptReviewer:'',ptComment:'',ptReviewTime:'',ptEvals:{}};
   setSyncBadge('syncing','⏳ Saving...');
@@ -1861,10 +1862,10 @@ function openReview(idx){
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
     gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}</div><div class="ci-wrap" id="rv-grp-${g}"></div>`;
     container.appendChild(gDiv);const wrap=gDiv.querySelector(`#rv-grp-${g}`);
-    info.items.forEach((text,i)=>{
-      const key=`${g}-${i}`;const stSt=rec.snap[key]?.status||'';
+    checklistItemsForGroup(g,rec.date).forEach((text,i)=>{
+      const key=`${g}-${i}`;const saved=rec.snap[key]||{};const itemText=saved.text||text;const stSt=saved.status||'';
       const div=document.createElement('div');div.className='ri';
-      div.innerHTML=`<div class="rs"><div class="rb pass" title="ผ่าน" onclick="setEval('${key}','pass',this)">✓</div><div class="rb fail" title="ไม่ผ่าน" onclick="setEval('${key}','fail',this)">✗</div><div class="rb nab" title="N/A" onclick="setEval('${key}','na',this)">—</div></div><div style="flex:1"><div style="font-size:13.5px">${text}</div><div style="font-size:11.5px;color:var(--g4);margin-top:2px">ผู้ช่วยบันทึก: ${stSt==='done'?'✅ ทำแล้ว':stSt==='na'?'— N/A':'❌ ยังไม่ได้ทำ'}</div></div>`;
+      div.innerHTML=`<div class="rs"><div class="rb pass" title="ผ่าน" onclick="setEval('${key}','pass',this)">✓</div><div class="rb fail" title="ไม่ผ่าน" onclick="setEval('${key}','fail',this)">✗</div><div class="rb nab" title="N/A" onclick="setEval('${key}','na',this)">—</div></div><div style="flex:1"><div style="font-size:13.5px">${escapeHtml(itemText)}</div><div style="font-size:11.5px;color:var(--g4);margin-top:2px">ผู้ช่วยบันทึก: ${stSt==='done'?'✅ ทำแล้ว':stSt==='na'?'— N/A':'❌ ยังไม่ได้ทำ'}</div></div>`;
       setEvalDefault(key,stSt==='done'?'pass':stSt==='na'?'na':'fail',div);
       wrap.appendChild(div);
     });
@@ -1936,7 +1937,6 @@ function dataUrlToFile(dataUrl,filename){
   return new File([bytes],filename,{type:mime});
 }
 function reviewShareText(){
-  const reviewer=document.getElementById('ptReviewerSel')?.value||'';
   const verdict=document.getElementById('ptVerdict')?.value||'';
   const verdictLabel=verdict==='pass'?'ผ่าน':verdict==='partial'?'ผ่านบางส่วน':verdict==='fail'?'ไม่ผ่าน':'ยังไม่เลือกผล';
   const comment=document.getElementById('ptComment')?.value.trim()||'';
@@ -1946,7 +1946,6 @@ function reviewShareText(){
     rec?`ผู้ช่วย: ${rec.staffName||'-'}`:'',
     rec?`วันที่: ${thaiDate(rec.date)} | ${shiftLabel(rec.shift||'morning')}`:'',
     `ผลประเมิน: ${verdictLabel}`,
-    reviewer?`PT ผู้ประเมิน: ${reviewer}`:'',
     comment?`ข้อสังเกต: ${comment}`:''
   ].filter(Boolean).join('\n');
 }
@@ -2230,7 +2229,7 @@ async function showDetail(id){
   }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
     html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
-    CL[g].items.forEach((text,i)=>{const st=s.snap[`${g}-${i}`]?.status||'';const ptE=s.ptEvals?.[`${g}-${i}`]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${text}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
+    Object.keys(s.snap).filter(key=>key.startsWith(g+'-')).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1])).forEach(key=>{const item=s.snap[key]||{};const st=item.status||'';const ptE=s.ptEvals?.[key]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${escapeHtml(item.text||'')}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
   });
   document.getElementById('detailBody').innerHTML=html;document.getElementById('detailModal').classList.add('open');
 }
@@ -2978,22 +2977,28 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-line-share-v11';
-  let refreshing = false;
+  const APP_VERSION = 'v20260716-qc-fixes-v12';
+  let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if(refreshing) return;
-    refreshing = true;
+    if(!sessionStorage.getItem('pt-kth-allow-reload')) return;
     sessionStorage.setItem('pt-kth-updated-version', APP_VERSION);
     window.location.reload();
   });
 
   function activateWaitingWorker(registration) {
     if(registration && registration.waiting) {
-      registration.waiting.postMessage('SKIP_WAITING');
+      promptForAppUpdate(registration.waiting);
       return true;
     }
     return false;
+  }
+  function promptForAppUpdate(worker){
+    if(updatePromptShown)return;updatePromptShown=true;
+    showConfirm('มีเวอร์ชันใหม่ของระบบ พร้อมอัปเดตตอนนี้หรือไม่? (หากกำลังติ๊ก Checklist อยู่ ให้กดยกเลิกแล้วบันทึกงานก่อน)',()=>{
+      sessionStorage.setItem('pt-kth-allow-reload','1');
+      worker.postMessage('SKIP_WAITING');
+    });
   }
 
   function watchServiceWorker(registration) {
@@ -3003,7 +3008,7 @@ if('serviceWorker' in navigator) {
       if(!worker) return;
       worker.addEventListener('statechange', () => {
         if(worker.state === 'installed' && navigator.serviceWorker.controller) {
-          worker.postMessage('SKIP_WAITING');
+          promptForAppUpdate(worker);
         }
       });
     });
