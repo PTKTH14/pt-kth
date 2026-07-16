@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-supervisor-summary-v16">
+<link rel="manifest" href="manifest.json?v=20260716-na-excluded-v17">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-supervisor-summary-v16">
+<meta name="version" content="v20260716-na-excluded-v17">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1826,12 +1826,13 @@ function updateProgress(){
   const groups=Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift));let total=0,done=0;
   groups.forEach(g=>{
     const n=checklistItemsForGroup(g,activeDate2).length;
-    let d=0;
-    for(let i=0;i<n;i++){const s=checkState[`${g}-${i}`];if(s==='done'||s==='na')d++;}
-    total+=n;done+=d;
-    const el=document.getElementById(`cnt-${g}`);if(el)el.textContent=`${d}/${n}`;
+    let d=0,na=0;
+    for(let i=0;i<n;i++){const s=checkState[`${g}-${i}`];if(s==='done')d++;else if(s==='na')na++;}
+    const eligible=Math.max(0,n-na);
+    total+=eligible;done+=d;
+    const el=document.getElementById(`cnt-${g}`);if(el)el.textContent=`${d}/${eligible}`;
   });
-  const pct=total>0?Math.round(done/total*100):0;
+  const pct=total>0?Math.round(done/total*100):100;
   const ptEl=document.getElementById('progTxt'),ppEl=document.getElementById('progPct'),bar=document.getElementById('progBar');
   if(ptEl)ptEl.textContent=`${done} / ${total}`;if(ppEl)ppEl.textContent=pct+'%';
   if(bar){bar.style.width=pct+'%';bar.style.background=pct>=100?'var(--g)':pct>=80?'var(--y)':pct>=60?'var(--o)':'var(--r)';}
@@ -1874,7 +1875,9 @@ function openSubmitModal(){
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((_,i)=>{tAll++;const s=checkState[`${g}-${i}`]||'';if(s==='done')tDone++;else if(s==='na')tNA++;else tMiss++;});});
   document.getElementById('m_staff').value=st.text;
   document.getElementById('m_date').value=thaiDate(date)+' | '+shiftLabel(currentShift);
-  document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: <strong>${Math.round((tDone+tNA)/tAll*100)}%</strong>`;
+  const actualTotal=Math.max(0,tAll-tNA);
+  const actualPct=actualTotal>0?Math.round(tDone/actualTotal*100):100;
+  document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: <strong>${actualPct}%</strong> <span style="color:var(--g6);font-size:12px">(คิดจากรายการที่ต้องทำ ${actualTotal} รายการ)</span>`;
   document.getElementById('m_note').value='';
   document.getElementById('submitModal').classList.add('open');
 }
@@ -1903,7 +1906,7 @@ function loadReviewView(){
   const pending=submissions.filter(s=>s.status==='pending');
   const pl=document.getElementById('pendingList');if(!pl)return;
   if(pending.length===0){pl.innerHTML=`<div style="background:#fff;border-radius:var(--r12);padding:30px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:34px;margin-bottom:8px">📭</div><div style="font-size:15px;color:var(--g6)">ไม่มี Checklist ที่รอประเมิน</div></div>`;document.getElementById('reviewFormWrap').style.display='none';return;}
-  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pending.map(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${s.staffName}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${s.submitTimeDisplay||''}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${s.staffName}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${s.submitTimeDisplay||''}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 
 function openReview(idx){
@@ -1914,8 +1917,8 @@ function openReview(idx){
   document.getElementById('rvStaffLabel').textContent=rec.staffName;
   document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
   document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':'sc-afternoon');
-  const tot=Object.keys(rec.snap).length;const dn=Object.values(rec.snap).filter(v=>v.status==='done'||v.status==='na').length;
-  document.getElementById('rvProg').textContent=`ความสมบูรณ์: ${Math.round(dn/tot*100)}% (${dn}/${tot})`;
+  const stats=completionStats(rec);
+  document.getElementById('rvProg').textContent=`ความสมบูรณ์: ${calcCompletion(rec)}% (${stats.done}/${stats.total})`;
   const container=document.getElementById('reviewGroups');container.innerHTML='';
   Object.keys(CL).filter(g=>CL[g].shifts.includes(rec.shift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
@@ -2274,7 +2277,7 @@ function loadHistory(){
   const tb=document.getElementById('historyBody');if(!tb)return;
   if(data.length===0){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';return;}
   tb.innerHTML=data.map(s=>{
-    const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;const pct=Math.round(dn/tot*100);
+    const pct=calcCompletion(s);
     const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
     const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
     const timePart=(s.submitTimeDisplay||'').split(' ')[1]||s.submitTimeDisplay||'';
@@ -2284,17 +2287,18 @@ function loadHistory(){
 
 async function showDetail(id){
   const s=submissions.find(x=>x.id===id);if(!s)return;
-  const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;
   document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
-  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${Math.round(dn/tot*100)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${calcCompletion(s)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
   html+=`<div style="margin:-6px 0 14px;padding:9px 12px;border-radius:8px;background:${s.ptLineShared?'#E8F8EE':'#FFF8E1'};color:${s.ptLineShared?'#1E7E34':'#8A5A00'};font-size:13px;font-weight:700">${s.ptLineShared?'✅ ส่งรูปเข้า LINE แล้ว':'⚠️ ยังไม่ได้ติ๊กว่าส่งรูปเข้า LINE'}</div>`;
   const detailPhotos=await getReviewPhotosForRecord(s);
   if(detailPhotos.length){
     html+=`<div class="detail-photo-title">📷 รูปประกอบการประเมิน</div><div class="detail-photo-grid">${detailPhotos.map((photo,i)=>{const src=photo.url||photo.dataUrl;return`<a class="detail-photo-card" href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="รูปประกอบการประเมิน ${i+1}"></a>`;}).join('')}</div>`;
   }
   Object.keys(CL).filter(g=>CL[g].shifts.includes(s.shift||'morning')).forEach(g=>{
+    const keys=Object.keys(s.snap).filter(key=>key.startsWith(g+'-')).filter(key=>{const item=s.snap[key]||{};const ptE=s.ptEvals?.[key]||'';return item.status!=='na'&&ptE!=='na';}).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1]));
+    if(!keys.length)return;
     html+=`<div style="font-size:12px;font-weight:800;text-transform:uppercase;color:var(--g6);margin:12px 0 4px">${CL[g].emoji} ${CL[g].label}</div>`;
-    Object.keys(s.snap).filter(key=>key.startsWith(g+'-')).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1])).forEach(key=>{const item=s.snap[key]||{};const st=item.status||'';const ptE=s.ptEvals?.[key]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':st==='na'?'—':'❌'}</span><span style="flex:1">${escapeHtml(item.text||'')}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
+    keys.forEach(key=>{const item=s.snap[key]||{};const st=item.status||'';const ptE=s.ptEvals?.[key]||'';html+=`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px"><span style="min-width:22px;text-align:center">${st==='done'?'✅':'❌'}</span><span style="flex:1">${escapeHtml(item.text||'')}</span><span>${ptE==='pass'?'<span style="color:var(--g)">✓</span>':ptE==='fail'?'<span style="color:var(--r)">✗</span>':''}</span></div>`;});
   });
   document.getElementById('detailBody').innerHTML=html;document.getElementById('detailModal').classList.add('open');
 }
@@ -2312,7 +2316,7 @@ function exportCSV(){
   let data=[...submissions].reverse().filter(s=>isDateInRange(s.date,fStart,fEnd));
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   const rows=[['วันที่','เวร','ผู้ช่วย','ความสมบูรณ์%','สถานะ','PT ประเมิน','ผลประเมิน','ความเห็น PT']];
-  data.forEach(s=>{const tot=Object.keys(s.snap).length;const dn=Object.values(s.snap).filter(v=>v.status==='done'||v.status==='na').length;rows.push([s.date,shiftLabel(s.shift||'morning'),s.staffName,Math.round(dn/tot*100),s.status,s.ptReviewer||'—',s.ptVerdict||'—',s.ptComment||'']);});
+  data.forEach(s=>{rows.push([s.date,shiftLabel(s.shift||'morning'),s.staffName,calcCompletion(s),s.status,s.ptReviewer||'—',s.ptVerdict||'—',s.ptComment||'']);});
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PT_KTH.csv';a.click();showToast('📥 Export CSV สำเร็จ','success');
 }
@@ -2348,9 +2352,13 @@ function refreshDashboard() {
 }
 
 function calcCompletion(s) {
-  const tot = Object.keys(s.snap).length;
-  const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
-  return tot > 0 ? Math.round(dn/tot*100) : 0;
+  const stats=completionStats(s);
+  return stats.total > 0 ? Math.round(stats.done/stats.total*100) : 100;
+}
+function completionStats(s){
+  const values=Object.values(s?.snap||{}).filter(v=>(v?.status||'')!=='na');
+  const done=values.filter(v=>v.status==='done').length;
+  return{total:values.length,done,na:Object.values(s?.snap||{}).filter(v=>v?.status==='na').length};
 }
 
 function executiveMetric(title,value,detail,color){
@@ -2361,7 +2369,8 @@ function topIssueText(records){
   (records||[]).forEach(s=>{
     Object.keys(s.snap||{}).forEach(k=>{
       const item=s.snap[k]||{};const st=item.status;const pt=s.ptEvals&&s.ptEvals[k];
-      if(pt==='fail'||(st!=='done'&&st!=='na')){
+      if(st==='na'||pt==='na')return;
+      if(pt==='fail'||st!=='done'){
         const text=String(item.text||'').replace(/\([^)]+\)/g,'').trim();
         if(text)counts[text]=(counts[text]||0)+1;
       }
@@ -2967,9 +2976,7 @@ function loadSupDaily(data) {
     return;
   }
   tb.innerHTML = data.map(s => {
-    const tot = Object.keys(s.snap).length;
-    const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
-    const pct = Math.round(dn/tot*100);
+    const pct = calcCompletion(s);
     const bar = `<div style="display:flex;align-items:center;gap:6px">
       <div style="width:60px;height:6px;background:var(--g2);border-radius:3px;overflow:hidden">
         <div style="width:${pct}%;height:100%;background:${pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)'};border-radius:3px"></div>
@@ -3021,9 +3028,7 @@ function loadSupPerson(data) {
     // เฉลี่ยความสมบูรณ์
     const avgComplete = Math.round(
       records.reduce((sum, s) => {
-        const tot = Object.keys(s.snap).length;
-        const dn  = Object.values(s.snap).filter(v => v.status==='done'||v.status==='na').length;
-        return sum + (tot>0 ? dn/tot*100 : 0);
+        return sum + calcCompletion(s);
       }, 0) / total
     );
 
@@ -3033,10 +3038,11 @@ function loadSupPerson(data) {
       Object.keys(s.snap).forEach(k => {
         const st = s.snap[k].status;
         const pt = s.ptEvals && s.ptEvals[k];
-        if (pt==='fail' || st==='na' || st!=='done') {
-          const parts = k.split('-'); const g = parts[0]; const i = parts[1];
-          if (CL[g] && CL[g].items[i]) {
-            let text = CL[g].items[i].replace(/\([^)]+\)/g,'').trim();
+        if (st==='na'||pt==='na') return;
+        if (pt==='fail' || st!=='done') {
+          const item=s.snap[k]||{};
+          if (item.text) {
+            let text = String(item.text).replace(/\([^)]+\)/g,'').trim();
             if (text.length > 30) text = text.substring(0,30)+'...';
             issueCounts[text] = (issueCounts[text]||0)+1;
           }
@@ -3113,7 +3119,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-supervisor-summary-v16';
+  const APP_VERSION = 'v20260716-na-excluded-v17';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -3714,10 +3720,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const failed   = data.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
   const passRate = reviewed.length > 0 ? Math.round(successful.length/reviewed.length*100) : 0;
-  const avgComp  = data.length > 0 ? Math.round(data.reduce((s,r)=>{
-    const t=Object.keys(r.snap).length, d=Object.values(r.snap).filter(v=>v.status==='done'||v.status==='na').length;
-    return s+(t>0?d/t*100:0);
-  },0)/data.length) : 0;
+  const avgComp  = data.length > 0 ? Math.round(data.reduce((s,r)=>s+calcCompletion(r),0)/data.length) : 0;
 
   // จัดกลุ่มรายคน
   const byStaff = {};
@@ -3778,10 +3781,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
       const fail = records.filter(r => r.status==='fail');
       const pend = records.filter(r => r.status==='pending');
       const rate = rev.length > 0 ? Math.round(successful.length/rev.length*100) : 0;
-      const avg  = records.length > 0 ? Math.round(records.reduce((s,r)=>{
-        const t=Object.keys(r.snap).length, d=Object.values(r.snap).filter(v=>v.status==='done'||v.status==='na').length;
-        return s+(t>0?d/t*100:0);
-      },0)/records.length) : 0;
+      const avg  = records.length > 0 ? Math.round(records.reduce((s,r)=>s+calcCompletion(r),0)/records.length) : 0;
       const rateColor = rate>=80?'#28A745':rate>=60?'#FD7E14':'#DC3545';
 
       return `
@@ -3815,9 +3815,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
             </thead>
             <tbody>
               ${records.sort((a,b)=>a.date>b.date?1:-1).map(r => {
-                const t=Object.keys(r.snap).length;
-                const d=Object.values(r.snap).filter(v=>v.status==='done'||v.status==='na').length;
-                const pct=t>0?Math.round(d/t*100):0;
+                const pct=calcCompletion(r);
                 const vColor=reportVerdictColor(r.ptVerdict, r.status);
                 const vLabel=reportVerdictLabel(r.ptVerdict, r.status);
                 const dt=new Date(r.date+'T00:00:00');
