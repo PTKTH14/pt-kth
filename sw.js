@@ -1,4 +1,4 @@
-cconst CACHE_NAME = 'pt-kth-v20260715-header-title-v6';
+const CACHE_NAME = 'pt-kth-v20260716-time-checklist-dashboard-v8';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
