@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260716-na-detail-v18">
+<link rel="manifest" href="manifest.json?v=20260717-retention-v20">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260716-na-detail-v18">
+<meta name="version" content="v20260717-retention-v20">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -211,6 +211,57 @@
       },
       fbSaveAuditLog: async function(record) {
         await db.collection('audit_logs').doc(String(record.id)).set(record);
+      },
+      fbGetDataStats: async function() {
+        const countCollection = async function(name) {
+          const snap = await db.collection(name).get();
+          return snap.size;
+        };
+        const results = await Promise.all([
+          countCollection('submissions'),
+          countCollection('assistant_evaluations'),
+          countCollection('supervisor_notes'),
+          countCollection('missed_evaluations'),
+          countCollection('audit_logs')
+        ]);
+        return {
+          submissions: results[0],
+          assistantEvaluations: results[1],
+          supervisorNotes: results[2],
+          missedEvaluations: results[3],
+          auditLogs: results[4]
+        };
+      },
+      fbPruneOldData: async function(cutoffDate, options) {
+        const opts = options || {};
+        const cutoff = String(cutoffDate || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error('วันที่ตัดข้อมูลไม่ถูกต้อง');
+        const deleteMatching = async function(name, predicate) {
+          const snap = await db.collection(name).get();
+          const docs = snap.docs.filter(function(doc) { return predicate(doc.data() || {}); });
+          for (let start = 0; start < docs.length; start += 400) {
+            const batch = db.batch();
+            docs.slice(start, start + 400).forEach(function(doc) { batch.delete(doc.ref); });
+            await batch.commit();
+          }
+          return docs.length;
+        };
+        const isOldByDate = function(record) { return String(record.date || '').slice(0, 10) < cutoff; };
+        const isOldByCreatedAt = function(record) {
+          const key = String(record.createdAt || record.date || '').slice(0, 10);
+          return key && key < cutoff;
+        };
+        const counts = { submissions:0, assistantEvaluations:0, supervisorNotes:0, missedEvaluations:0, auditLogs:0 };
+        if (opts.includeOperational !== false) {
+          counts.submissions = await deleteMatching('submissions', isOldByDate);
+          counts.assistantEvaluations = await deleteMatching('assistant_evaluations', isOldByDate);
+          counts.supervisorNotes = await deleteMatching('supervisor_notes', isOldByDate);
+          counts.missedEvaluations = await deleteMatching('missed_evaluations', isOldByDate);
+        }
+        if (opts.includeAuditLogs !== false) {
+          counts.auditLogs = await deleteMatching('audit_logs', isOldByCreatedAt);
+        }
+        return counts;
       },
       fbCreateBackup: async function() {
         const readCollection = async function(name) {
@@ -705,13 +756,13 @@ tr:hover td{background:var(--g1)}
       <div class="fg">
         <label>📷 รูปประกอบการประเมิน</label>
         <div class="photo-box">
-          <input class="photo-input" type="file" id="ptPhotoInput" accept="image/*" capture="environment" multiple onchange="handleReviewPhotos(event)">
+          <input class="photo-input" type="file" id="ptPhotoInput" accept="image/*" multiple onchange="handleReviewPhotos(event)">
           <div class="photo-actions">
             <button type="button" class="btn btn-pri" style="padding:7px 12px;font-size:12.5px" onclick="document.getElementById('ptPhotoInput').click()">📷 ถ่ายรูป / เลือกรูป</button>
             <button type="button" class="btn btn-out" style="padding:7px 12px;font-size:12.5px;color:#06C755;border-color:#06C755" onclick="shareReviewPhotosToLine()">💬 ส่งรูปเข้า LINE</button>
             <button type="button" class="btn btn-out" style="padding:7px 12px;font-size:12.5px" onclick="clearReviewPhotos()">ล้างรูป</button>
           </div>
-          <div class="photo-hint">แนบได้สูงสุด 3 รูป ระบบจะย่อรูปให้อัตโนมัติ และสามารถกดส่งเข้า LINE กลุ่มจากมือถือได้</div>
+          <div class="photo-hint">แนบได้สูงสุด 3 รูป เลือกได้ทั้งถ่ายใหม่ รูปในเครื่อง หรือไฟล์รูปภาพ ระบบจะย่อรูปให้อัตโนมัติ และสามารถกดส่งเข้า LINE กลุ่มจากมือถือได้</div>
           <div id="ptPhotoPreview" class="photo-grid"></div>
         </div>
       </div>
@@ -1243,6 +1294,22 @@ tr:hover td{background:var(--g1)}
           <button class="btn" id="restoreBackupBtn" disabled onclick="confirmFirebaseRestore()" style="background:var(--o);color:#fff">♻️ เริ่มกู้คืนข้อมูล</button>
         </div>
         <div id="restoreBackupSummary" style="margin-top:12px;font-size:12px;color:var(--g6)">ยังไม่ได้เลือกไฟล์</div>
+      </div>
+
+      <div class="card" style="max-width:760px;border-left:4px solid #6A1B9A">
+        <h3 style="margin-bottom:6px">🧹 จัดการข้อมูลเก่า</h3>
+        <p style="font-size:12.5px;color:var(--g6);line-height:1.7;margin-bottom:14px">ระบบจะเก็บข้อมูลในเว็บไว้ 2 ปี ข้อมูลเก่ากว่านั้นควรดาวน์โหลดสำรองก่อนลบ เพื่อให้เว็บโหลดไวและดูแลง่าย</p>
+        <div id="dataRetentionSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px"></div>
+        <div style="padding:10px 12px;border-radius:8px;background:#F3E5F5;color:#4A148C;font-size:12px;line-height:1.7;margin-bottom:12px">
+          เก็บในระบบ: <strong>2 ปีล่าสุด</strong> • วันที่เก่ากว่า <strong id="retentionCutoffDisplay">—</strong> จะถือเป็นข้อมูลเก่า
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-out" id="refreshDataStatsBtn" onclick="refreshDataRetentionSummary()">🔄 เช็กจำนวนข้อมูล</button>
+          <button class="btn btn-out" id="backupBeforePruneBtn" onclick="downloadFirebaseBackup()">⬇️ สำรองก่อนล้าง</button>
+          <button class="btn" id="pruneOldDataBtn" onclick="confirmPruneOldData()" style="background:#6A1B9A;color:#fff">🧹 ลบข้อมูลเก่ากว่า 2 ปี</button>
+          <button class="btn btn-out" id="pruneOldAuditBtn" onclick="confirmPruneOldAuditLogs()" style="color:var(--r);border-color:#F0B7BF">🕘 ลบเฉพาะประวัติเก่า</button>
+        </div>
+        <div style="margin-top:12px;padding:9px 11px;border-radius:8px;background:#FFF8E1;color:#795A00;font-size:11.5px;line-height:1.6">แนะนำ: กด “สำรองก่อนล้าง” ทุกครั้ง แล้วค่อยลบข้อมูลเก่า ข้อมูลรายชื่อ/ตั้งค่า/รายการ Checklist จะไม่ถูกลบ</div>
       </div>
     </div>
   </div>
@@ -2680,7 +2747,7 @@ function renderAuditLogs(){
 function setAdminTab(tab) {
   currentAdminTab=['data','audit','settings','backup'].includes(tab)?tab:'data';
   ['data','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings'){renderSettings();loadSupervisorRequests();}if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup')renderBackupPanelSummary();
+  if(currentAdminTab==='settings'){renderSettings();loadSupervisorRequests();}if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
 }
 
 async function loadSupervisorRequests(){
@@ -2714,6 +2781,48 @@ function renderBackupPanelSummary(data){
   const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES})},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
+}
+function retentionCutoffDate(years){
+  const d=new Date();d.setHours(0,0,0,0);d.setFullYear(d.getFullYear()-(Number(years)||2));return localDateKey(d);
+}
+function renderDataRetentionSummary(counts){
+  const summary=document.getElementById('dataRetentionSummary');const cutoff=document.getElementById('retentionCutoffDisplay');
+  if(cutoff)cutoff.textContent=retentionCutoffDate(2);
+  const current=counts||{submissions:submissions.length,assistantEvaluations:evaluationRecords.length,supervisorNotes:supervisorNotes.length,missedEvaluations:missedEvaluations.length,auditLogs:auditLogs.length};
+  if(summary)summary.innerHTML=backupMetric('Checklist',current.submissions||0)+backupMetric('รายงานส่วนตัว',current.assistantEvaluations||0,'#7B1FA2')+backupMetric('หมายเหตุลับ',current.supervisorNotes||0,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',current.missedEvaluations||0,'var(--o)')+backupMetric('ประวัติใช้งาน',current.auditLogs||0,'var(--g6)');
+}
+async function refreshDataRetentionSummary(showDone=true){
+  renderDataRetentionSummary();
+  if(!isAdminLoggedIn||!window.FB?.fbGetDataStats)return;
+  const button=document.getElementById('refreshDataStatsBtn');if(button)button.disabled=true;
+  try{const counts=await window.FB.fbGetDataStats();renderDataRetentionSummary(counts);if(showDone)showToast('✅ อัปเดตจำนวนข้อมูลแล้ว','success');}
+  catch(error){showToast('⚠️ เช็กจำนวนจาก Firebase ไม่สำเร็จ ใช้จำนวนที่โหลดในเครื่องแทน','warning');}
+  finally{if(button)button.disabled=false;}
+}
+function formatPruneCounts(counts){
+  const c=counts||{};return `Checklist ${c.submissions||0} รายการ, รายงานส่วนตัว ${c.assistantEvaluations||0} รายการ, หมายเหตุลับ ${c.supervisorNotes||0} รายการ, ผู้ไม่ประเมิน ${c.missedEvaluations||0} รายการ, ประวัติ ${c.auditLogs||0} รายการ`;
+}
+async function pruneOldData(includeOperational,includeAuditLogs,buttonId,successText){
+  if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
+  if(!window.FB?.fbPruneOldData)return showToast('⚠️ ต้องเชื่อมต่อ Firebase ก่อนจึงจะล้างข้อมูลได้','warning');
+  const button=document.getElementById(buttonId);if(button)button.disabled=true;setSyncBadge('syncing','⏳ Saving...');
+  const cutoff=retentionCutoffDate(2);
+  try{
+    const counts=await window.FB.fbPruneOldData(cutoff,{includeOperational,includeAuditLogs});
+    await reloadFirebaseStateAfterRestore();
+    await writeAuditLog('delete','system_data',`${successText} ก่อนวันที่ ${cutoff}: ${formatPruneCounts(counts)}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    await refreshDataRetentionSummary(false);
+    showToast(`✅ ${successText} แล้ว`, 'success');setSyncBadge('synced','🔥 Firebase');
+  }catch(error){console.error('Prune old data error:',error);showToast('❌ ล้างข้อมูลไม่สำเร็จ: '+friendlyErrorMessage(error),'error');setSyncBadge('error','⚠️ Error');}
+  finally{if(button)button.disabled=false;}
+}
+function confirmPruneOldData(){
+  const cutoff=retentionCutoffDate(2);
+  showConfirm(`ต้องการลบข้อมูลเก่ากว่า 2 ปี (ก่อนวันที่ ${cutoff}) ใช่หรือไม่? แนะนำให้กดสำรองข้อมูลก่อนล้างทุกครั้ง`,()=>pruneOldData(true,true,'pruneOldDataBtn','ลบข้อมูลเก่ากว่า 2 ปี'));
+}
+function confirmPruneOldAuditLogs(){
+  const cutoff=retentionCutoffDate(2);
+  showConfirm(`ต้องการลบเฉพาะประวัติการใช้งานเก่ากว่า 2 ปี (ก่อนวันที่ ${cutoff}) ใช่หรือไม่?`,()=>pruneOldData(false,true,'pruneOldAuditBtn','ลบประวัติการใช้งานเก่า'));
 }
 async function downloadFirebaseBackup(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
@@ -3119,7 +3228,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260716-na-detail-v18';
+  const APP_VERSION = 'v20260717-retention-v20';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
