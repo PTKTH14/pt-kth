@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260717-retention-v20">
+<link rel="manifest" href="manifest.json?v=20260717-admin-edit-v21">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260717-retention-v20">
+<meta name="version" content="v20260717-admin-edit-v21">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1455,6 +1455,21 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<div class="mo" id="adminEditChecklistModal">
+  <div class="modal wide">
+    <div class="mh"><h2>✏️ แก้ไข Checklist</h2><button class="mc-btn" onclick="closeModal('adminEditChecklistModal')">✕</button></div>
+    <div class="mb">
+      <div id="adminEditChecklistHeader" style="padding:10px 12px;border-radius:8px;background:#F4F8FB;color:var(--bd);font-size:13px;font-weight:700;line-height:1.7;margin-bottom:12px"></div>
+      <div style="padding:9px 11px;border-radius:8px;background:#FFF8E1;color:#795A00;font-size:12px;line-height:1.6;margin-bottom:12px">ใช้สำหรับแก้กรณีติ๊กผิดเล็กน้อยเท่านั้น ระบบจะบันทึกประวัติการแก้ไขไว้ในแอดมิน</div>
+      <div id="adminEditChecklistBody" style="max-height:58vh;overflow:auto"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="closeModal('adminEditChecklistModal')">ยกเลิก</button>
+      <button class="btn btn-pri" id="adminSaveChecklistBtn" onclick="saveAdminChecklistEdit()">💾 บันทึกการแก้ไข</button>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="confirmModal">
   <div class="modal" style="max-width:380px;text-align:center">
     <div class="mb" style="padding:24px 20px 10px">
@@ -1518,7 +1533,7 @@ const DEFAULT_CL_ITEMS = {
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[];
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
-let lastWebAlertMinute='';
+let lastWebAlertMinute='', activeAdminChecklistEditId=null;
 
 function showStartupError(error){
   const message=friendlyErrorMessage(error);
@@ -2370,6 +2385,57 @@ async function showDetail(id){
   document.getElementById('detailBody').innerHTML=html;document.getElementById('detailModal').classList.add('open');
 }
 
+function adminChecklistStatusIcon(status){return status==='done'?'✅':status==='na'?'—':'❌';}
+function openAdminChecklistEdit(id){
+  if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
+  const rec=submissions.find(item=>Number(item.id)===Number(id));if(!rec)return showToast('⚠️ ไม่พบรายการนี้','warning');
+  activeAdminChecklistEditId=Number(id);
+  const header=document.getElementById('adminEditChecklistHeader');const body=document.getElementById('adminEditChecklistBody');
+  if(header)header.innerHTML=`${escapeHtml(rec.staffName||'—')} • ${escapeHtml(rec.date||'—')} • ${shiftLabel(rec.shift||'morning')}<br><span style="font-weight:600;color:var(--g6)">แก้ได้เฉพาะสถานะ Checklist ของผู้ช่วย</span>`;
+  if(!body)return;
+  const snap=rec.snap||{};let html='';
+  Object.keys(CL).filter(g=>CL[g].shifts.includes(rec.shift||'morning')).forEach(g=>{
+    const keys=Object.keys(snap).filter(key=>key.startsWith(g+'-')).sort((a,b)=>Number(a.split('-')[1])-Number(b.split('-')[1]));
+    if(!keys.length)return;
+    html+=`<div style="font-size:12px;font-weight:800;color:var(--bd);margin:14px 0 6px">${CL[g].emoji} ${CL[g].label}</div>`;
+    keys.forEach(key=>{
+      const item=snap[key]||{};const status=item.status||'';const name=`adminEditStatus-${key}`;
+      html+=`<div style="display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--g2)">
+        <div style="font-size:13px;line-height:1.5;color:var(--g8)"><span style="display:inline-block;min-width:22px;text-align:center">${adminChecklistStatusIcon(status)}</span>${escapeHtml(item.text||'')}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;font-size:12px">
+          <label style="display:flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid #CFE8D6;border-radius:999px;background:#F5FFF7;cursor:pointer"><input type="radio" name="${escapeHtml(name)}" data-key="${escapeHtml(key)}" value="done" ${status==='done'?'checked':''}> ✅ ทำแล้ว</label>
+          <label style="display:flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid #FFE0A6;border-radius:999px;background:#FFFBF0;cursor:pointer"><input type="radio" name="${escapeHtml(name)}" data-key="${escapeHtml(key)}" value="na" ${status==='na'?'checked':''}> — N/A</label>
+          <label style="display:flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid #F3C4CB;border-radius:999px;background:#FFF7F8;cursor:pointer"><input type="radio" name="${escapeHtml(name)}" data-key="${escapeHtml(key)}" value="" ${!status?'checked':''}> ❌ ยังไม่ทำ</label>
+        </div>
+      </div>`;
+    });
+  });
+  body.innerHTML=html||'<div style="text-align:center;color:var(--g4);padding:20px">ไม่พบรายการ Checklist</div>';
+  document.getElementById('adminEditChecklistModal')?.classList.add('open');
+}
+async function saveAdminChecklistEdit(){
+  if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
+  const rec=submissions.find(item=>Number(item.id)===Number(activeAdminChecklistEditId));if(!rec)return showToast('⚠️ ไม่พบรายการนี้','warning');
+  const button=document.getElementById('adminSaveChecklistBtn');if(button)button.disabled=true;
+  const updated=Object.assign({},rec,{snap:Object.assign({},rec.snap||{})});
+  let changes=0;
+  document.querySelectorAll('#adminEditChecklistBody input[type="radio"]:checked').forEach(input=>{
+    const key=input.dataset.key;const next=input.value||'';if(!key||!updated.snap[key])return;
+    const before=updated.snap[key].status||'';
+    if(before!==next){updated.snap[key]=Object.assign({},updated.snap[key],{status:next});changes++;}
+  });
+  if(!changes){if(button)button.disabled=false;return showToast('ยังไม่มีรายการที่เปลี่ยนแปลง','warning');}
+  try{
+    if(window.FB?.fbUpdateSubmission)await window.FB.fbUpdateSubmission(updated);
+    submissions=submissions.map(item=>Number(item.id)===Number(updated.id)?updated:item);
+    localStorage.setItem('pt_submissions',JSON.stringify(submissions));
+    await writeAuditLog('update','system_data',`แอดมินแก้ Checklist ของ ${updated.staffName} — ${updated.date} ${shiftLabel(updated.shift||'morning')} (${changes} รายการ)`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    renderAdminTable();loadHistory();loadDashboard();loadReviewView();updateHistoryFilters();updateDashFilter();
+    closeModal('adminEditChecklistModal');
+    showToast('✅ บันทึกการแก้ไข Checklist แล้ว','success');
+  }catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  finally{if(button)button.disabled=false;}
+}
 async function deleteRecord(id){
   const deletedRecord=submissions.find(item=>Number(item.id)===Number(id));
   showConfirm('ต้องการลบรายการนี้ใช่หรือไม่?',async()=>{
@@ -2919,7 +2985,16 @@ async function changeAdminPassword(){
   try{await window.FB.fbChangePassword(current,next);['currentAdminPassword','newAdminPassword','confirmAdminPassword'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});await writeAuditLog('security','security','เปลี่ยนรหัสผ่านแอดมิน',{actor:currentAdminEmail(),actorRole:'แอดมิน'});showToast('✅ เปลี่ยนรหัสผ่านแอดมินทุกอุปกรณ์แล้ว','success');}
   catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
-function renderAdminTable(){const tb=document.getElementById('adminTableBody');if(!tb)return;if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}let data=[...submissions].reverse();tb.innerHTML=data.map(s=>{const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';return`<tr><td>${escapeHtml(s.date)} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${escapeHtml(s.staffName)}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;}).join('');}
+function renderAdminTable(){
+  const tb=document.getElementById('adminTableBody');if(!tb)return;
+  if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}
+  let data=[...submissions].reverse();
+  tb.innerHTML=data.map(s=>{
+    const stTag=s.status==='pending'?'<span class="tag tw2">รอประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
+    const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
+    return`<tr><td>${escapeHtml(s.date)} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${escapeHtml(s.staffName)}</td><td>${stTag}</td><td>${vrTag}</td><td style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:#1565C0" onclick="openAdminChecklistEdit(${s.id})">✏️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;
+  }).join('');
+}
 async function clearAllData(){showConfirm('🚨 ล้างข้อมูลทั้งหมดในระบบ? (กู้คืนไม่ได้!)',async()=>{try{const deletedCount=submissions.length;await window.FB.fbClearSubmissions();submissions=[];await writeAuditLog('delete','system_data',`ล้างข้อมูล Checklist ทั้งหมด ${deletedCount} รายการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderAdminTable();loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว','success');}catch(e){showToast('❌ ล้างไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}});}
 
 // ══ MODAL & CONFIRM ══
@@ -3228,7 +3303,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260717-retention-v20';
+  const APP_VERSION = 'v20260717-admin-edit-v21';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
