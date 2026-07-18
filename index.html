@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260718-checklist-all-days-v22">
+<meta name="version" content="v20260718-checklist-edit-wording-v23">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -3308,7 +3308,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260718-checklist-all-days-v22';
+  const APP_VERSION = 'v20260718-checklist-edit-wording-v23';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -3766,6 +3766,7 @@ function renderClItems() {
       <span style="color:var(--g4);font-size:12px;min-width:22px;text-align:center">${i+1}</span>
       <span style="flex:1;font-size:13.5px">${escapeHtml(text)}${isClItemStarred(currentClShift,text)?' <span title="รายการสำคัญ">⭐</span>':''}</span>
       <div style="display:flex;gap:4px">
+        <button onclick="editClItem(${i})" title="แก้ไขข้อความรายการนี้" style="background:none;border:1px solid #9CC5E5;color:#0F4C81;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">✏️</button>
         <button onclick="toggleClItemStar(${i})" title="${isClItemStarred(currentClShift,text)?'เอาดาวออก':'ติดดาวรายการนี้'}" style="background:${isClItemStarred(currentClShift,text)?'#FFF4BF':'none'};border:1px solid #F3C75F;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">⭐</button>
         ${i>0?`<button onclick="moveClItem(${i},-1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↑</button>`:'<span style="width:29px"></span>'}
         ${i<items.length-1?`<button onclick="moveClItem(${i},1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↓</button>`:'<span style="width:29px"></span>'}
@@ -3788,6 +3789,23 @@ async function addClItem() {
   inp.value = '';
   renderClItems();
   showToast('✅ เพิ่มรายการแล้ว','success');
+}
+
+async function editClItem(idx){
+  const items=getClItems(currentClShift);const before=items[idx];if(!before)return;
+  const next=window.prompt('แก้ไขข้อความรายการ Checklist',before);
+  if(next===null)return;
+  const text=next.trim();
+  if(!text)return showToast('⚠️ กรุณาระบุข้อความรายการ','warning');
+  if(text===before)return;
+  const starred=isClItemStarred(currentClShift,before);
+  items[idx]=text;
+  localStorage.setItem('custom_cl_'+currentClShift,JSON.stringify(items));
+  const stars=getClStars();delete stars[clStarKey(currentClShift,before)];stars[clStarKey(currentClShift,text)]=starred;localStorage.setItem('custom_cl_stars',JSON.stringify(stars));
+  _applyCLCustom();
+  try{await saveChecklistItemsToFirebase();showToast('✅ แก้ไขข้อความแล้ว — sync ทุกเครื่องแล้ว','success');}
+  catch(e){showToast('⚠️ แก้ไขในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
+  renderClItems();buildChecklist();
 }
 
 async function toggleClItemStar(idx){
