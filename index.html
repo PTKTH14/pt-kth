@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260717-admin-edit-v21">
+<meta name="version" content="v20260718-checklist-all-days-v22">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1224,12 +1224,14 @@ tr:hover td{background:var(--g1)}
       <div class="card" style="margin-top:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h3 style="margin-bottom:0">📋 จัดการรายการ Checklist</h3>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('morning')" id="clTabMorning">🌅 เวรเช้า</button>
-            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('evening')" id="clTabEvening">🌙 เวรบ่าย</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('morning')" id="clTabMorning">🌅 จ.-ศ. เช้า</button>
+            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('evening')" id="clTabEvening">🌙 จ.-ศ. บ่าย</button>
+            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('saturdayMorning')" id="clTabSaturdayMorning">🌅 เสาร์เช้า</button>
+            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('saturdayEvening')" id="clTabSaturdayEvening">🌙 เสาร์บ่าย</button>
           </div>
         </div>
-        <p style="font-size:12px;color:var(--g6);margin-bottom:12px">⚠️ การแก้ไขจะมีผลกับ Checklist ใหม่ที่บันทึกหลังจากนี้เท่านั้น (ข้อมูลเก่าไม่เปลี่ยน)</p>
+        <p style="font-size:12px;color:var(--g6);margin-bottom:12px">⚠️ แก้ไข เพิ่ม ลบ ย้ายลำดับ และกด ⭐ เพื่อทำเครื่องหมายสำคัญได้ทุกรายการทุกวัน การแก้ไขมีผลกับ Checklist ใหม่ที่บันทึกหลังจากนี้เท่านั้น</p>
         <div id="clItemList" style="margin-bottom:12px"></div>
         <div style="display:flex;gap:8px">
           <input type="text" id="newClItem" placeholder="พิมพ์รายการใหม่..." style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addClItem()">
@@ -1657,8 +1659,11 @@ async function init(){
       ptList    = (config && config.ptList)    ? config.ptList    : [];
       applySystemSettings(config && config.systemSettings);
       if(config && config.checklistItems) {
-        localStorage.setItem('custom_cl_morning', JSON.stringify(Array.isArray(config.checklistItems.morning)?config.checklistItems.morning:DEFAULT_CL_ITEMS.morning));
-        localStorage.setItem('custom_cl_evening', JSON.stringify(Array.isArray(config.checklistItems.evening)?config.checklistItems.evening:DEFAULT_CL_ITEMS.evening));
+        ['morning','evening','saturdayMorning','saturdayEvening'].forEach(shift=>{
+          const items=config.checklistItems[shift];
+          localStorage.setItem('custom_cl_'+shift,JSON.stringify(Array.isArray(items)?items:getDefaultClItems(shift)));
+        });
+        localStorage.setItem('custom_cl_stars',JSON.stringify(config.checklistItems.stars&&typeof config.checklistItems.stars==='object'?config.checklistItems.stars:{}));
       }
       _applyCLCustom();
       setLoadingDetail('โหลด submissions...');
@@ -1850,18 +1855,18 @@ function updateDateDisplay(){const v=document.getElementById('dateInput').value;
 document.getElementById('staffSelect').addEventListener('change',function(){const n=this.options[this.selectedIndex]?.text;document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อ —')?n:'เลือกชื่อก่อน';document.getElementById('staffSelectMobile').value=this.value;});
 
 // ══ CHECKLIST ══
-const SAT_MORNING_EXTRA = ['ทำความสะอาดห้องกายภาพบำบัดทั่วไป (พื้น ผนัง อุปกรณ์)'];
-const SAT_EVENING_EXTRA = [
-  'เปลี่ยนปลอกหมอนทุกใบ (วันเสาร์ ⭐)',
-  'ซักผ้าคลุมเตียงทุกผืน / นำส่งโรงซัก (วันเสาร์ ⭐)',
-  'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์ ⭐)'
+const DEFAULT_SAT_MORNING_ITEMS = ['ทำความสะอาดห้องกายภาพบำบัดทั่วไป (พื้น ผนัง อุปกรณ์)'];
+const DEFAULT_SAT_EVENING_ITEMS = [
+  'เปลี่ยนปลอกหมอนทุกใบ (วันเสาร์)',
+  'ซักผ้าคลุมเตียงทุกผืน / นำส่งโรงซัก (วันเสาร์)',
+  'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์)'
 ];
 function isSaturdayDate(date){return date ? new Date(date+'T00:00:00').getDay()===6 : new Date().getDay()===6;}
 function checklistItemsForGroup(groupKey,date){
   const base=[...(CL[groupKey]?.items||[])];
-  if(isSaturdayDate(date)&&groupKey==='morning')return base.concat(SAT_MORNING_EXTRA);
-  if(isSaturdayDate(date)&&groupKey==='evening')return base.concat(SAT_EVENING_EXTRA);
-  return base;
+  const saturdayKey=groupKey==='morning'?'saturdayMorning':'saturdayEvening';
+  const items=isSaturdayDate(date)?base.concat(getClItems(saturdayKey)):base;
+  return items.map(text=>isClItemStarred(groupKey,text)||(isSaturdayDate(date)&&isClItemStarred(saturdayKey,text))?`${text} ⭐`:text);
 }
 function buildChecklist(){
   const wrap=document.getElementById('checklistGroups');if(!wrap)return;wrap.innerHTML='';
@@ -3303,7 +3308,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260717-admin-edit-v21';
+  const APP_VERSION = 'v20260718-checklist-all-days-v22';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -3721,20 +3726,30 @@ function getClItems(shift) {
   if(saved) {
     try { return JSON.parse(saved); } catch(e) {}
   }
-  return shift === 'morning' ? [...DEFAULT_CL_ITEMS.morning] : [...DEFAULT_CL_ITEMS.evening];
+  return getDefaultClItems(shift);
 }
 
+function getDefaultClItems(shift){
+  if(shift==='morning')return [...DEFAULT_CL_ITEMS.morning];
+  if(shift==='evening')return [...DEFAULT_CL_ITEMS.evening];
+  if(shift==='saturdayMorning')return [...DEFAULT_SAT_MORNING_ITEMS];
+  if(shift==='saturdayEvening')return [...DEFAULT_SAT_EVENING_ITEMS];
+  return [];
+}
+function getClStars(){try{return JSON.parse(localStorage.getItem('custom_cl_stars')||'{}')||{};}catch(e){return {};}}
+function clStarKey(shift,text){return `${shift}::${text}`;}
+function defaultClItemStarred(shift,text){return shift==='saturdayEvening'&&DEFAULT_SAT_EVENING_ITEMS.includes(text);}
+function isClItemStarred(shift,text){const value=getClStars()[clStarKey(shift,text)];return value===undefined?defaultClItemStarred(shift,text):value===true;}
+function setClItemStarred(shift,text,starred){const stars=getClStars();stars[clStarKey(shift,text)]=!!starred;localStorage.setItem('custom_cl_stars',JSON.stringify(stars));}
+
 async function saveChecklistItemsToFirebase(){
-  const checklistItems={morning:getClItems('morning'),evening:getClItems('evening')};
+  const checklistItems={morning:getClItems('morning'),evening:getClItems('evening'),saturdayMorning:getClItems('saturdayMorning'),saturdayEvening:getClItems('saturdayEvening'),stars:getClStars()};
   if(window.FB?.fbSaveChecklistConfig)await window.FB.fbSaveChecklistConfig(checklistItems);
 }
 
 function setClShift(shift) {
   currentClShift = shift;
-  const tm = document.getElementById('clTabMorning');
-  const te = document.getElementById('clTabEvening');
-  if(tm) { tm.className = shift==='morning' ? 'btn btn-pri' : 'btn btn-out'; tm.style.padding='5px 12px'; tm.style.fontSize='12.5px'; }
-  if(te) { te.className = shift==='evening' ? 'btn btn-pri' : 'btn btn-out'; te.style.padding='5px 12px'; te.style.fontSize='12.5px'; }
+  [['morning','clTabMorning'],['evening','clTabEvening'],['saturdayMorning','clTabSaturdayMorning'],['saturdayEvening','clTabSaturdayEvening']].forEach(([key,id])=>{const tab=document.getElementById(id);if(tab){tab.className=shift===key?'btn btn-pri':'btn btn-out';tab.style.padding='5px 12px';tab.style.fontSize='12.5px';}});
   renderClItems();
 }
 
@@ -3749,8 +3764,9 @@ function renderClItems() {
   wrap.innerHTML = items.map((text, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">
       <span style="color:var(--g4);font-size:12px;min-width:22px;text-align:center">${i+1}</span>
-      <span style="flex:1;font-size:13.5px">${text}</span>
+      <span style="flex:1;font-size:13.5px">${escapeHtml(text)}${isClItemStarred(currentClShift,text)?' <span title="รายการสำคัญ">⭐</span>':''}</span>
       <div style="display:flex;gap:4px">
+        <button onclick="toggleClItemStar(${i})" title="${isClItemStarred(currentClShift,text)?'เอาดาวออก':'ติดดาวรายการนี้'}" style="background:${isClItemStarred(currentClShift,text)?'#FFF4BF':'none'};border:1px solid #F3C75F;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">⭐</button>
         ${i>0?`<button onclick="moveClItem(${i},-1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↑</button>`:'<span style="width:29px"></span>'}
         ${i<items.length-1?`<button onclick="moveClItem(${i},1)" style="background:none;border:1px solid var(--g2);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">↓</button>`:'<span style="width:29px"></span>'}
         <button onclick="deleteClItem(${i})" style="background:none;border:1px solid var(--rb);color:var(--r);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px">🗑️</button>
@@ -3774,11 +3790,19 @@ async function addClItem() {
   showToast('✅ เพิ่มรายการแล้ว','success');
 }
 
+async function toggleClItemStar(idx){
+  const items=getClItems(currentClShift);const text=items[idx];if(!text)return;
+  setClItemStarred(currentClShift,text,!isClItemStarred(currentClShift,text));
+  try{await saveChecklistItemsToFirebase();showToast('⭐ อัปเดตดาวรายการแล้ว — sync ทุกเครื่องแล้ว','success');}
+  catch(e){showToast('⚠️ อัปเดตดาวในเครื่องแล้ว แต่ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning');}
+  renderClItems();buildChecklist();
+}
+
 function deleteClItem(idx) {
   showConfirm('ต้องการลบรายการนี้?', () => {
     const key = 'custom_cl_' + currentClShift;
     const items = getClItems(currentClShift);
-    items.splice(idx, 1);
+    const removed=items[idx];items.splice(idx, 1);const stars=getClStars();delete stars[clStarKey(currentClShift,removed)];localStorage.setItem('custom_cl_stars',JSON.stringify(stars));
     localStorage.setItem(key, JSON.stringify(items));
     _applyCLCustom();
     saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning'));
@@ -3808,8 +3832,8 @@ async function saveClItems() {
 
 function resetClItems() {
   showConfirm('คืนค่า Checklist กลับเป็นค่าเริ่มต้นใช่หรือไม่?', () => {
-    localStorage.removeItem('custom_cl_morning');
-    localStorage.removeItem('custom_cl_evening');
+    ['morning','evening','saturdayMorning','saturdayEvening'].forEach(shift=>localStorage.removeItem('custom_cl_'+shift));
+    localStorage.removeItem('custom_cl_stars');
     _applyCLCustom();
     saveChecklistItemsToFirebase().catch(e=>showToast('⚠️ sync Firebase ไม่สำเร็จ: '+friendlyErrorMessage(e),'warning'));
     renderClItems();
@@ -3820,10 +3844,8 @@ function resetClItems() {
 
 function _applyCLCustom() {
   // apply custom items เข้า CL object
-  const mItems = getClItems('morning');
-  const eItems = getClItems('evening');
-  CL.morning.items = mItems.length ? mItems : [...DEFAULT_CL_ITEMS.morning];
-  CL.evening.items = eItems.length ? eItems : [...DEFAULT_CL_ITEMS.evening];
+  CL.morning.items = getClItems('morning');
+  CL.evening.items = getClItems('evening');
 }
 
 // โหลด custom checklist ตอนเริ่มแอป
