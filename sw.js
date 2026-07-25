@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260718-checklist-edit-wording-v23';
+const CACHE_NAME = 'pt-kth-v20260725-install-banner-v25';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
