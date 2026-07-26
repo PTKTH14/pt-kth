@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260725-install-banner-v25">
+<meta name="version" content="v20260726-stock-workflow-v26">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -113,7 +113,7 @@
       fbGetConfig: async function() {
         const snap = await db.collection('config').doc('main').get();
         if (!snap.exists) return { staffList: [], ptList: [], checklistItems: null };
-        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[], checklistItems: snap.data().checklistItems||null, systemSettings: snap.data().systemSettings||null };
+        return { staffList: snap.data().staffList||[], ptList: snap.data().ptList||[], checklistItems: snap.data().checklistItems||null, systemSettings: snap.data().systemSettings||null, stockCatalog: snap.data().stockCatalog||null };
       },
       fbSaveConfig: async function(staffList, ptList) {
         await db.collection('config').doc('main').set({ staffList, ptList }, { merge:true });
@@ -123,6 +123,9 @@
       },
       fbSaveSystemSettings: async function(systemSettings) {
         await db.collection('config').doc('main').set({ systemSettings }, { merge:true });
+      },
+      fbSaveStockCatalog: async function(stockCatalog) {
+        await db.collection('config').doc('main').set({ stockCatalog }, { merge:true });
       },
       fbGetSubmissions: async function() {
         const snap = await db.collection('submissions').get();
@@ -318,7 +321,8 @@
           staffList: Array.isArray(config.staffList) ? config.staffList : [],
           ptList: Array.isArray(config.ptList) ? config.ptList : [],
           checklistItems: config.checklistItems || null,
-          systemSettings: config.systemSettings || null
+          systemSettings: config.systemSettings || null,
+          stockCatalog: Array.isArray(config.stockCatalog) ? config.stockCatalog : []
         });
         const counts = {};
         counts.submissions = await restoreCollection('submissions', data && data.submissions);
@@ -349,7 +353,7 @@
   --o:#FD7E14;--r:#DC3545;--rb:#F8D7DA;
   --g1:#F8F9FA;--g2:#E9ECEF;--g4:#9CA3AF;--g6:#6C757D;--g8:#343A40;
   --sh1:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 12px rgba(15,76,129,.12);--sh3:0 8px 32px rgba(15,76,129,.18);
-  --r8:8px;--r12:12px;--mobile-nav-h:60px;--topbar-h:80px;
+  --r8:8px;--r12:12px;--mobile-nav-h:74px;--topbar-h:80px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);min-height:100vh}
@@ -590,12 +594,13 @@ tr:hover td{background:var(--g1)}
 .loading-overlay.hidden{display:none}
 .spin{width:44px;height:44px;border:4px solid var(--g2);border-top-color:var(--bd);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--mobile-nav-h);background:#fff;border-top:1px solid var(--g2);box-shadow:0 -2px 12px rgba(15,76,129,.10);z-index:300;align-items:stretch}
-.mn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:inherit;font-size:10px;font-weight:600;color:var(--g4);background:none;border:none;padding:6px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
-.mn-item.active{color:var(--bd)}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));padding:5px 7px env(safe-area-inset-bottom);background:rgba(255,255,255,.98);border-top:1px solid var(--g2);box-shadow:0 -4px 18px rgba(15,76,129,.14);z-index:300;align-items:stretch;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mobile-nav::-webkit-scrollbar{display:none}
+.mn-item{flex:0 0 78px;min-width:78px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:var(--g6);background:none;border:none;border-radius:12px;padding:7px 5px;transition:color .15s,background .15s,transform .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;scroll-snap-align:center}
+.mn-item.active{color:var(--bd);background:var(--bl)}
 .mn-item:active{background:var(--bl)}
-.mn-icon{font-size:20px;line-height:1}
-.mn-label{font-size:9.5px;text-align:center}
+.mn-icon{font-size:23px;line-height:1}
+.mn-label{font-size:10.5px;line-height:1.15;text-align:center;white-space:nowrap}
 @media(max-width:768px){
   .sidebar{display:none}
   .main{padding:14px;padding-bottom:calc(var(--mobile-nav-h) + 14px)}
@@ -634,6 +639,12 @@ tr:hover td{background:var(--g1)}
 .toast{position:fixed;bottom:calc(var(--mobile-nav-h) + 12px);right:22px;background:var(--g8);color:#fff;padding:11px 18px;border-radius:var(--r8);font-size:13.5px;box-shadow:var(--sh3);z-index:9999;display:flex;align-items:center;gap:9px;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--g)}.toast.error{background:var(--r)}.toast.warning{background:var(--o)}
+@media(max-width:768px){
+  #adminPanel-settings .card>div[style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
+  #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
+  .mobile-nav:after{content:"";flex:0 0 1px}
+  .mn-item:active{transform:scale(.96);background:#DCEEFF}
+}
 @media print{.topbar,.sidebar,.act-row,.ci-acts,.mobile-nav{display:none!important}.main{padding:0}}
 </style>
 </head>
@@ -769,7 +780,7 @@ tr:hover td{background:var(--g1)}
   </div>
   <div class="card" style="margin-top:14px">
     <div class="fg"><label>หมายเหตุประจำรอบ</label><textarea id="stockOverallNote" maxlength="2000" placeholder="เช่น ของส่งล่าช้า รายการรออนุมัติ หรือสิ่งที่ต้องแจ้งหัวหน้างาน..."></textarea></div>
-    <div class="act-row" style="margin-top:0;padding-top:4px"><button class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
+    <div class="act-row" style="margin-top:0;padding-top:4px"><button id="stockSaveBtn" class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
   </div>
   <div class="card" style="margin-top:16px">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">แสดงรายการล่าสุดและของที่ต้องติดตาม</div></div><span class="tag" id="stockHistoryCount">0 รอบ</span></div>
@@ -860,6 +871,7 @@ tr:hover td{background:var(--g1)}
   </div>
 
   <div class="dashboard-reading-guide"><strong>ลำดับการอ่าน:</strong><span>จำนวนงาน</span><span class="guide-arrow">→</span><span>ความสมบูรณ์ของ Checklist</span><span class="guide-arrow">→</span><span>สถานะและผลประเมินจาก PT</span></div>
+  <div id="stockPerformanceDashboard"></div>
 
   <!-- KPI ROW 1: ภาพรวม -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
@@ -1098,6 +1110,7 @@ tr:hover td{background:var(--g1)}
     <h3 style="margin-bottom:10px">📌 สรุปสำหรับผู้บริหาร</h3>
     <div id="supervisorExecutiveDashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
   </div>
+  <div id="supervisorStockPerformance"></div>
 
   <!-- ตัวกรอง -->
   <div class="card filter-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center">
@@ -1200,6 +1213,7 @@ tr:hover td{background:var(--g1)}
           <tbody id="adminTableBody"><tr><td colspan="6" style="text-align:center;color:var(--g4);padding:24px">กำลังโหลด...</td></tr></tbody>
         </table>
       </div>
+      <div id="adminStockPerformance"></div>
       <div class="card" style="margin:20px 0">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
           <h3 style="margin:0">🔒 รายงานประเมินผู้ช่วยรายบุคคล</h3>
@@ -1270,6 +1284,20 @@ tr:hover td{background:var(--g1)}
           <input type="text" id="newPTName" placeholder="ชื่อ-นามสกุล นักกายภาพบำบัด" style="flex:1;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none" onkeydown="if(event.key==='Enter')addPT()">
           <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
         </div>
+      </div>
+      <div class="card" style="margin-top:20px;border-left:4px solid #7C3AED">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div><h3 style="margin-bottom:4px">📦 จัดการรายการเบิกของ</h3><p style="font-size:12px;color:var(--g6)">แอดมินเพิ่ม แก้ไข หรือลบรายการหลักได้ และมีผลทุกอุปกรณ์</p></div>
+          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="resetStockCatalogEditor()">ล้างแบบฟอร์ม</button>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px">
+          <div class="fg"><label>ชื่อรายการ</label><input id="stockCatalogName" placeholder="เช่น ถุงมือยาง"></div>
+          <div class="fg"><label>หมวด</label><select id="stockCatalogCategory"><option value="medical">วัสดุการแพทย์</option><option value="general">วัสดุทั่วไป</option><option value="cleaning">ทำความสะอาด</option><option value="other">อื่น ๆ</option></select></div>
+          <div class="fg"><label>หน่วย</label><input id="stockCatalogUnit" placeholder="กล่อง"></div>
+          <div class="fg"><label>จำนวนเป้าหมาย</label><input id="stockCatalogTarget" type="number" min="0" step="1" placeholder="0"></div>
+        </div>
+        <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockCatalogItem()">💾 บันทึกรายการ</button></div>
+        <div id="stockCatalogAdminList" style="margin-top:12px"></div>
       </div>
       <div class="card" style="margin-top:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -1536,6 +1564,19 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<div class="mo" id="stockReviewModal">
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><h2>🩺 ประเมินงานเบิกของและสต็อก</h2><button class="mc-btn" onclick="closeModal('stockReviewModal')">✕</button></div>
+    <div class="mb">
+      <div id="stockReviewTitle" style="padding:10px 12px;background:var(--g1);border-radius:9px;margin-bottom:14px;color:var(--bd);font-weight:700"></div>
+      <div class="fg"><label>PT ผู้ประเมิน</label><select id="stockReviewPt"></select></div>
+      <div class="fg"><label>ผลประเมิน</label><select id="stockReviewVerdict"><option value="">— เลือกผล —</option><option value="pass">ผ่าน</option><option value="partial">ต้องปรับปรุง</option><option value="fail">ไม่ผ่าน</option></select></div>
+      <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="ข้อเสนอแนะหรือสิ่งที่ต้องแก้ไข..."></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockReview()">💾 บันทึกผลประเมิน</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastMsg">—</span></div>
 
 <script>
@@ -1584,7 +1625,7 @@ const DEFAULT_CL_ITEMS = {
 
 // ══ STATE ══
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[];
-const STOCK_CATALOG=[
+const DEFAULT_STOCK_CATALOG=[
   {id:'med-glove-xs',category:'medical',categoryLabel:'วัสดุทางการแพทย์',icon:'🩺',name:'ถุงมือ XS',targetQty:1,unit:'กล่อง'},
   {id:'med-glove-m',category:'medical',categoryLabel:'วัสดุทางการแพทย์',icon:'🩺',name:'ถุงมือ M',targetQty:2,unit:'กล่อง'},
   {id:'med-cotton',category:'medical',categoryLabel:'วัสดุทางการแพทย์',icon:'🩺',name:'สำลีก้อน',targetQty:2,unit:'ถุงใหญ่'},
@@ -1601,6 +1642,8 @@ const STOCK_CATALOG=[
   {id:'alcohol-70',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Alcohol 70%',targetQty:6,unit:'ขวด'},
   {id:'alcohol-gel',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Gel Alcohol (ล้างมือ)',targetQty:null,targetLabel:'กำหนดตามการใช้งาน',unit:'ขวด'}
 ];
+let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
+let editingStockRecordId=null, editingStockCatalogIndex=null, activeStockReviewId=null;
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
@@ -1713,6 +1756,7 @@ async function init(){
     missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
     auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
     applySystemSettings(JSON.parse(localStorage.getItem('pt_system_settings')||'null'));
+    stockCatalog = JSON.parse(localStorage.getItem('pt_stock_catalog')||'null') || DEFAULT_STOCK_CATALOG.map(item=>({...item}));
     stockRecords = JSON.parse(localStorage.getItem('pt_stock_requests')||'[]');
     setSyncBadge('error','⚠️ Offline');
     showToast('⚠️ ใช้ข้อมูล offline (Firebase ไม่ตอบสนอง)','warning');
@@ -1727,6 +1771,10 @@ async function init(){
       staffList = (config && config.staffList) ? config.staffList : [];
       ptList    = (config && config.ptList)    ? config.ptList    : [];
       applySystemSettings(config && config.systemSettings);
+      stockCatalog = Array.isArray(config && config.stockCatalog) && config.stockCatalog.length
+        ? config.stockCatalog.map(normalizeStockCatalogItem)
+        : DEFAULT_STOCK_CATALOG.map(item=>({...item}));
+      localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));
       if(config && config.checklistItems) {
         ['morning','evening','saturdayMorning','saturdayEvening'].forEach(shift=>{
           const items=config.checklistItems[shift];
@@ -1842,6 +1890,7 @@ function isWebAlertResolved(status,key,shift){
 function getActiveWebAlerts(status){
   const alerts=[];
   ['morning','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
+  const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict);if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของรอ PT ประเมิน ${pendingStock.length} รอบ`,detail:'กดเปิดงานเบิกของเพื่อเลือกชื่อ PT และบันทึกผลประเมิน',names:pendingStock.slice(0,5).map(record=>record.responsible)});
   return alerts;
 }
 function webAlertActionButton(personType,alertKey,shift,isDemo){
@@ -1875,12 +1924,13 @@ function renderWebAlertShiftSection(status,shift){
 function renderWebAlerts(status,alerts){
   const list=document.getElementById('webAlertList');const now=document.getElementById('webAlertNow');if(!list||!now)return;
   now.textContent=`ตรวจล่าสุด ${getThaiTimestamp(status.current)} • ข้อมูลวันที่ ${status.today}`;
-  list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'afternoon');
+  const pendingStock=stockRecords.filter(record=>!record.ptVerdict);const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+(pendingStock.length?webAlertCard('warning',`รอ PT ประเมิน ${pendingStock.length} รอบ`,'ระบบแจ้งภายในเว็บ ไม่ส่ง LINE และจะหายเมื่อ PT ประเมินครบ',pendingStock.slice(0,5).map(record=>record.responsible),`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`):webAlertCard('success','PT ประเมินงานเบิกของครบแล้ว','ไม่มีรายการค้างประเมิน',[]));
+  list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
 }
 function maybeShowWebAlertPopup(status,alerts){
   const unseen=alerts.filter(alert=>!localStorage.getItem(`pt_web_alert_seen_${status.today}_${alert.key}`));if(!unseen.length)return;
   const body=document.getElementById('webAlertModalBody');const modal=document.getElementById('webAlertModal');if(!body||!modal)return;
-  body.innerHTML=unseen.map(alert=>webAlertCard(alert.type,alert.title,alert.detail,alert.names,webAlertActionButton(alert.personType,alert.key,alert.shift,false))).join('')+'<div style="font-size:12px;color:var(--g6);margin-top:8px">ป๊อปอัปนี้จะแสดงครั้งเดียวต่อหัวข้อในแต่ละวัน กดกระดิ่งด้านบนเพื่อเปิดดูซ้ำได้ตลอดเวลา</div>';
+  body.innerHTML=unseen.map(alert=>webAlertCard(alert.type,alert.title,alert.detail,alert.names,alert.personType==='stock'?`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`:webAlertActionButton(alert.personType,alert.key,alert.shift,false))).join('')+'<div style="font-size:12px;color:var(--g6);margin-top:8px">ป๊อปอัปนี้จะแสดงครั้งเดียวต่อหัวข้อในแต่ละวัน กดกระดิ่งด้านบนเพื่อเปิดดูซ้ำได้ตลอดเวลา</div>';
   unseen.forEach(alert=>localStorage.setItem(`pt_web_alert_seen_${status.today}_${alert.key}`,'1'));
   modal.classList.add('open');
 }
@@ -2037,8 +2087,42 @@ function missedPTText(record,emptyText){const names=getMissedPTNames(record);ret
 function missedPTBadge(record){const names=getMissedPTNames(record);return names.length?`<span class="tag tf" style="white-space:normal;line-height:1.45">⚠️ ${names.map(escapeHtml).join('<br>')}</span>`:'<span style="color:var(--g4)">—</span>';}
 
 // ══ WEEKLY STOCK & REQUESTS ══
+const STOCK_CATEGORY_META={
+  medical:{label:'วัสดุทางการแพทย์',icon:'🩺'},general:{label:'วัสดุทั่วไป',icon:'🧹'},
+  cleaning:{label:'ทำความสะอาด',icon:'🧼'},alcohol:{label:'แอลกอฮอล์',icon:'🧴'},other:{label:'อื่น ๆ',icon:'📦'}
+};
+function normalizeStockCatalogItem(item,index){
+  const category=String(item?.category||'other');const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;
+  return{id:String(item?.id||`stock-${Date.now()}-${index||0}`),category,categoryLabel:String(item?.categoryLabel||meta.label),icon:String(item?.icon||meta.icon),name:String(item?.name||'').trim(),targetQty:item?.targetQty===null?null:Math.max(0,Number(item?.targetQty||0)),targetLabel:String(item?.targetLabel||''),unit:String(item?.unit||'ชิ้น').trim(),weekly:Boolean(item?.weekly)};
+}
+function renderStockCatalogAdmin(){
+  const wrap=document.getElementById('stockCatalogAdminList');if(!wrap)return;
+  wrap.innerHTML=stockCatalog.length?stockCatalog.map((item,index)=>`<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:9px;margin-bottom:7px;background:#fff"><div><strong>${escapeHtml(item.icon)} ${escapeHtml(item.name)}</strong><div style="font-size:11px;color:var(--g6)">${escapeHtml(item.categoryLabel)} • เป้าหมาย ${item.targetQty===null?escapeHtml(item.targetLabel||'ตามเหมาะสม'):`${item.targetQty} ${escapeHtml(item.unit)}`}</div></div><div style="display:flex;gap:5px"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editStockCatalogItem(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px;color:var(--r)" onclick="deleteStockCatalogItem(${index})">ลบ</button></div></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:16px">ยังไม่มีรายการหลัก</div>';
+}
+function resetStockCatalogEditor(){
+  editingStockCatalogIndex=null;['stockCatalogName','stockCatalogUnit','stockCatalogTarget'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const category=document.getElementById('stockCatalogCategory');if(category)category.value='medical';
+}
+function editStockCatalogItem(index){
+  const item=stockCatalog[index];if(!item)return;editingStockCatalogIndex=index;
+  document.getElementById('stockCatalogName').value=item.name;document.getElementById('stockCatalogCategory').value=STOCK_CATEGORY_META[item.category]?item.category:'other';document.getElementById('stockCatalogUnit').value=item.unit;document.getElementById('stockCatalogTarget').value=item.targetQty===null?'':item.targetQty;
+  document.getElementById('stockCatalogName').focus();
+}
+async function persistStockCatalog(action,detail){
+  await window.FB.fbSaveStockCatalog(stockCatalog);localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));createStockDraft();renderStockGroups();renderStockCatalogAdmin();await writeAuditLog(action,'system_data',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+}
+async function saveStockCatalogItem(){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
+  const name=(document.getElementById('stockCatalogName')?.value||'').trim();const category=document.getElementById('stockCatalogCategory')?.value||'other';const unit=(document.getElementById('stockCatalogUnit')?.value||'ชิ้น').trim();const targetRaw=document.getElementById('stockCatalogTarget')?.value;
+  if(!name)return showToast('⚠️ กรุณากรอกชื่อรายการ','warning');if(!unit)return showToast('⚠️ กรุณากรอกหน่วย','warning');
+  const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;const item=normalizeStockCatalogItem({id:editingStockCatalogIndex===null?`stock-${Date.now()}`:stockCatalog[editingStockCatalogIndex].id,category,categoryLabel:meta.label,icon:meta.icon,name,unit,targetQty:targetRaw===''?null:Number(targetRaw),targetLabel:targetRaw===''?'ตามความเหมาะสม':''});
+  try{const isEdit=editingStockCatalogIndex!==null;if(isEdit)stockCatalog[editingStockCatalogIndex]=item;else stockCatalog.push(item);await persistStockCatalog(isEdit?'update':'add',`${isEdit?'แก้ไข':'เพิ่ม'}รายการเบิก ${name}`);resetStockCatalogEditor();showToast('✅ บันทึกรายการเบิกแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+function deleteStockCatalogItem(index){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const item=stockCatalog[index];if(!item)return;
+  showConfirm(`ลบรายการ “${item.name}” ใช่หรือไม่?`,async()=>{try{stockCatalog.splice(index,1);await persistStockCatalog('delete',`ลบรายการเบิก ${item.name}`);resetStockCatalogEditor();showToast('🗑️ ลบรายการแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});
+}
 function createStockDraft(){
-  stockDraftItems=STOCK_CATALOG.map(item=>Object.assign({},item,{currentQty:'',requestQty:'',issueStatus:'normal',note:''}));
+  stockDraftItems=stockCatalog.map(item=>Object.assign({},item,{currentQty:'',requestQty:'',issueStatus:'normal',note:''}));
   stockExtraItems=[];
 }
 function mondayKeyFromDate(dateValue){
@@ -2062,7 +2146,7 @@ function stockStatusMarkup(index){
 }
 function renderStockGroups(){
   const wrap=document.getElementById('stockGroups');if(!wrap)return;
-  const categories=[...new Map(STOCK_CATALOG.map(item=>[item.category,{key:item.category,label:item.categoryLabel,icon:item.icon}])).values()];
+  const categories=[...new Map(stockCatalog.map(item=>[item.category,{key:item.category,label:item.categoryLabel,icon:item.icon}])).values()];
   wrap.innerHTML=categories.map(category=>{
     const indexed=stockDraftItems.map((item,index)=>({item,index})).filter(entry=>entry.item.category===category.key);
     const rows=indexed.map(({item,index})=>`<div class="stock-item-row">
@@ -2105,7 +2189,7 @@ function loadStockView(){
   updateStockWeekBadge();renderStockGroups();renderStockExtraItems();renderStockHistory();
 }
 function resetStockDraft(withConfirm){
-  const reset=()=>{createStockDraft();const note=document.getElementById('stockOverallNote');if(note)note.value='';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
+  const reset=()=>{editingStockRecordId=null;createStockDraft();const note=document.getElementById('stockOverallNote');if(note)note.value='';const button=document.getElementById('stockSaveBtn');if(button)button.textContent='✅ บันทึกการตรวจและเบิกของ';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
   if(withConfirm)showConfirm('ล้างจำนวนคงเหลือและรายการเบิกทั้งหมดใช่หรือไม่?',reset);else reset();
 }
 async function submitStockRequest(){
@@ -2113,26 +2197,54 @@ async function submitStockRequest(){
   if(!date)return showToast('⚠️ กรุณาเลือกวันที่ตรวจสต็อก','warning');if(!responsible)return showToast('⚠️ กรุณาเลือกผู้รับผิดชอบ','warning');
   const missing=stockDraftItems.find(item=>item.currentQty===''&&item.issueStatus==='normal');if(missing)return showToast(`⚠️ กรุณากรอกจำนวนคงเหลือ: ${missing.name}`,'warning');
   const incompleteExtra=stockExtraItems.find(item=>!item.name.trim()||item.currentQty==='');if(incompleteExtra)return showToast('⚠️ กรุณากรอกชื่อและจำนวนคงเหลือของรายการเพิ่มเติมให้ครบ','warning');
-  const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&record.responsible===responsible))return showToast('⚠️ ผู้รับผิดชอบคนนี้มีบันทึกในสัปดาห์นี้แล้ว หากต้องแก้ไขให้แจ้งแอดมินลบรายการเดิม','warning');
+  const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&record.responsible===responsible&&Number(record.id)!==Number(editingStockRecordId)))return showToast('⚠️ ผู้รับผิดชอบคนนี้มีบันทึกในสัปดาห์นี้แล้ว','warning');
   const normalizedBase=stockDraftItems.map(item=>({id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty:Number(item.requestQty||0),issueStatus:item.issueStatus,note:String(item.note||'').trim()}));
   const normalizedExtra=stockExtraItems.map((item,index)=>({id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty:Number(item.requestQty||0),issueStatus:'normal',note:String(item.note||'').trim()}));
-  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const record={id:Date.now(),date,weekKey,responsible,items,overallNote,status:attention?'attention':'complete',createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)};
+  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const record={id:old?.id||Date.now(),date,weekKey,responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',evaluationStatus:old?.evaluationStatus||'pending',ptVerdict:old?.ptVerdict||'',ptReviewer:old?.ptReviewer||'',ptComment:old?.ptComment||'',reviewedAt:old?.reviewedAt||'',reviewTimeDisplay:old?.reviewTimeDisplay||''};
   try{
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('add','stock_request',`บันทึกตรวจสต็อกประจำสัปดาห์โดย ${responsible}`,{actor:responsible,actorRole:'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();resetStockDraft(false);showToast('✅ บันทึกการตรวจสต็อกและรายการเบิกแล้ว','success');
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}ตรวจสต็อกประจำสัปดาห์โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
 }
 function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
+function stockPerformanceStats(record){
+  const items=Array.isArray(record?.items)?record.items:[];const completed=items.filter(item=>Number.isFinite(Number(item.currentQty))).length;const completionPct=items.length?Math.round(completed/items.length*100):0;
+  const issueItems=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const clearIssues=issueItems.filter(item=>item.issueStatus==='normal'||String(item.note||'').trim()).length;const clarityPct=issueItems.length?Math.round(clearIssues/issueItems.length*100):100;
+  const autoScore=Math.round(completionPct*.4+clarityPct*.3);const reviewScore=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?18:0;return{completionPct,clarityPct,totalScore:Math.min(100,autoScore+reviewScore),reviewed:Boolean(record?.ptVerdict)};
+}
+function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':'รอ PT ประเมิน';}
 function renderStockHistory(){
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
   if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=stockSummaryMetric('รอบที่บันทึก',sorted.length,'var(--bd)')+stockSummaryMetric('รอติดตาม',attentionCount,'var(--r)')+stockSummaryMetric('รวมจำนวนเบิก',requestedTotal,'#9A6700');
   if(!sorted.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:22px">ยังไม่มีประวัติการตรวจสต็อก</div>';return;}
-  list.innerHTML=sorted.slice(0,20).map(record=>{const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus==='unavailable'?' — ไม่มีของ':''}${item.issueStatus==='memo'?' — ทำบันทึกเพิ่ม':''}${item.note?` (${escapeHtml(item.note)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';const deleteButton=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">สัปดาห์ ${escapeHtml(thaiDate(record.weekKey||record.date))}</strong><div class="stock-history-meta"><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div>${deleteButton}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;}).join('');
+  list.innerHTML=sorted.slice(0,20).map(record=>{const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus==='unavailable'?' — ไม่มีของ':''}${item.issueStatus==='memo'?' — ทำบันทึกเพิ่ม':''}${item.note?` (${escapeHtml(item.note)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';const reviewButton=`<button class="btn ${record.ptVerdict?'btn-out':'btn-pri'}" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">${record.ptVerdict?'แก้ผลประเมิน':'PT ประเมิน'}</button>`;return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">สัปดาห์ ${escapeHtml(thaiDate(record.weekKey||record.date))}</strong><div class="stock-history-meta"><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">ผลงาน ${stats.totalScore}%</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;}).join('');
+}
+function editStockRecord(id){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
+  editingStockRecordId=record.id;stockDraftItems=stockCatalog.map(catalogItem=>{const saved=(record.items||[]).find(item=>item.id===catalogItem.id);return Object.assign({},catalogItem,saved||{},{currentQty:saved?.currentQty??'',requestQty:saved?.requestQty??'',issueStatus:saved?.issueStatus||'normal',note:saved?.note||''});});stockExtraItems=(record.items||[]).filter(item=>String(item.id||'').startsWith('extra-')).map(item=>({...item}));
+  switchView('stock');document.getElementById('stockDate').value=record.date;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
+}
+function openStockReview(id){
+  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;activeStockReviewId=record.id;
+  document.getElementById('stockReviewTitle').textContent=`${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';document.getElementById('stockReviewVerdict').value=record.ptVerdict||'';document.getElementById('stockReviewComment').value=record.ptComment||'';document.getElementById('stockReviewModal').classList.add('open');
+}
+async function saveStockReview(){
+  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const verdict=document.getElementById('stockReviewVerdict')?.value||'';const comment=(document.getElementById('stockReviewComment')?.value||'').trim();if(!record)return;if(!reviewer||!verdict)return showToast('⚠️ กรุณาเลือก PT และผลประเมิน','warning');const now=new Date();const updated={...record,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
+  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT ประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();refreshWebAlerts(false);showToast('✅ บันทึกผลประเมินงานเบิกของแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+function stockPerformanceMarkup(records,title){
+  const reviewed=records.filter(record=>record.ptVerdict);const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;const passed=reviewed.filter(record=>record.ptVerdict==='pass'||record.ptVerdict==='partial').length;const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
+  const people={};records.forEach(record=>{if(!people[record.responsible])people[record.responsible]=[];people[record.responsible].push(record);});
+  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">คะแนนรวมความครบถ้วน การระบุปัญหา และผลประเมินจาก PT</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
+}
+function renderStockPerformancePanels(){
+  const targets=[['stockPerformanceDashboard','ผลงานเบิกของและตรวจสต็อก'],['supervisorStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['adminStockPerformance','สรุปผลงานเบิกของและตรวจสต็อก']];
+  targets.forEach(([id,title])=>{const el=document.getElementById(id);if(el)el.innerHTML=stockPerformanceMarkup(stockRecords,title);});
 }
 function deleteStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้นที่ลบได้','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));
-  showConfirm('ลบบันทึกตรวจสต็อกรายการนี้ใช่หรือไม่?',async()=>{try{if(window.FB?.fbDeleteStockRequest)await window.FB.fbDeleteStockRequest(id);stockRecords=stockRecords.filter(item=>Number(item.id)!==Number(id));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('delete','stock_request',`ลบบันทึกตรวจสต็อกของ ${record?.responsible||'—'}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderStockHistory();showToast('🗑️ ลบบันทึกตรวจสต็อกแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+error.message,'error');}});
+  showConfirm('ลบบันทึกตรวจสต็อกรายการนี้ใช่หรือไม่?',async()=>{try{if(window.FB?.fbDeleteStockRequest)await window.FB.fbDeleteStockRequest(id);stockRecords=stockRecords.filter(item=>Number(item.id)!==Number(id));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('delete','stock_request',`ลบบันทึกตรวจสต็อกของ ${record?.responsible||'—'}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderStockHistory();renderStockPerformancePanels();refreshWebAlerts(false);showToast('🗑️ ลบบันทึกตรวจสต็อกแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+error.message,'error');}});
 }
 
 function openSubmitModal(){
@@ -2748,6 +2860,7 @@ function showTrendPoint(index){
 }
 
 function loadDashboard() {
+  renderStockPerformancePanels();
   updateDashFilter();
   const fStart = document.getElementById('dashStartDate')?.value;
   const fEnd   = document.getElementById('dashEndDate')?.value;
@@ -3006,7 +3119,7 @@ function renderAuditLogs(){
 function setAdminTab(tab) {
   currentAdminTab=['data','audit','settings','backup'].includes(tab)?tab:'data';
   ['data','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings'){renderSettings();loadSupervisorRequests();}if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
+  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
 }
 
 async function loadSupervisorRequests(){
@@ -3037,7 +3150,7 @@ function firebaseBackupCounts(data){
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES})},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
@@ -3116,8 +3229,8 @@ async function prepareFirebaseRestore(event){
 }
 async function reloadFirebaseStateAfterRestore(){
   const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs(),window.FB.fbGetStockRequests()]);
-  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];
-  localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));
+  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];
+  localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));
   updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderAdminTable();renderMissedEvalSummary();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
 }
 function confirmFirebaseRestore(){
@@ -3180,6 +3293,7 @@ async function changeAdminPassword(){
   catch(error){showToast('❌ '+firebaseAuthErrorMessage(error),'error');}
 }
 function renderAdminTable(){
+  renderStockPerformancePanels();
   const tb=document.getElementById('adminTableBody');if(!tb)return;
   if(!submissions||submissions.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--g4);padding:24px">ไม่พบข้อมูล</td></tr>';return;}
   let data=[...submissions].reverse();
@@ -3310,6 +3424,7 @@ async function fetchSupervisorNotes(){
 }
 async function loadSupervisor() {
   if(!isSupLoggedIn)return;
+  renderStockPerformancePanels();
   await fetchSupervisorNotes();
   updateSupFilter();
   const fStart = document.getElementById('supStartDate')?.value;
@@ -4113,7 +4228,8 @@ async function previewMonthlyReport() {
   const privateResult=await getPrivateMonthlyRecords();
   if(token!==monthlyReportPreviewToken)return;
   monthlyReportPrivateRecords=privateResult.records;
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0) {
+  const hasMonthlyStock=stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`));
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!hasMonthlyStock) {
     el.innerHTML = `<div style="text-align:center;color:var(--g4);padding:40px">ไม่พบข้อมูลเดือน ${thaiMonthName(month)} ${yearBE}</div>`;
     if(pdfButton)pdfButton.disabled=false;if(excelButton)excelButton.disabled=false;
     return;
@@ -4144,6 +4260,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const pending  = data.filter(s => s.status === 'pending');
   const reportStaff=document.getElementById('reportStaff')?.value||'all';
   const reportPrefix=`${yearBE-543}-${String(month).padStart(2,'0')}`;
+  const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>String(record.date||'').startsWith(reportPrefix)&&(reportStaff==='all'||record.responsible===reportStaff));
   const missedAssistantRecords=missedEvaluations.filter(record=>String(record.date||'').startsWith(reportPrefix)&&(record.assistantNames||[]).some(name=>reportStaff==='all'||name===reportStaff));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff).length,0);
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
@@ -4271,6 +4388,11 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
       </div>`;
     }).join('')}
 
+    ${monthlyStockRecords.length?`<section style="margin-top:18px;page-break-inside:auto">
+      <div style="font-size:14px;font-weight:800;color:#5B21B6;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #A78BFA">📦 ผลงานเบิกของและตรวจสต็อก</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:#F3E8FF"><th style="padding:7px;text-align:left">วันที่</th><th style="padding:7px;text-align:left">ผู้ช่วย</th><th style="padding:7px;text-align:left">ผล PT</th><th style="padding:7px;text-align:left">PT ผู้ประเมิน</th><th style="padding:7px;text-align:center">คะแนน</th><th style="padding:7px;text-align:left">ความคิดเห็น</th></tr></thead><tbody>${monthlyStockRecords.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(record=>`<tr style="border-bottom:1px solid #E9ECEF"><td style="padding:6px 7px">${escapeHtml(thaiDate(record.date))}</td><td style="padding:6px 7px">${escapeHtml(record.responsible||'—')}</td><td style="padding:6px 7px">${escapeHtml(stockVerdictLabel(record))}</td><td style="padding:6px 7px">${escapeHtml(record.ptReviewer||'—')}</td><td style="padding:6px 7px;text-align:center;font-weight:700">${stockPerformanceStats(record).totalScore}%</td><td style="padding:6px 7px">${escapeHtml(record.ptComment||'—')}</td></tr>`).join('')}</tbody></table>
+    </section>`:''}
+
     ${missedAssistantRecords.length?`<section style="margin-top:18px;page-break-inside:auto">
       <div style="font-size:14px;font-weight:800;color:#B04A00;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #F0A45C">📋 ผู้ช่วยที่ไม่บันทึก Checklist ตามกำหนด</div>
       ${missedAssistantRecords.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).map(record=>{const names=(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff);return`<div style="border:1px solid #FFD0A8;border-left:4px solid #F57C00;border-radius:8px;background:#FFFAF5;padding:10px 12px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid">
@@ -4331,7 +4453,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
 function generateMonthlyPDF() {
   if(!isAdminLoggedIn && !isSupLoggedIn) return showToast('⛔ รายงานนี้เปิดได้เฉพาะหัวหน้างานและแอดมิน','error');
   const { month, yearBE, data } = getReportData();
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`))) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
   const reportHTML = buildReportHTML(month, yearBE, data, false, monthlyReportPrivateRecords);
   const filename='PT_KTH_Monthly_Report_' + (yearBE - 543) + '-' + String(month).padStart(2, '0') + '.pdf';
   if(openPrintableReport(reportHTML,filename,'landscape'))showToast('🖨️ ในหน้าต่างพิมพ์ เลือกเครื่องพิมพ์ “บันทึกเป็น PDF”','success');
@@ -4382,6 +4504,11 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
       record.ptReviewer || '', missedPTText(record), record.ptComment || ''
     ]);
   });
+  const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>String(record.date||'').startsWith(reportPrefix)&&(staffFilter==='all'||record.responsible===staffFilter));
+  if(monthlyStock.length){
+    rows.push([],['ผลงานเบิกของและตรวจสต็อก'],['วันที่','ผู้ช่วย','สถานะรายการ','ผล PT','PT ผู้ประเมิน','คะแนนผลงาน (%)','ความคิดเห็น PT']);
+    monthlyStock.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).forEach(record=>rows.push([thaiDate(record.date),record.responsible||'',record.status==='attention'?'ต้องติดตาม':'ครบถ้วน',stockVerdictLabel(record),record.ptReviewer||'',stockPerformanceStats(record).totalScore,record.ptComment||'']));
+  }
   if(missedAssistantRecords.length){
     rows.push([],['ผู้ช่วยที่ไม่บันทึก Checklist ตามกำหนด'],['วันที่','เวร','รายชื่อผู้ช่วย','ค่าเสียหาย (บาท)']);
     missedAssistantRecords.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).forEach(record=>{const names=(record.assistantNames||[]).filter(name=>staffFilter==='all'||name===staffFilter);rows.push([thaiDate(record.date),shiftLabel(record.shift||'morning'),names.join(', '),names.length*10]);});
@@ -4406,7 +4533,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
 function generateMonthlyExcel() {
   if(!isAdminLoggedIn && !isSupLoggedIn) return showToast('⛔ รายงานนี้เปิดได้เฉพาะหัวหน้างานและแอดมิน','error');
   const { month, yearBE, data } = getReportData();
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`))) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
   const button=document.getElementById('monthlyExcelBtn');const oldLabel=button?.innerHTML;
   if(button){button.disabled=true;button.innerHTML='⏳ กำลังสร้าง Excel...';}
   try{downloadRowsAsExcel('PT_KTH_Monthly_Report_' + (yearBE - 543) + '-' + String(month).padStart(2, '0') + '.xlsx', monthlyExcelRows(month, yearBE, data, monthlyReportPrivateRecords));showToast('✅ ดาวน์โหลดไฟล์ Excel .xlsx เรียบร้อย','success');}
