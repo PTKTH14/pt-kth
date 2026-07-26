@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-pt-workflow-v31">
+<meta name="version" content="v20260726-stock-review-patch-v32">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -160,6 +160,9 @@
       },
       fbSaveStockRequest: async function(record) {
         await db.collection('stock_requests').doc(String(record.id)).set(record);
+      },
+      fbUpdateStockReview: async function(id, review) {
+        await db.collection('stock_requests').doc(String(id)).update(review);
       },
       fbDeleteStockRequest: async function(id) {
         await db.collection('stock_requests').doc(String(id)).delete();
@@ -2404,7 +2407,8 @@ async function saveStockReview(){
   const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();if(!record)return;if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');
   const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
   const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
-  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  const reviewPatch={items:updatedItems,procurementUpdatedAt:updated.procurementUpdatedAt,procurementUpdatedBy:updated.procurementUpdatedBy,evaluationStatus:updated.evaluationStatus,ptVerdict:updated.ptVerdict,ptReviewer:updated.ptReviewer,ptComment:updated.ptComment,ptAccuracyScore:updated.ptAccuracyScore,ptCommunicationScore:updated.ptCommunicationScore,stockScore:updated.stockScore,reviewedAt:updated.reviewedAt,reviewTimeDisplay:updated.reviewTimeDisplay};
+  try{if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 function stockPerformanceMarkup(records,title){
   const reviewed=records.filter(record=>record.ptVerdict);const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
@@ -3800,7 +3804,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260726-stock-pt-workflow-v31';
+  const APP_VERSION = 'v20260726-stock-review-patch-v32';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
