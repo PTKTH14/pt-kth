@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-redesign-v28">
+<meta name="version" content="v20260726-stock-pt-workflow-v31">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -455,10 +455,12 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .supervisor-account-info{display:flex;align-items:center;gap:9px;min-width:0}.supervisor-account-avatar{width:34px;height:34px;border-radius:50%;background:#F3E5F5;color:#6A1B9A;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.supervisor-account-name{font-size:13px;font-weight:800;color:var(--bd);overflow:hidden;text-overflow:ellipsis}.supervisor-account-caption{font-size:10.5px;color:var(--g6)}
 .stock-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 18px;margin-bottom:14px;border-radius:14px;background:linear-gradient(135deg,#EAF7F0 0%,#EFF8FF 100%);border:1px solid #CFE7DA;border-left:5px solid var(--g)}
 .stock-hero-title{font-size:15px;font-weight:800;color:#176B38;margin-bottom:3px}.stock-hero-note{font-size:12px;color:var(--g6);line-height:1.6}.stock-week-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:#fff;color:#176B38;border:1px solid #B9DEC8;font-size:11.5px;font-weight:800;white-space:nowrap}
-.stock-meta-grid{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr) minmax(220px,1fr);gap:12px;align-items:end}.stock-meta-grid .fg{margin:0}
+.stock-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:12px;align-items:end}.stock-meta-grid .fg{margin:0}
+.stock-schedule-list{display:grid;gap:8px}.stock-schedule-row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,.8fr) auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--g2);border-radius:10px;background:#fff}.stock-schedule-row.is-off{background:#F4F5F6;opacity:.72}.stock-schedule-days{font-size:11.5px;color:var(--g6);line-height:1.6}.stock-schedule-category-grid{display:flex;gap:8px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--g2);border-radius:8px;background:#FBFCFD}.stock-schedule-category-grid label{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #DDE7E1;border-radius:999px;background:#fff;font-size:11.5px;font-weight:700;cursor:pointer}.stock-schedule-category-grid input{width:16px;height:16px}
 .stock-group{margin-top:14px;background:#fff;border:1px solid #DDE7E1;border-radius:14px;overflow:hidden;box-shadow:var(--sh1)}.stock-group-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 15px;background:#F5FAF7;border-bottom:1px solid #DDE7E1}.stock-group-head h3{font-size:14px;color:#176B38}.stock-group-count{font-size:11px;color:var(--g6)}
 .stock-columns,.stock-item-row{display:grid;grid-template-columns:minmax(180px,1.45fr) minmax(105px,.7fr) minmax(92px,.58fr) minmax(92px,.58fr) minmax(130px,.8fr) minmax(170px,1.1fr);gap:9px;align-items:center}.stock-columns{padding:8px 15px;background:#FBFCFC;color:var(--g6);font-size:10.5px;font-weight:700}.stock-item-row{padding:11px 15px;border-top:1px solid #EEF2EF}.stock-item-name{font-size:13px;font-weight:700;color:var(--g8)}.stock-target{font-size:12px;color:#176B38;font-weight:700}.stock-input,.stock-select{width:100%;min-width:0;border:1px solid #D6E1DA;border-radius:8px;padding:7px 8px;font-family:inherit;font-size:12.5px;background:#fff;outline:none}.stock-input:focus,.stock-select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(40,167,69,.09)}.stock-status{font-size:11.5px;font-weight:800}.stock-status.ok{color:var(--g)}.stock-status.order{color:#B36B00}.stock-status.issue{color:var(--r)}
 .stock-extra-list{display:grid;gap:9px}.stock-extra-row{display:grid;grid-template-columns:minmax(170px,1.4fr) minmax(85px,.55fr) minmax(85px,.55fr) minmax(100px,.7fr) minmax(180px,1.2fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--g2);border-radius:10px;background:#FBFCFD}.stock-history-list{display:grid;gap:10px}.stock-history-card{border:1px solid var(--g2);border-left:4px solid var(--g);border-radius:11px;background:#fff;padding:12px 14px;box-shadow:var(--sh1)}.stock-history-card.attention{border-left-color:var(--r)}.stock-history-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--g6);font-size:11.5px;margin-top:4px}.stock-issue-list{margin-top:9px;padding:9px 11px;border-radius:8px;background:#FFF9ED;color:#7A5200;font-size:12px;line-height:1.7}
+.stock-review-workflow{margin:0 0 14px;padding:12px;border:1px solid #D9EAF7;border-radius:11px;background:#F8FBFF}.stock-review-workflow-head{font-size:13px;font-weight:800;color:var(--bd);margin-bottom:3px}.stock-review-workflow-note{font-size:11.5px;color:var(--g6);line-height:1.55;margin-bottom:10px}.stock-review-item{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(145px,.8fr) minmax(170px,1fr);gap:9px;align-items:center;padding:10px;background:#fff;border:1px solid #DCE8F1;border-radius:9px;margin-top:8px}.stock-review-item-name{font-size:12.5px;font-weight:800;color:var(--g8)}.stock-review-item-qty{font-size:11px;color:var(--g6);margin-top:2px}.stock-eye-btn{width:32px;height:32px;padding:0!important;justify-content:center;border-radius:50%!important;font-size:14px!important}
 .supervisor-request{border:1px solid #DCE5ED;border-radius:10px;padding:12px 13px;margin-bottom:9px;background:#fff}
 .supervisor-request-meta{font-size:11.5px;color:var(--g6);margin-top:3px;overflow-wrap:anywhere}
 .supervisor-request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
@@ -624,7 +626,7 @@ tr:hover td{background:var(--g1)}
   .audit-summary{grid-template-columns:1fr}
   .trend-summary{grid-template-columns:1fr 1fr}.trend-stat:last-child{grid-column:1/-1}
   .trend-stage{min-width:720px}
-  .stock-meta-grid{grid-template-columns:1fr}.stock-columns{display:none}.stock-item-row{grid-template-columns:1fr 1fr;padding:13px}.stock-item-name{grid-column:1/-1;font-size:14px}.stock-item-row>*::before{display:block;font-size:9.5px;color:var(--g4);font-weight:700;margin-bottom:3px}.stock-target::before{content:'สต็อกเป้าหมาย'}.stock-current-wrap::before{content:'คงเหลือปัจจุบัน'}.stock-request-wrap::before{content:'จำนวนที่เบิก'}.stock-state-wrap::before{content:'สถานะพิเศษ'}.stock-note-wrap::before{content:'หมายเหตุ'}.stock-note-wrap{grid-column:1/-1}.stock-extra-row{grid-template-columns:1fr 1fr}.stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note{grid-column:1/-1}.stock-extra-row .btn{grid-column:1/-1;justify-content:center}
+  .stock-meta-grid{grid-template-columns:1fr}.stock-schedule-row{grid-template-columns:1fr}.stock-columns{display:none}.stock-item-row{grid-template-columns:1fr 1fr;padding:13px}.stock-item-name{grid-column:1/-1;font-size:14px}.stock-item-row>*::before{display:block;font-size:9.5px;color:var(--g4);font-weight:700;margin-bottom:3px}.stock-target::before{content:'สต็อกเป้าหมาย'}.stock-current-wrap::before{content:'คงเหลือปัจจุบัน'}.stock-request-wrap::before{content:'จำนวนที่เบิก'}.stock-state-wrap::before{content:'สถานะพิเศษ'}.stock-note-wrap::before{content:'หมายเหตุ'}.stock-note-wrap{grid-column:1/-1}.stock-extra-row{grid-template-columns:1fr 1fr}.stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note{grid-column:1/-1}.stock-extra-row .btn{grid-column:1/-1;justify-content:center}.stock-review-item{grid-template-columns:1fr}.stock-eye-btn{width:38px;height:38px}
   .ph h1{font-size:17px}
   .mobile-controls{display:flex !important}
   :root{--topbar-h:78px}
@@ -641,6 +643,7 @@ tr:hover td{background:var(--g1)}
 .toast.success{background:var(--g)}.toast.error{background:var(--r)}.toast.warning{background:var(--o)}
 @media(max-width:768px){
   #adminPanel-settings .card>div[style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
+  #adminPanel-settings .card>div[style*="minmax(200px,1.4fr)"]{grid-template-columns:1fr!important}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
   .mn-item:active{transform:scale(.96);background:#DCEEFF}
 }
@@ -762,17 +765,18 @@ tr:hover td{background:var(--g1)}
 
 <!-- WEEKLY STOCK & REQUESTS -->
 <div class="view" id="view-stock">
-  <div class="ph"><h1>📦 เบิกของและตรวจสต็อกประจำสัปดาห์</h1><p>งานนอกเหนือจากเวรเช้า–บ่าย • ตรวจและเขียนเบิกทุกวันจันทร์</p></div>
+  <div class="ph"><h1>📦 เบิกของและตรวจสต็อก</h1><p>รอบตรวจและหมวดวัสดุกำหนดได้จากหน้าแอดมิน รองรับการแยกตรวจคนละวัน</p></div>
   <div class="stock-hero">
     <div><div class="stock-hero-title">เช็กของคงเหลือ แล้วระบบช่วยคำนวณจำนวนที่ควรเบิก</div><div class="stock-hero-note">กรอกจำนวนคงเหลือและจำนวนเบิก ระบบจะแสดง “เพียงพอ” หรือ “ต้องการเบิก” ให้อัตโนมัติ</div></div>
-    <span class="stock-week-badge" id="stockDueBadge">📅 รอบประจำสัปดาห์</span>
+    <span class="stock-week-badge" id="stockDueBadge">📅 กำลังตรวจรอบสต็อก</span>
   </div>
   <div class="card" style="margin-bottom:14px;border-left:4px solid #2563EB;background:#F8FBFF">
     <h3 style="margin-bottom:6px">ℹ️ วิธีบันทึกการตรวจสต็อก</h3>
     <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">หลัง PT ประเมิน ผู้ช่วยเจ้าของรายการหรือแอดมินอัปเดตผลพัสดุได้ โดยไม่เปลี่ยนคะแนนเดิม</span></div>
   </div>
   <div class="card stock-meta-grid">
-    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" onchange="updateStockWeekBadge()"></div>
+    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" onchange="handleStockDateChange()"></div>
+    <div class="fg"><label>รอบตรวจ <span style="color:var(--r)">*</span></label><select id="stockSchedule" class="sb-sel" onchange="changeStockSchedule()"><option value="">— เลือกรอบตรวจ —</option></select></div>
     <div class="fg"><label>ผู้รับผิดชอบ <span style="color:var(--r)">*</span></label><select id="stockResponsible" class="sb-sel"><option value="">— เลือกชื่อผู้ช่วย —</option></select></div>
     <div class="fg"><label>รอบสัปดาห์</label><div id="stockWeekDisplay" style="padding:9px 11px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);font-size:12.5px;color:var(--bd);font-weight:700">—</div></div>
   </div>
@@ -794,7 +798,7 @@ tr:hover td{background:var(--g1)}
 
 <!-- REVIEW -->
 <div class="view" id="view-review">
-  <div class="ph"><h1>🔍 ประเมินผลงาน (นักกายภาพบำบัด)</h1><p>ตรวจสอบ Checklist ที่ผู้ช่วยส่งมา</p></div>
+  <div class="ph"><h1>🔍 ประเมินผลงาน (นักกายภาพบำบัด)</h1><p>ตรวจสอบ Checklist และงานเบิกของที่ผู้ช่วยส่งมา</p></div>
   <div id="pendingList"></div>
   <div id="reviewFormWrap" style="display:none">
     <div class="ds">
@@ -1265,6 +1269,8 @@ tr:hover td{background:var(--g1)}
           <div class="fg"><label>PT เวรเช้า</label><input type="time" id="cutoffPtMorning"></div>
           <div class="fg"><label>ผู้ช่วย เวรบ่าย</label><input type="time" id="cutoffAssistantAfternoon"></div>
           <div class="fg"><label>PT เวรบ่าย</label><input type="time" id="cutoffPtAfternoon"></div>
+          <div class="fg"><label>ผู้ช่วย วันเสาร์</label><input type="time" id="cutoffAssistantSaturday"></div>
+          <div class="fg"><label>PT วันเสาร์</label><input type="time" id="cutoffPtSaturday"></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
@@ -1289,6 +1295,21 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
         </div>
       </div>
+      <div class="card" style="margin-top:20px;border-left:4px solid #0B7A75">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div><h3 style="margin-bottom:4px">🗓️ ตั้งค่ารอบตรวจสต็อก</h3><p style="font-size:12px;color:var(--g6)">กำหนดวัน เวลา และหมวดวัสดุแยกเป็นหลายรอบได้ เช่น การแพทย์วันจันทร์ และวัสดุทั่วไปวันพุธ</p></div>
+          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="resetStockScheduleEditor()">ล้างแบบฟอร์ม</button>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(200px,1.4fr) minmax(150px,.7fr) minmax(130px,.6fr);gap:9px">
+          <div class="fg"><label>ชื่อรอบตรวจ</label><input id="stockScheduleName" maxlength="80" placeholder="เช่น ตรวจวัสดุการแพทย์"></div>
+          <div class="fg"><label>วันตรวจประจำสัปดาห์</label><select id="stockScheduleWeekday"><option value="1">วันจันทร์</option><option value="2">วันอังคาร</option><option value="3">วันพุธ</option><option value="4">วันพฤหัสบดี</option><option value="5">วันศุกร์</option><option value="6">วันเสาร์</option><option value="0">วันอาทิตย์</option></select></div>
+          <div class="fg"><label>เวลาที่ควรส่ง</label><input id="stockScheduleDueTime" type="time" value="12:00"></div>
+        </div>
+        <div class="fg"><label>หมวดวัสดุในรอบนี้</label><div id="stockScheduleCategoryChoices" class="stock-schedule-category-grid"></div></div>
+        <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockSchedule()">💾 บันทึกรอบตรวจ</button></div>
+        <div style="margin:8px 0 10px;padding:8px 10px;border-radius:8px;background:#EEF7FF;color:var(--bd);font-size:11.5px;line-height:1.6">หนึ่งหมวดอยู่ได้หลายรอบ ระบบจะเลือกตามวันที่ให้อัตโนมัติ แต่ผู้ช่วยยังเปลี่ยนรอบเองได้เมื่อบันทึกย้อนหลังหรือทำงานเพิ่มเติม</div>
+        <div id="stockScheduleAdminList" class="stock-schedule-list"></div>
+      </div>
       <div class="card" style="margin-top:20px;border-left:4px solid #7C3AED">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
           <div><h3 style="margin-bottom:4px">📦 จัดการรายการสต็อก</h3><p style="font-size:12px;color:var(--g6)">เพิ่ม แก้ไข ปิดใช้งาน หรือลบรายการที่ยังไม่มีประวัติได้ และมีผลทุกอุปกรณ์</p></div>
@@ -1296,7 +1317,7 @@ tr:hover td{background:var(--g1)}
         </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px">
           <div class="fg"><label>ชื่อรายการ</label><input id="stockCatalogName" placeholder="เช่น ถุงมือยาง"></div>
-          <div class="fg"><label>หมวด</label><select id="stockCatalogCategory"><option value="medical">วัสดุการแพทย์</option><option value="general">วัสดุทั่วไป</option><option value="cleaning">ทำความสะอาด</option><option value="other">อื่น ๆ</option></select></div>
+          <div class="fg"><label>หมวด</label><select id="stockCatalogCategory"><option value="medical">วัสดุการแพทย์</option><option value="general">วัสดุทั่วไป</option><option value="cleaning">ทำความสะอาด</option><option value="alcohol">แอลกอฮอล์</option><option value="other">อื่น ๆ</option></select></div>
           <div class="fg"><label>หน่วย</label><input id="stockCatalogUnit" placeholder="กล่อง"></div>
           <div class="fg"><label>จำนวนเป้าหมาย</label><input id="stockCatalogTarget" type="number" min="0" step="1" placeholder="0"></div>
         </div>
@@ -1461,18 +1482,6 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
-<div class="mo" id="stockWorkflowModal">
-  <div class="modal" style="max-width:700px">
-    <div class="mh"><h2>🚚 อัปเดตผลการเบิกจากพัสดุ</h2><button class="mc-btn" onclick="closeModal('stockWorkflowModal')">✕</button></div>
-    <div class="mb">
-      <div id="stockWorkflowTitle" style="padding:10px 12px;background:var(--g1);border-radius:8px;margin-bottom:12px;font-weight:700;color:var(--bd)"></div>
-      <div style="font-size:12px;color:var(--g6);margin-bottom:12px">ผู้ช่วยเจ้าของรายการหรือแอดมินอัปเดตเมื่อส่งคำขอหรือได้รับคำตอบจากพัสดุ ระบบบันทึกวันเวลาและผู้แก้ไขไว้ในประวัติ</div>
-      <div id="stockWorkflowItems"></div>
-    </div>
-    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockWorkflowModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockWorkflow()">💾 บันทึกสถานะพัสดุ</button></div>
-  </div>
-</div>
-
 <div class="mo" id="webAlertModal">
   <div class="modal">
     <div class="mh" style="background:#FFF3F3"><h2 style="color:#B02A37">🔔 มีรายการเลยเวลาประเมิน</h2><button class="mc-btn" onclick="closeModal('webAlertModal')">✕</button></div>
@@ -1592,10 +1601,15 @@ tr:hover td{background:var(--g1)}
 
 <div class="mo" id="stockReviewModal">
   <div class="modal" style="max-width:620px">
-    <div class="mh"><h2>🩺 ประเมินงานเบิกของและสต็อก</h2><button class="mc-btn" onclick="closeModal('stockReviewModal')">✕</button></div>
+    <div class="mh"><h2>🩺 บันทึกผลพัสดุและประเมินงาน</h2><button class="mc-btn" onclick="closeModal('stockReviewModal')">✕</button></div>
     <div class="mb">
       <div id="stockReviewTitle" style="padding:10px 12px;background:var(--g1);border-radius:9px;margin-bottom:14px;color:var(--bd);font-weight:700"></div>
-      <div class="fg"><label>PT ผู้ประเมิน</label><select id="stockReviewPt"></select></div>
+      <div class="fg"><label>PT ผู้กรอกผลและประเมิน</label><select id="stockReviewPt"></select></div>
+      <div class="stock-review-workflow">
+        <div class="stock-review-workflow-head">🚚 ผลที่ผู้ช่วยกลับมารายงานหลังเบิกของ</div>
+        <div class="stock-review-workflow-note">PT เลือกผลตามที่ผู้ช่วยรายงานในแต่ละรายการ หากได้รับบางส่วน พัสดุไม่มีของ หรือยกเลิก ต้องระบุหมายเหตุ</div>
+        <div id="stockReviewWorkflowItems"></div>
+      </div>
       <div style="padding:11px 12px;background:#F8FBFF;border:1px solid #D9EAF7;border-radius:9px;margin-bottom:12px">
         <div style="font-weight:800;color:var(--bd);margin-bottom:4px">1. ความครบถ้วน — 40 คะแนน</div>
         <div id="stockReviewCompletion" style="font-size:12px;color:var(--g6)">ระบบตรวจจากช่องจำนวนคงเหลือให้อัตโนมัติ</div>
@@ -1605,7 +1619,7 @@ tr:hover td{background:var(--g1)}
       <div id="stockReviewScorePreview" style="padding:12px 14px;border-radius:9px;background:#EEF7FF;color:var(--bd);font-weight:800;margin-bottom:12px">คะแนนรวม —</div>
       <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="ข้อเสนอแนะหรือสิ่งที่ต้องแก้ไข..."></textarea></div>
     </div>
-    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockReview()">💾 บันทึกผลประเมิน</button></div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockReview()">💾 บันทึกผลพัสดุและคะแนน</button></div>
   </div>
 </div>
 
@@ -1674,8 +1688,12 @@ const DEFAULT_STOCK_CATALOG=[
   {id:'alcohol-70',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Alcohol 70%',targetQty:6,unit:'ขวด'},
   {id:'alcohol-gel',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Gel Alcohol (ล้างมือ)',targetQty:null,targetLabel:'กำหนดตามการใช้งาน',unit:'ขวด'}
 ];
+const DEFAULT_STOCK_SCHEDULES=[
+  {id:'weekly-all',name:'ตรวจสต็อกประจำสัปดาห์',weekday:1,dueTime:'12:00',categories:['medical','general','cleaning','alcohol','other'],active:true}
+];
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
-let editingStockRecordId=null, editingStockCatalogIndex=null, activeStockReviewId=null, activeStockWorkflowId=null, lastStockShareRecord=null, stockWorkflowDraftItems=[];
+let stockSchedules=DEFAULT_STOCK_SCHEDULES.map(item=>({...item,categories:[...item.categories]}));
+let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[];
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
@@ -1721,7 +1739,10 @@ function firebaseAuthErrorMessage(error){
 function friendlyErrorMessage(error){
   const raw=String(error?.message||error?.code||error||'').trim();
   const code=String(error?.code||'');
-  if(code.includes('permission-denied')||/permission|insufficient/i.test(raw))return'บัญชีนี้ยังไม่มีสิทธิ์ทำรายการนี้ กรุณาให้แอดมินตรวจสอบสิทธิ์';
+  if(code.includes('permission-denied')||/permission|insufficient/i.test(raw)){
+    if(['127.0.0.1','localhost'].includes(location.hostname))return'เว็บตัวอย่างยังไม่ได้เผยแพร่ Firebase Rules เวอร์ชันใหม่ จึงยังบันทึกไม่ได้ กรุณาทดสอบการบันทึกอีกครั้งหลังดีพลอย';
+    return'Firebase Rules ยังไม่อนุญาตรายการนี้ กรุณาให้แอดมินตรวจสอบสิทธิ์หรือรีเฟรชเว็บเป็นเวอร์ชันล่าสุด';
+  }
   if(/undefined|is not defined/i.test(raw))return'ระบบเจอข้อมูลบางส่วนไม่พร้อม กรุณารีเฟรชหน้าแล้วลองอีกครั้ง';
   if(/network|offline|timeout/i.test(raw))return'เชื่อมต่อ Firebase ไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่';
   if(/quota|storage/i.test(raw))return'พื้นที่หรือบริการเก็บข้อมูลไม่พร้อมใช้งานในตอนนี้';
@@ -1883,6 +1904,10 @@ async function init(){
   updateDashFilter();
   renderMissedEvalOptions();
   loadHistory();
+  const linkedStockId=new URLSearchParams(window.location.search).get('stock');
+  if(linkedStockId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockId))){
+    switchView('review',document.getElementById('nav-review'));setMobileNav('review');openStockReview(Number(linkedStockId));
+  }
   if(isAdminLoggedIn)await migrateLegacySupervisorNotes();
   // sync mobile/desktop inputs
   document.getElementById('dateInputMobile').addEventListener('change',function(){document.getElementById('dateInput').value=this.value;updateDateDisplay();});
@@ -1909,20 +1934,25 @@ function formatItemText(t){return t.replace(/\(([^)]+)\)/g,'(<span style="color:
 function getWebAlertStatus(now){
   const current=now||new Date();const today=localDateKey(current);const minutes=current.getHours()*60+current.getMinutes();
   const buildShiftStatus=(shift,assistantDeadline,ptDeadline)=>{const shiftSubmissions=submissions.filter(item=>item.date===today&&(item.shift||'morning')===shift);return{submissions:shiftSubmissions,assistantSubmissionMissing:minutes>=assistantDeadline&&shiftSubmissions.length===0,pendingPtReviews:minutes>=ptDeadline?shiftSubmissions.filter(item=>item.status==='pending'||!item.ptVerdict):[],afterAssistantDeadline:minutes>=assistantDeadline,afterPtDeadline:minutes>=ptDeadline};};
-  return{today,minutes,current,morning:buildShiftStatus('morning',SHIFT_DEADLINES.assistant.morning,SHIFT_DEADLINES.pt.morning),afternoon:buildShiftStatus('afternoon',SHIFT_DEADLINES.assistant.afternoon,SHIFT_DEADLINES.pt.afternoon)};
+  return{today,minutes,current,morning:buildShiftStatus('morning',getEffectiveDeadline('assistant','morning',today),getEffectiveDeadline('pt','morning',today)),afternoon:buildShiftStatus('afternoon',getEffectiveDeadline('assistant','afternoon',today),getEffectiveDeadline('pt','afternoon',today))};
 }
 function getWebAlertShiftConfig(status,shift){
-  const isMorning=shift==='morning';const data=status[shift];
-  const assistantDeadline=SHIFT_DEADLINES.assistant[shift];const ptDeadline=SHIFT_DEADLINES.pt[shift];
-  return{shift,data,label:isMorning?'เวรเช้า':'เวรบ่าย',icon:isMorning?'🌅':'🌙',assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:'assistant-'+minutesToTimeText(assistantDeadline).replace(':',''),ptKey:'pt-'+minutesToTimeText(ptDeadline).replace(':','')};
+  const isMorning=shift==='morning';const data=status[shift];const saturday=isSaturdayKey(status.today);
+  const assistantDeadline=getEffectiveDeadline('assistant',shift,status.today);const ptDeadline=getEffectiveDeadline('pt',shift,status.today);
+  return{shift,data,label:saturday?`วันเสาร์ • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:isMorning?'เวรเช้า':'เวรบ่าย',icon:saturday?'🗓️':isMorning?'🌅':'🌙',assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${saturday?'sat-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${saturday?'sat-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
 }
 function isWebAlertResolved(status,key,shift){
   return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
 }
+function getDueStockSchedules(status){
+  const day=status.current.getDay();const weekKey=mondayKeyFromDate(status.today);
+  return activeStockSchedules().filter(schedule=>schedule.weekday===day&&status.minutes>=(timeTextToMinutes(schedule.dueTime)||0)&&!stockRecords.some(record=>record.weekKey===weekKey&&(record.scheduleId||'weekly-all')===schedule.id));
+}
 function getActiveWebAlerts(status){
   const alerts=[];
   ['morning','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
-  const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict);if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของรอ PT ประเมิน ${pendingStock.length} รอบ`,detail:'กดเปิดงานเบิกของเพื่อเลือกชื่อ PT และบันทึกผลประเมิน',names:pendingStock.slice(0,5).map(record=>record.responsible)});
+  getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้`,names:[]}));
+  const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict);if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของรอ PT ดำเนินการ ${pendingStock.length} รอบ`,detail:'กดเปิดงานเบิกของเพื่อกรอกผลพัสดุ เลือกชื่อ PT และบันทึกคะแนน',names:pendingStock.slice(0,5).map(record=>record.responsible)});
   return alerts;
 }
 function webAlertActionButton(personType,alertKey,shift,isDemo){
@@ -1956,7 +1986,7 @@ function renderWebAlertShiftSection(status,shift){
 function renderWebAlerts(status,alerts){
   const list=document.getElementById('webAlertList');const now=document.getElementById('webAlertNow');if(!list||!now)return;
   now.textContent=`ตรวจล่าสุด ${getThaiTimestamp(status.current)} • ข้อมูลวันที่ ${status.today}`;
-  const pendingStock=stockRecords.filter(record=>!record.ptVerdict);const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+(pendingStock.length?webAlertCard('warning',`รอ PT ประเมิน ${pendingStock.length} รอบ`,'ระบบแจ้งภายในเว็บ ไม่ส่ง LINE และจะหายเมื่อ PT ประเมินครบ',pendingStock.slice(0,5).map(record=>record.responsible),`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`):webAlertCard('success','PT ประเมินงานเบิกของครบแล้ว','ไม่มีรายการค้างประเมิน',[]));
+  const pendingStock=stockRecords.filter(record=>!record.ptVerdict);const dueStock=getDueStockSchedules(status);const openStockButton=`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`;const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+dueStock.map(schedule=>webAlertCard('danger',`ยังไม่พบบันทึกรอบ ${escapeHtml(schedule.name)}`,`เลยเวลาที่ควรส่ง ${escapeHtml(schedule.dueTime)} น.`,[],openStockButton)).join('')+(pendingStock.length?webAlertCard('warning',`รอ PT ประเมิน ${pendingStock.length} รอบ`,'ระบบแจ้งภายในเว็บ ไม่ส่ง LINE และจะหายเมื่อ PT ประเมินครบ',pendingStock.slice(0,5).map(record=>record.responsible),openStockButton):webAlertCard('success','PT ประเมินงานเบิกของครบแล้ว','ไม่มีรายการค้างประเมิน',[]));
   list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
 }
 function maybeShowWebAlertPopup(status,alerts){
@@ -2046,7 +2076,7 @@ function buildChecklist(){
   if(timeLock.locked){
     timeBanner.innerHTML=`<div style="background:var(--rb);border:1.5px solid var(--r);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:var(--r);font-weight:700;font-size:13.5px">${timeLock.message} กรุณาติดต่อแอดมิน</div>`;
   }else if(activeDateForLock===fmtDate(new Date())){
-    const now=new Date();const remaining=SHIFT_DEADLINES.assistant[currentShift]-((now.getHours()*60)+now.getMinutes());
+    const now=new Date();const remaining=getEffectiveDeadline('assistant',currentShift,activeDateForLock)-((now.getHours()*60)+now.getMinutes());
     timeBanner.innerHTML=remaining>0&&remaining<=30?`<div style="background:var(--yb);border:1.5px solid var(--y);border-radius:var(--r8);padding:12px 16px;margin-bottom:12px;color:#856404;font-weight:700;font-size:13.5px">⏰ เหลือเวลาอีก ${remaining} นาที ก่อนถึงเวลา ${timeLock.deadlineText} น. — รีบบันทึกด่วน!</div>`:'';
   }else timeBanner.innerHTML='';
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{
@@ -2092,25 +2122,33 @@ function updateProgress(){
 function getActiveStaff(){const isMobile=window.innerWidth<=768;const sel=isMobile?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
 function getActiveDate(){const isMobile=window.innerWidth<=768;return isMobile?document.getElementById('dateInputMobile').value:document.getElementById('dateInput').value;}
 const DEFAULT_SHIFT_DEADLINES = {
-  assistant: { morning: 8*60+30, afternoon: 20*60 },
-  pt: { morning: 9*60+30, afternoon: 20*60+30 }
+  assistant: { morning: 8*60+30, afternoon: 20*60, saturday: 16*60 },
+  pt: { morning: 9*60+30, afternoon: 20*60+30, saturday: 16*60+30 }
 };
 let SHIFT_DEADLINES = cloneShiftDeadlines(DEFAULT_SHIFT_DEADLINES);
-function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,afternoon:Number(source?.assistant?.afternoon)||1200},pt:{morning:Number(source?.pt?.morning)||570,afternoon:Number(source?.pt?.afternoon)||1230}};}
-function normalizeSystemSettings(settings){return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES)};}
-function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
+function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,afternoon:Number(source?.assistant?.afternoon)||1200,saturday:Number(source?.assistant?.saturday)||960},pt:{morning:Number(source?.pt?.morning)||570,afternoon:Number(source?.pt?.afternoon)||1230,saturday:Number(source?.pt?.saturday)||990}};}
+function normalizeStockSchedule(schedule,index){
+  const categories=Array.isArray(schedule?.categories)?[...new Set(schedule.categories.map(String).filter(Boolean))]:[];
+  const weekday=Number(schedule?.weekday);
+  return{id:String(schedule?.id||`stock-round-${Date.now()}-${index||0}`),name:String(schedule?.name||`รอบตรวจ ${Number(index||0)+1}`).trim().slice(0,80),weekday:Number.isInteger(weekday)&&weekday>=0&&weekday<=6?weekday:1,dueTime:/^\d{2}:\d{2}$/.test(String(schedule?.dueTime||''))?String(schedule.dueTime):'12:00',categories:categories.length?categories:['medical','general','cleaning','alcohol','other'],active:schedule?.active!==false};
+}
+function cloneStockSchedules(source){const rows=Array.isArray(source)&&source.length?source:DEFAULT_STOCK_SCHEDULES;return rows.map(normalizeStockSchedule);}
+function normalizeSystemSettings(settings){return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules)};}
+function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
 function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
+function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0,10)+'T00:00:00').getDay()===6;}
+function getEffectiveDeadline(role,shift,date){if(isSaturdayKey(date))return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[shift==='afternoon'?'afternoon':'morning'];}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
   const normalizedShift=shift==='afternoon'?'afternoon':'morning';
-  const deadline=SHIFT_DEADLINES[role]?.[normalizedShift];
+  const deadline=getEffectiveDeadline(role,normalizedShift,date);
   const deadlineText=minutesToTimeText(deadline||0);
   const today=fmtDate(new Date());
   if(date<today)return{locked:true,deadlineText,message:`⛔ เลยวันที่บันทึกแล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}ย้อนหลังได้`};
   if(date>today)return{locked:false,deadlineText,message:''};
   const now=new Date();const current=now.getHours()*60+now.getMinutes();
-  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${normalizedShift==='morning'?'เวรเช้า':'เวรบ่าย'}ได้`};
+  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isSaturdayKey(date)?'วันเสาร์':normalizedShift==='morning'?'เวรเช้า':'เวรบ่าย'}ได้`};
   return{locked:false,deadlineText,message:''};
 }
 function getMissedEvaluationRecord(date,shift){return missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===(shift||'morning'))||null;}
@@ -2123,6 +2161,54 @@ const STOCK_CATEGORY_META={
   medical:{label:'วัสดุทางการแพทย์',icon:'🩺'},general:{label:'วัสดุทั่วไป',icon:'🧹'},
   cleaning:{label:'ทำความสะอาด',icon:'🧼'},alcohol:{label:'แอลกอฮอล์',icon:'🧴'},other:{label:'อื่น ๆ',icon:'📦'}
 };
+const STOCK_WEEKDAY_LABELS=['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
+function activeStockSchedules(){return stockSchedules.filter(schedule=>schedule.active!==false);}
+function stockScheduleById(id){return stockSchedules.find(schedule=>schedule.id===String(id||''))||null;}
+function stockScheduleCategoryKeys(){return[...new Set(stockCatalog.filter(item=>item.active!==false).map(item=>item.category).filter(Boolean))];}
+function stockScheduleCategoryText(schedule){return(schedule?.categories||[]).map(category=>(STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other).label).join(', ')||'ทุกหมวด';}
+function stockScheduleForDate(dateValue){
+  const day=new Date((dateValue||localDateKey(new Date()))+'T00:00:00').getDay();
+  return activeStockSchedules().find(schedule=>schedule.weekday===day)||activeStockSchedules()[0]||null;
+}
+function renderStockScheduleCategoryChoices(selectedCategories){
+  const wrap=document.getElementById('stockScheduleCategoryChoices');if(!wrap)return;
+  const selected=new Set(Array.isArray(selectedCategories)?selectedCategories:stockScheduleCategoryKeys());
+  const keys=[...new Set([...stockScheduleCategoryKeys(),...Object.keys(STOCK_CATEGORY_META)])];
+  wrap.innerHTML=keys.map(key=>{const meta=STOCK_CATEGORY_META[key]||STOCK_CATEGORY_META.other;return`<label><input type="checkbox" name="stockScheduleCategory" value="${escapeHtml(key)}"${selected.has(key)?' checked':''}>${meta.icon} ${escapeHtml(meta.label)}</label>`;}).join('');
+}
+function renderStockSchedulesAdmin(){
+  const wrap=document.getElementById('stockScheduleAdminList');if(!wrap)return;
+  wrap.innerHTML=stockSchedules.length?stockSchedules.map((schedule,index)=>`<div class="stock-schedule-row ${schedule.active===false?'is-off':''}"><div><strong>🗓️ ${escapeHtml(schedule.name)}</strong> <span class="tag ${schedule.active===false?'td0':'tp'}">${schedule.active===false?'ปิดใช้งาน':'ใช้งาน'}</span><div class="stock-schedule-days">${escapeHtml(STOCK_WEEKDAY_LABELS[schedule.weekday])} • ควรส่งก่อน ${escapeHtml(schedule.dueTime)} น.<br>หมวด: ${escapeHtml(stockScheduleCategoryText(schedule))}</div></div><div style="font-size:11.5px;color:var(--g6)">ระบบเลือกให้อัตโนมัติตามวันที่<br>รองรับหลายรอบในสัปดาห์เดียว</div><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editStockSchedule(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="toggleStockSchedule(${index})">${schedule.active===false?'เปิดใช้':'ปิดใช้'}</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px;color:var(--r)" onclick="deleteStockSchedule(${index})">ลบ</button></div></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:16px">ยังไม่มีรอบตรวจ</div>';
+}
+function resetStockScheduleEditor(){
+  editingStockScheduleIndex=null;const name=document.getElementById('stockScheduleName');const weekday=document.getElementById('stockScheduleWeekday');const due=document.getElementById('stockScheduleDueTime');if(name)name.value='';if(weekday)weekday.value='1';if(due)due.value='12:00';renderStockScheduleCategoryChoices();
+}
+function editStockSchedule(index){
+  const schedule=stockSchedules[index];if(!schedule)return;editingStockScheduleIndex=index;
+  document.getElementById('stockScheduleName').value=schedule.name;document.getElementById('stockScheduleWeekday').value=String(schedule.weekday);document.getElementById('stockScheduleDueTime').value=schedule.dueTime;renderStockScheduleCategoryChoices(schedule.categories);document.getElementById('stockScheduleName').focus();
+}
+async function persistStockSchedules(action,detail){
+  const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules});
+  if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
+  await window.FB.fbSaveSystemSettings(settings);applySystemSettings(settings);renderStockSchedulesAdmin();renderStockScheduleOptions();await writeAuditLog(action,'settings',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+}
+async function saveStockSchedule(){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
+  const name=(document.getElementById('stockScheduleName')?.value||'').trim();const weekday=Number(document.getElementById('stockScheduleWeekday')?.value);const dueTime=document.getElementById('stockScheduleDueTime')?.value||'';const categories=[...document.querySelectorAll('input[name="stockScheduleCategory"]:checked')].map(input=>input.value);
+  if(!name)return showToast('⚠️ กรุณากรอกชื่อรอบตรวจ','warning');if(!categories.length)return showToast('⚠️ กรุณาเลือกอย่างน้อย 1 หมวดวัสดุ','warning');if(!/^\d{2}:\d{2}$/.test(dueTime))return showToast('⚠️ กรุณาเลือกเวลาที่ควรส่ง','warning');
+  const old=editingStockScheduleIndex===null?null:stockSchedules[editingStockScheduleIndex];const schedule=normalizeStockSchedule({id:old?.id||`stock-round-${Date.now()}`,name,weekday,dueTime,categories,active:old?.active!==false});
+  try{const isEdit=editingStockScheduleIndex!==null;if(isEdit)stockSchedules[editingStockScheduleIndex]=schedule;else stockSchedules.push(schedule);await persistStockSchedules(isEdit?'update':'add',`${isEdit?'แก้ไข':'เพิ่ม'}รอบตรวจสต็อก ${name}`);resetStockScheduleEditor();showToast('✅ บันทึกรอบตรวจแล้ว — ทุกอุปกรณ์จะใช้ตารางใหม่นี้','success');}catch(error){showToast('❌ บันทึกรอบตรวจไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+async function toggleStockSchedule(index){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const schedule=stockSchedules[index];if(!schedule)return;schedule.active=schedule.active===false;
+  try{await persistStockSchedules('update',`${schedule.active?'เปิด':'ปิด'}ใช้งานรอบตรวจ ${schedule.name}`);showToast(`✅ ${schedule.active?'เปิด':'ปิด'}ใช้งานรอบตรวจแล้ว`,'success');}catch(error){schedule.active=!schedule.active;showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+function deleteStockSchedule(index){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const schedule=stockSchedules[index];if(!schedule)return;
+  const hasHistory=stockRecords.some(record=>(record.scheduleId||'weekly-all')===schedule.id);
+  if(hasHistory)return showConfirm(`รอบ “${schedule.name}” มีประวัติใช้งาน จึงลบไม่ได้ ระบบจะปิดใช้งานแทน`,async()=>{schedule.active=false;await persistStockSchedules('update',`ปิดใช้งานรอบ ${schedule.name} เนื่องจากมีประวัติ`);showToast('✅ ปิดใช้งานรอบตรวจแล้ว','success');});
+  showConfirm(`ลบรอบตรวจ “${schedule.name}” ใช่หรือไม่?`,async()=>{try{stockSchedules.splice(index,1);await persistStockSchedules('delete',`ลบรอบตรวจสต็อก ${schedule.name}`);resetStockScheduleEditor();showToast('🗑️ ลบรอบตรวจแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});
+}
 function normalizeStockCatalogItem(item,index){
   const category=String(item?.category||'other');const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;
   return{id:String(item?.id||`stock-${Date.now()}-${index||0}`),category,categoryLabel:String(item?.categoryLabel||meta.label),icon:String(item?.icon||meta.icon),name:String(item?.name||'').trim(),targetQty:item?.targetQty===null?null:Math.max(0,Number(item?.targetQty||0)),targetLabel:String(item?.targetLabel||''),unit:String(item?.unit||'ชิ้น').trim(),weekly:Boolean(item?.weekly),active:item?.active!==false};
@@ -2140,7 +2226,7 @@ function editStockCatalogItem(index){
   document.getElementById('stockCatalogName').focus();
 }
 async function persistStockCatalog(action,detail){
-  await window.FB.fbSaveStockCatalog(stockCatalog);localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));createStockDraft();renderStockGroups();renderStockCatalogAdmin();await writeAuditLog(action,'system_data',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+  await window.FB.fbSaveStockCatalog(stockCatalog);localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));createStockDraft(document.getElementById('stockSchedule')?.value);renderStockGroups();renderStockCatalogAdmin();renderStockScheduleCategoryChoices();renderStockSchedulesAdmin();await writeAuditLog(action,'system_data',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
 }
 async function saveStockCatalogItem(){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
@@ -2159,17 +2245,26 @@ function deleteStockCatalogItem(index){
   if(hasHistory)return showConfirm(`รายการ “${item.name}” มีประวัติใช้งาน จึงลบไม่ได้ ระบบจะปิดใช้งานแทน`,async()=>{item.active=false;await persistStockCatalog('update',`ปิดใช้งานรายการ ${item.name} เนื่องจากมีประวัติ`);showToast('✅ ปิดใช้งานรายการแล้ว','success');});
   showConfirm(`ลบรายการ “${item.name}” ใช่หรือไม่?`,async()=>{try{stockCatalog.splice(index,1);await persistStockCatalog('delete',`ลบรายการเบิก ${item.name}`);resetStockCatalogEditor();showToast('🗑️ ลบรายการแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});
 }
-function createStockDraft(){
-  stockDraftItems=stockCatalog.filter(item=>item.active!==false).map(item=>Object.assign({},item,{currentQty:'',requestQty:'',issueStatus:'normal',note:''}));
+function renderStockScheduleOptions(preferredId){
+  const select=document.getElementById('stockSchedule');if(!select)return null;
+  const current=String(preferredId||select.value||'');const dateValue=document.getElementById('stockDate')?.value||localDateKey(new Date());const suggested=stockScheduleForDate(dateValue);const active=activeStockSchedules();
+  select.innerHTML=active.length?active.map(schedule=>`<option value="${escapeHtml(schedule.id)}">${escapeHtml(schedule.name)} — ${escapeHtml(STOCK_WEEKDAY_LABELS[schedule.weekday])}</option>`).join(''):'<option value="">— แอดมินยังไม่ได้เปิดรอบตรวจ —</option>';
+  const next=active.some(schedule=>schedule.id===current)?current:(suggested?.id||active[0]?.id||'');select.value=next;return stockScheduleById(next);
+}
+function createStockDraft(scheduleId){
+  const schedule=stockScheduleById(scheduleId)||activeStockSchedules()[0]||null;const categories=new Set(schedule?.categories||[]);
+  stockDraftItems=stockCatalog.filter(item=>item.active!==false&&(!categories.size||categories.has(item.category))).map(item=>Object.assign({},item,{currentQty:'',requestQty:'',issueStatus:'normal',note:''}));
   stockExtraItems=[];
 }
 function mondayKeyFromDate(dateValue){
   const value=dateValue||localDateKey(new Date());const date=new Date(value+'T00:00:00');const offset=(date.getDay()+6)%7;date.setDate(date.getDate()-offset);return localDateKey(date);
 }
+function handleStockDateChange(){const schedule=renderStockScheduleOptions();createStockDraft(schedule?.id);updateStockWeekBadge();renderStockGroups();renderStockExtraItems();}
+function changeStockSchedule(){createStockDraft(document.getElementById('stockSchedule')?.value);updateStockWeekBadge();renderStockGroups();renderStockExtraItems();}
 function updateStockWeekBadge(){
-  const input=document.getElementById('stockDate');const dateValue=input?.value||localDateKey(new Date());const monday=mondayKeyFromDate(dateValue);const selected=new Date(dateValue+'T00:00:00');const badge=document.getElementById('stockDueBadge');const display=document.getElementById('stockWeekDisplay');
+  const input=document.getElementById('stockDate');const dateValue=input?.value||localDateKey(new Date());const monday=mondayKeyFromDate(dateValue);const selected=new Date(dateValue+'T00:00:00');const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);const badge=document.getElementById('stockDueBadge');const display=document.getElementById('stockWeekDisplay');
   if(display)display.textContent=`สัปดาห์วันจันทร์ที่ ${thaiDate(monday)}`;
-  if(badge){const isMonday=selected.getDay()===1;badge.textContent=isMonday?'✅ วันจันทร์ — ถึงรอบตรวจสต็อก':'📅 บันทึกย้อนหลัง/เพิ่มเติม';badge.style.color=isMonday?'#176B38':'#8A5A00';badge.style.borderColor=isMonday?'#B9DEC8':'#E8D29B';}
+  if(badge){const isDueDay=schedule&&selected.getDay()===schedule.weekday;badge.textContent=schedule?(isDueDay?`✅ ${schedule.name} • ส่งก่อน ${schedule.dueTime} น.`:`📅 ${schedule.name} • วันประจำคือ${STOCK_WEEKDAY_LABELS[schedule.weekday]}`):'⚠️ ยังไม่มีรอบตรวจที่เปิดใช้งาน';badge.style.color=isDueDay?'#176B38':'#8A5A00';badge.style.borderColor=isDueDay?'#B9DEC8':'#E8D29B';}
 }
 function stockStatusInfo(item){
   if(item.issueStatus==='problem'||item.issueStatus==='unavailable'||item.issueStatus==='memo')return{label:'พบปัญหา',className:'issue'};
@@ -2224,28 +2319,28 @@ function renderStockExtraItems(){
   </div>`).join('');
 }
 function loadStockView(){
-  if(!stockDraftItems.length)createStockDraft();
   const date=document.getElementById('stockDate');if(date&&!date.value)date.value=localDateKey(new Date());
+  const schedule=renderStockScheduleOptions();if(!stockDraftItems.length)createStockDraft(schedule?.id);
   updateStaffDropdown();const active=getActiveStaff();const responsible=document.getElementById('stockResponsible');if(responsible&&active.value&&!responsible.value)responsible.value=active.text;
   updateStockWeekBadge();renderStockGroups();renderStockExtraItems();renderStockHistory();
 }
 function resetStockDraft(withConfirm){
-  const reset=()=>{editingStockRecordId=null;createStockDraft();const note=document.getElementById('stockOverallNote');if(note)note.value='';const button=document.getElementById('stockSaveBtn');if(button)button.textContent='✅ บันทึกการตรวจและเบิกของ';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
+  const reset=()=>{editingStockRecordId=null;createStockDraft(document.getElementById('stockSchedule')?.value);const note=document.getElementById('stockOverallNote');if(note)note.value='';const button=document.getElementById('stockSaveBtn');if(button)button.textContent='✅ บันทึกการตรวจและเบิกของ';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
   if(withConfirm)showConfirm('ล้างจำนวนคงเหลือและรายการเบิกทั้งหมดใช่หรือไม่?',reset);else reset();
 }
 async function submitStockRequest(){
-  const date=document.getElementById('stockDate')?.value||'';const responsible=document.getElementById('stockResponsible')?.value||'';const overallNote=(document.getElementById('stockOverallNote')?.value||'').trim();
-  if(!date)return showToast('⚠️ กรุณาเลือกวันที่ตรวจสต็อก','warning');if(!responsible)return showToast('⚠️ กรุณาเลือกผู้รับผิดชอบ','warning');
+  const date=document.getElementById('stockDate')?.value||'';const responsible=document.getElementById('stockResponsible')?.value||'';const overallNote=(document.getElementById('stockOverallNote')?.value||'').trim();const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);
+  if(!date)return showToast('⚠️ กรุณาเลือกวันที่ตรวจสต็อก','warning');if(!schedule)return showToast('⚠️ กรุณาเลือกรอบตรวจสต็อก','warning');if(!responsible)return showToast('⚠️ กรุณาเลือกผู้รับผิดชอบ','warning');if(!stockDraftItems.length)return showToast('⚠️ รอบนี้ยังไม่มีรายการวัสดุ กรุณาให้แอดมินตรวจหมวดของรอบ','warning');
   const missing=stockDraftItems.find(item=>item.currentQty==='');if(missing)return showToast(`⚠️ กรุณากรอกจำนวนคงเหลือ: ${missing.name}`,'warning');
   const problemWithoutNote=stockDraftItems.find(item=>item.issueStatus!=='normal'&&!String(item.note||'').trim());if(problemWithoutNote)return showToast(`⚠️ กรุณาอธิบายปัญหา: ${problemWithoutNote.name}`,'warning');
   const incompleteExtra=stockExtraItems.find(item=>!item.name.trim()||item.currentQty==='');if(incompleteExtra)return showToast('⚠️ กรุณากรอกชื่อและจำนวนคงเหลือของรายการเพิ่มเติมให้ครบ','warning');
-  const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&record.responsible===responsible&&Number(record.id)!==Number(editingStockRecordId)))return showToast('⚠️ ผู้รับผิดชอบคนนี้มีบันทึกในสัปดาห์นี้แล้ว','warning');
+  const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&(record.scheduleId||'weekly-all')===schedule.id&&record.responsible===responsible&&Number(record.id)!==Number(editingStockRecordId)))return showToast(`⚠️ ผู้รับผิดชอบคนนี้บันทึกรอบ “${schedule.name}” ในสัปดาห์นี้แล้ว`,'warning');
   const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
   const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
-  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const record={id:old?.id||Date.now(),date,weekKey,responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',evaluationStatus:old?.evaluationStatus||'pending',ptVerdict:old?.ptVerdict||'',ptReviewer:old?.ptReviewer||'',ptComment:old?.ptComment||'',ptAccuracyScore:Number(old?.ptAccuracyScore||0),ptCommunicationScore:Number(old?.ptCommunicationScore||0),stockScore:Number(old?.stockScore||0),reviewedAt:old?.reviewedAt||'',reviewTimeDisplay:old?.reviewTimeDisplay||'',procurementUpdatedAt:old?.procurementUpdatedAt||'',procurementUpdatedBy:old?.procurementUpdatedBy||''};
+  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',evaluationStatus:old?.evaluationStatus||'pending',ptVerdict:old?.ptVerdict||'',ptReviewer:old?.ptReviewer||'',ptComment:old?.ptComment||'',ptAccuracyScore:Number(old?.ptAccuracyScore||0),ptCommunicationScore:Number(old?.ptCommunicationScore||0),stockScore:Number(old?.stockScore||0),reviewedAt:old?.reviewedAt||'',reviewTimeDisplay:old?.reviewTimeDisplay||'',procurementUpdatedAt:old?.procurementUpdatedAt||'',procurementUpdatedBy:old?.procurementUpdatedBy||''};
   try{
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}ตรวจสต็อกประจำสัปดาห์โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');if(!old)openStockShare(record);
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');if(!old)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
 }
 function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
@@ -2264,40 +2359,41 @@ const STOCK_FULFILLMENT_META={
 };
 function stockFulfillmentInfo(item){return STOCK_FULFILLMENT_META[item?.fulfillmentStatus]||STOCK_FULFILLMENT_META.pending;}
 function stockShareUrl(record){return`https://ptkth14.github.io/pt-kth/?stock=${encodeURIComponent(record?.id||'')}`;}
-function openStockShare(record){lastStockShareRecord=record;const link=stockShareUrl(record);const linkEl=document.getElementById('stockShareLink');if(linkEl)linkEl.textContent=link;const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${thaiDate(record.date)} • ${record.responsible} • รอ PT ประเมิน`;document.getElementById('stockShareModal').classList.add('open');}
+function openStockShare(record){lastStockShareRecord=record;const link=stockShareUrl(record);const linkEl=document.getElementById('stockShareLink');if(linkEl)linkEl.textContent=link;const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible} • รอ PT ประเมิน`;document.getElementById('stockShareModal').classList.add('open');}
 async function copyStockShareLink(){const link=stockShareUrl(lastStockShareRecord);await navigator.clipboard.writeText(link);showToast('📋 คัดลอกลิงก์งานเบิกของแล้ว','success');}
-function shareStockToLine(){const record=lastStockShareRecord;if(!record)return;const msg=encodeURIComponent(`📦 มีงานเบิกของและตรวจสต็อกรอ PT ประเมิน\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}\nเปิดระบบ: ${stockShareUrl(record)}`);window.open('https://line.me/R/share?text='+msg,'_blank');}
-function openStockWorkflow(id){
-  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;const active=getActiveStaff();const isOwner=active?.text===record.responsible;if(!isAdminLoggedIn&&!isOwner)return showToast('⛔ เฉพาะผู้ช่วยเจ้าของรายการหรือแอดมิน','error');activeStockWorkflowId=record.id;stockWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:item.fulfillmentStatus||'pending',fulfillmentNote:item.fulfillmentNote||''}));
-  document.getElementById('stockWorkflowTitle').textContent=`${thaiDate(record.date)} • ${record.responsible}`;const wrap=document.getElementById('stockWorkflowItems');wrap.innerHTML=stockWorkflowDraftItems.length?stockWorkflowDraftItems.map((item,index)=>`<div style="display:grid;grid-template-columns:minmax(160px,1.3fr) minmax(150px,.8fr) minmax(170px,1fr);gap:9px;align-items:center;padding:10px;border:1px solid var(--g2);border-radius:9px;margin-bottom:8px"><div><strong>${escapeHtml(item.name)}</strong><div style="font-size:11px;color:var(--g6)">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" onchange="setStockWorkflowValue(${index},'fulfillmentStatus',this.value)">${Object.entries(STOCK_FULFILLMENT_META).filter(([key])=>key!=='not_required').map(([key,meta])=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${meta.label}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:20px">รายการนี้ไม่มีจำนวนที่ขอเบิก</div>';document.getElementById('stockWorkflowModal').classList.add('open');
-}
-function setStockWorkflowValue(index,field,value){if(stockWorkflowDraftItems[index])stockWorkflowDraftItems[index][field]=value;}
-async function saveStockWorkflow(){
-  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockWorkflowId));if(!record)return;const active=getActiveStaff();const isOwner=active?.text===record.responsible;if(!isAdminLoggedIn&&!isOwner)return showToast('⛔ เฉพาะผู้ช่วยเจ้าของรายการหรือแอดมิน','error');
-  const missingNote=stockWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุ: ${missingNote.name}`,'warning');
-  const draftMap=new Map(stockWorkflowDraftItems.map(item=>[item.id,item]));const now=new Date();const actor=isAdminLoggedIn?currentAdminEmail():record.responsible;const updated={...record,items:(record.items||[]).map(item=>draftMap.has(item.id)?{...item,fulfillmentStatus:draftMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(draftMap.get(item.id).fulfillmentNote||'').trim()}:item),procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:actor};
-  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`อัปเดตผลพัสดุของ ${record.responsible}`,{actor,actorRole:isAdminLoggedIn?'แอดมิน':'ผู้ช่วย'});closeModal('stockWorkflowModal');renderStockHistory();renderStockPerformancePanels();showToast('✅ อัปเดตสถานะพัสดุแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
-}
+function shareStockToLine(){const record=lastStockShareRecord;if(!record)return;const msg=encodeURIComponent(`📦 มีงานเบิกของและตรวจสต็อกรอ PT ประเมิน\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}\nเปิดระบบ: ${stockShareUrl(record)}`);window.open('https://line.me/R/share?text='+msg,'_blank');}
 function renderStockHistory(){
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
   if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=stockSummaryMetric('รอบที่บันทึก',sorted.length,'var(--bd)')+stockSummaryMetric('รอติดตาม',attentionCount,'var(--r)')+stockSummaryMetric('รวมจำนวนเบิก',requestedTotal,'#9A6700');
   if(!sorted.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:22px">ยังไม่มีประวัติการตรวจสต็อก</div>';return;}
-  list.innerHTML=sorted.slice(0,20).map(record=>{const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus!=='normal'?' — พบปัญหา':''}${item.note?` (${escapeHtml(item.note)})`:''}${Number(item.requestQty||0)>0?` — <span style="color:${stockFulfillmentInfo(item).color}">${escapeHtml(stockFulfillmentInfo(item).label)}</span>`:''}${item.fulfillmentNote?` (${escapeHtml(item.fulfillmentNote)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';const workflowButton=items.some(item=>Number(item.requestQty||0)>0)?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockWorkflow(${Number(record.id)})">ติดตามพัสดุ</button>`:'';const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';const reviewButton=`<button class="btn ${record.ptVerdict?'btn-out':'btn-pri'}" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">${record.ptVerdict?'แก้ผลประเมิน':'PT ประเมิน'}</button>`;return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">สัปดาห์ ${escapeHtml(thaiDate(record.weekKey||record.date))}</strong><div class="stock-history-meta"><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${workflowButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">${record.ptVerdict?`ผลงาน ${stats.totalScore}%`:'รอให้คะแนน'}</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;}).join('');
+  list.innerHTML=sorted.slice(0,20).map(record=>{
+    const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const roundName=record.scheduleName||'ตรวจสต็อกประจำสัปดาห์';
+    const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus!=='normal'?' — พบปัญหา':''}${item.note?` (${escapeHtml(item.note)})`:''}${Number(item.requestQty||0)>0?` — <span style="color:${stockFulfillmentInfo(item).color}">${escapeHtml(stockFulfillmentInfo(item).label)}</span>`:''}${item.fulfillmentNote?` (${escapeHtml(item.fulfillmentNote)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';
+    const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';
+    const reviewButton=`<button class="btn ${record.ptVerdict?'btn-out':'btn-pri'}" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">${record.ptVerdict?'แก้ผลและคะแนน':'PT กรอกผลและประเมิน'}</button>`;
+    return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(roundName)}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">${record.ptVerdict?`ผลงาน ${stats.totalScore}%`:'รอให้คะแนน'}</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;
+  }).join('');
 }
 function editStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
-  editingStockRecordId=record.id;stockDraftItems=stockCatalog.map(catalogItem=>{const saved=(record.items||[]).find(item=>item.id===catalogItem.id);return Object.assign({},catalogItem,saved||{},{currentQty:saved?.currentQty??'',requestQty:saved?.requestQty??'',issueStatus:saved?.issueStatus||'normal',note:saved?.note||''});});stockExtraItems=(record.items||[]).filter(item=>String(item.id||'').startsWith('extra-')).map(item=>({...item}));
-  switchView('stock');document.getElementById('stockDate').value=record.date;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
+  editingStockRecordId=record.id;stockDraftItems=(record.items||[]).filter(item=>!String(item.id||'').startsWith('extra-')).map(saved=>{const catalogItem=stockCatalog.find(item=>item.id===saved.id)||{};return Object.assign({},catalogItem,saved,{currentQty:saved.currentQty??'',requestQty:saved.requestQty??'',issueStatus:saved.issueStatus||'normal',note:saved.note||''});});stockExtraItems=(record.items||[]).filter(item=>String(item.id||'').startsWith('extra-')).map(item=>({...item}));
+  switchView('stock');document.getElementById('stockDate').value=record.date;const scheduleSelect=document.getElementById('stockSchedule');const scheduleId=record.scheduleId||'weekly-all';if(scheduleSelect&&!Array.from(scheduleSelect.options).some(option=>option.value===scheduleId))scheduleSelect.add(new Option(`${record.scheduleName||'รอบตรวจเดิม'} — ประวัติเดิม`,scheduleId));if(scheduleSelect)scheduleSelect.value=scheduleId;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
 }
 function openStockReview(id){
   const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;activeStockReviewId=record.id;
-  document.getElementById('stockReviewTitle').textContent=`${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';
+  document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';
+  stockReviewWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:item.fulfillmentStatus||'pending',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
   const stats=stockPerformanceStats(record);document.getElementById('stockReviewCompletion').textContent=`กรอกครบ ${stats.completionPct}% = ${stats.completionScore}/40 คะแนน`;
   document.getElementById('stockReviewAccuracy').value=Object.prototype.hasOwnProperty.call(record,'ptAccuracyScore')?String(record.ptAccuracyScore):'';
   document.getElementById('stockReviewCommunication').value=Object.prototype.hasOwnProperty.call(record,'ptCommunicationScore')?String(record.ptCommunicationScore):'';
   document.getElementById('stockReviewComment').value=record.ptComment||'';updateStockReviewScorePreview();document.getElementById('stockReviewModal').classList.add('open');
 }
+function renderStockReviewWorkflowItems(){
+  const wrap=document.getElementById('stockReviewWorkflowItems');if(!wrap)return;
+  wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" aria-label="ผลพัสดุ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)">${Object.entries(STOCK_FULFILLMENT_META).filter(([key])=>key!=='not_required').map(([key,meta])=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(meta.label)}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ (ถ้ามี)"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
+}
+function setStockReviewWorkflowValue(index,field,value){if(stockReviewWorkflowDraftItems[index])stockReviewWorkflowDraftItems[index][field]=value;}
 function updateStockReviewScorePreview(){
   const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const preview=document.getElementById('stockReviewScorePreview');if(!record||!preview)return;
   const completion=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;
@@ -2306,17 +2402,23 @@ function updateStockReviewScorePreview(){
 }
 async function saveStockReview(){
   const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();if(!record)return;if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');
-  const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const updated={...record,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
-  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT ประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();refreshWebAlerts(false);showToast('✅ บันทึกผลประเมินงานเบิกของแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
+  const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
+  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 function stockPerformanceMarkup(records,title){
   const reviewed=records.filter(record=>record.ptVerdict);const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
   const people={};records.forEach(record=>{if(!people[record.responsible])people[record.responsible]=[];people[record.responsible].push(record);});
-  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">ความครบถ้วน 40 คะแนน • จำนวนเบิกเหมาะสม 30 คะแนน • การระบุปัญหา 30 คะแนน</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
+  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">ความครบถ้วน 40 คะแนน • จำนวนเบิกเหมาะสม 30 คะแนน • การระบุปัญหา 30 คะแนน</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th><th style="text-align:center">รายการ</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;const encodedName=encodeURIComponent(name).replace(/'/g,'%27');return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td><td style="text-align:center"><button class="btn btn-out stock-eye-btn" title="ดูรายการที่เบิก" aria-label="ดูรายการที่เบิกของ ${escapeHtml(name)}" onclick="showStockPersonDetail(decodeURIComponent('${encodedName}'))">👁</button></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
+}
+function showStockPersonDetail(name){
+  const records=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));document.getElementById('detailTitle').textContent=`📦 รายการเบิกของ — ${name}`;
+  const html=records.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);const stats=stockPerformanceStats(record);const itemHtml=requested.length?requested.map(item=>{const info=stockFulfillmentInfo(item);return`<div style="display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--g2);font-size:12px"><div><strong>${escapeHtml(item.name)}</strong><div style="color:var(--g6);margin-top:2px">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}${item.fulfillmentNote?` • ${escapeHtml(item.fulfillmentNote)}`:''}</div></div><span class="tag" style="background:${info.color}18;color:${info.color}">${escapeHtml(info.label)}</span></div>`;}).join(''):'<div style="color:var(--g4);font-size:12px;padding:8px 0">รอบนี้ไม่มีรายการที่ขอเบิก</div>';return`<div class="stock-history-card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>PT ${escapeHtml(record.ptReviewer||'ยังไม่ประเมิน')}</span></div></div><div><span class="tag ${record.ptVerdict==='pass'?'tp':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='fail'?'tf':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span> ${record.ptVerdict?`<strong style="color:var(--bd)">${stats.totalScore}%</strong>`:''}</div></div><div style="margin-top:8px">${itemHtml}</div>${record.ptComment?`<div style="margin-top:9px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}</div>`;}).join('');
+  document.getElementById('detailBody').innerHTML=html||'<div style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการเบิกของ</div>';document.getElementById('detailModal').classList.add('open');
 }
 function stockAdminManageMarkup(records){
   if(!isAdminLoggedIn)return'';const sorted=[...records].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
-  return`<div class="card" style="margin-bottom:16px;border-left:4px solid var(--r)"><h3 style="margin-bottom:4px">🛠️ จัดการบันทึกสต็อกและเบิกของ</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">แอดมินแก้ไข ติดตามผลพัสดุ หรือลบบันทึกได้จากตารางนี้</div>${sorted.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย</th><th>ผล PT</th><th>คะแนน</th><th>จัดการ</th></tr></thead><tbody>${sorted.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockVerdictLabel(record))}</td><td>${record.ptVerdict?stockPerformanceStats(record).totalScore+'%':'—'}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="openStockWorkflow(${Number(record.id)})">ผลพัสดุ</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีรายการ</div>'}</div>`;
+  return`<div class="card" style="margin-bottom:16px;border-left:4px solid var(--r)"><h3 style="margin-bottom:4px">🛠️ จัดการบันทึกสต็อกและเบิกของ</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">แอดมินแก้ไข เปิดหน้าผลพัสดุและประเมิน หรือลบบันทึกได้จากตารางนี้</div>${sorted.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>ผล PT</th><th>คะแนน</th><th>จัดการ</th></tr></thead><tbody>${sorted.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockVerdictLabel(record))}</td><td>${record.ptVerdict?stockPerformanceStats(record).totalScore+'%':'—'}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="openStockReview(${Number(record.id)})">ผลพัสดุ/ประเมิน</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีรายการ</div>'}</div>`;
 }
 function renderStockPerformancePanels(){
   const targets=[['stockPerformanceDashboard','ผลงานเบิกของและตรวจสต็อก'],['historyStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['supervisorStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['adminStockPerformance','สรุปผลงานเบิกของและตรวจสต็อก']];
@@ -2367,10 +2469,11 @@ async function submitChecklist(){
 
 // ══ REVIEW ══
 function loadReviewView(){
-  const pending=submissions.filter(s=>s.status==='pending');
+  const pending=submissions.filter(s=>s.status==='pending');const pendingStock=stockRecords.filter(record=>!record.ptVerdict);
   const pl=document.getElementById('pendingList');if(!pl)return;
-  if(pending.length===0){pl.innerHTML=`<div style="background:#fff;border-radius:var(--r12);padding:30px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:34px;margin-bottom:8px">📭</div><div style="font-size:15px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;document.getElementById('reviewFormWrap').style.display='none';return;}
-  pl.innerHTML=`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
+  const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
+  pl.innerHTML=checklistHtml+stockHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -2404,8 +2507,8 @@ function openReview(idx){
   setLineShared(false);
   clearReviewPhotos();
   autoCalcVerdict();
-  document.getElementById('reviewFormWrap').style.display='block';
-  // scroll removed to prevent dashboard jump
+  const reviewWrap=document.getElementById('reviewFormWrap');reviewWrap.style.display='block';
+  requestAnimationFrame(()=>reviewWrap.scrollIntoView({behavior:'smooth',block:'start'}));
 }
 function setEval(key,val,el){
   reviewEvals[key]=val;
@@ -3116,8 +3219,10 @@ function fillSystemSettingsForm(settings){
   const map={
     cutoffAssistantMorning:normalized.deadlines.assistant.morning,
     cutoffAssistantAfternoon:normalized.deadlines.assistant.afternoon,
+    cutoffAssistantSaturday:normalized.deadlines.assistant.saturday,
     cutoffPtMorning:normalized.deadlines.pt.morning,
-    cutoffPtAfternoon:normalized.deadlines.pt.afternoon
+    cutoffPtAfternoon:normalized.deadlines.pt.afternoon,
+    cutoffPtSaturday:normalized.deadlines.pt.saturday
   };
   Object.entries(map).forEach(([id,minutes])=>{const el=document.getElementById(id);if(el)el.value=minutesToTimeText(minutes);});
 }
@@ -3125,11 +3230,11 @@ function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHI
 async function saveSystemSettings(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
   const values={
-    assistant:{morning:timeTextToMinutes(document.getElementById('cutoffAssistantMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffAssistantAfternoon')?.value)},
-    pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value)}
+    assistant:{morning:timeTextToMinutes(document.getElementById('cutoffAssistantMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffAssistantAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffAssistantSaturday')?.value)},
+    pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffPtSaturday')?.value)}
   };
   if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
-  const settings={deadlines:values,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
+  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
   try{
     applySystemSettings(settings);
     if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
@@ -3147,6 +3252,7 @@ function renderSettings(){
   const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   fillSystemSettingsForm({deadlines:SHIFT_DEADLINES});
+  renderStockScheduleCategoryChoices();renderStockSchedulesAdmin();
   renderClItems();
 }
 
@@ -3200,7 +3306,7 @@ function renderAuditLogs(){
 function setAdminTab(tab) {
   currentAdminTab=['data','audit','settings','backup'].includes(tab)?tab:'data';
   ['data','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
+  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();renderStockSchedulesAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
 }
 
 async function loadSupervisorRequests(){
@@ -3231,7 +3337,7 @@ function firebaseBackupCounts(data){
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
@@ -3694,7 +3800,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260718-checklist-edit-wording-v23';
+  const APP_VERSION = 'v20260726-stock-pt-workflow-v31';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
