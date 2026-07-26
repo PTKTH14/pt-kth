@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-fair-stock-confirm-v42">
+<meta name="version" content="v20260726-stock-overdue-audit-v43">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1376,6 +1376,7 @@ tr:hover td{background:var(--g1)}
           <div class="fg"><label>PT เวรบ่าย</label><input type="time" id="cutoffPtAfternoon"></div>
           <div class="fg"><label>ผู้ช่วย วันเสาร์</label><input type="time" id="cutoffAssistantSaturday"></div>
           <div class="fg"><label>PT วันเสาร์</label><input type="time" id="cutoffPtSaturday"></div>
+          <div class="fg"><label>แจ้งงานเบิกค้างเกินกำหนด</label><input type="number" id="stockOverdueDays" min="1" max="30" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">จำนวนวันที่อยู่สถานะ “กำลังเบิกของ” ก่อนขึ้นกระดิ่ง</div></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
@@ -1825,6 +1826,7 @@ const DEFAULT_STOCK_SCHEDULES=[
 ];
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
 let stockSchedules=DEFAULT_STOCK_SCHEDULES.map(item=>({...item,categories:[...item.categories]}));
+let stockOverdueDays=3;
 let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[], isSavingStockRequest=false, isSavingStockReview=false;
 const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
@@ -2087,11 +2089,21 @@ function getDueStockSchedules(status){
   const day=status.current.getDay();const weekKey=mondayKeyFromDate(status.today);
   return activeStockSchedules().filter(schedule=>schedule.weekday===day&&status.minutes>=(timeTextToMinutes(schedule.dueTime)||0)&&!stockRecords.some(record=>record.weekKey===weekKey&&(record.scheduleId||'weekly-all')===schedule.id));
 }
+function stockStageAgeDays(record,now){
+  const source=record?.stageUpdatedAt||record?.procurementUpdatedAt||record?.updatedAt||record?.createdAt;
+  const started=new Date(source||'');if(Number.isNaN(started.getTime()))return 0;
+  const current=now||new Date();const startDay=new Date(started.getFullYear(),started.getMonth(),started.getDate());const currentDay=new Date(current.getFullYear(),current.getMonth(),current.getDate());
+  return Math.max(0,Math.floor((currentDay-startDay)/86400000));
+}
+function getOverdueStockRecords(now){
+  return (typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>!record.ptVerdict&&stockStage(record)==='procuring'&&stockStageAgeDays(record,now)>=stockOverdueDays);
+}
 function getActiveWebAlerts(status){
   const alerts=[];
   ['morning','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
   getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้`,names:[]}));
   const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
+  const overdueStock=getOverdueStockRecords(status.current);if(overdueStock.length)alerts.push({key:'stock-overdue',shift:'stock',personType:'stock',count:overdueStock.length,type:'danger',title:`🚚 มีงานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,detail:'กรุณาติดตามสถานะการรับของ เพื่อป้องกันงานตกหล่น',names:overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`)});
   return alerts;
 }
 function webAlertActionButton(personType,alertKey,shift,isDemo){
@@ -2125,7 +2137,7 @@ function renderWebAlertShiftSection(status,shift){
 function renderWebAlerts(status,alerts){
   const list=document.getElementById('webAlertList');const now=document.getElementById('webAlertNow');if(!list||!now)return;
   now.textContent=`ตรวจล่าสุด ${getThaiTimestamp(status.current)} • ข้อมูลวันที่ ${status.today}`;
-  const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');const dueStock=getDueStockSchedules(status);const openStockButton=`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`;const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+dueStock.map(schedule=>webAlertCard('danger',`ยังไม่พบบันทึกรอบ ${escapeHtml(schedule.name)}`,`เลยเวลาที่ควรส่ง ${escapeHtml(schedule.dueTime)} น.`,[],openStockButton)).join('')+(pendingStock.length?webAlertCard('warning',`พร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว',pendingStock.slice(0,5).map(record=>record.responsible),openStockButton):webAlertCard('success','ไม่มีงานเบิกของพร้อมประเมิน','รายการที่กำลังเบิกจะแสดงในหน้า PT แต่ยังประเมินไม่ได้',[]));
+  const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');const overdueStock=getOverdueStockRecords(status.current);const dueStock=getDueStockSchedules(status);const openStockButton=`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`;const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+dueStock.map(schedule=>webAlertCard('danger',`ยังไม่พบบันทึกรอบ ${escapeHtml(schedule.name)}`,`เลยเวลาที่ควรส่ง ${escapeHtml(schedule.dueTime)} น.`,[],openStockButton)).join('')+(overdueStock.length?webAlertCard('danger',`งานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,'กรุณาติดตามสถานะการรับของ',overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`),openStockButton):'')+(pendingStock.length?webAlertCard('warning',`พร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว',pendingStock.slice(0,5).map(record=>record.responsible),openStockButton):webAlertCard('success','ไม่มีงานเบิกของพร้อมประเมิน','รายการที่กำลังเบิกจะแสดงในหน้า PT แต่ยังประเมินไม่ได้',[]));
   list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
 }
 function maybeShowWebAlertPopup(status,alerts){
@@ -2272,8 +2284,8 @@ function normalizeStockSchedule(schedule,index){
   return{id:String(schedule?.id||`stock-round-${Date.now()}-${index||0}`),name:String(schedule?.name||`รอบตรวจ ${Number(index||0)+1}`).trim().slice(0,80),weekday:Number.isInteger(weekday)&&weekday>=0&&weekday<=6?weekday:1,dueTime:/^\d{2}:\d{2}$/.test(String(schedule?.dueTime||''))?String(schedule.dueTime):'12:00',categories:categories.length?categories:['medical','general','cleaning','alcohol','other'],active:schedule?.active!==false};
 }
 function cloneStockSchedules(source){const rows=Array.isArray(source)&&source.length?source:DEFAULT_STOCK_SCHEDULES;return rows.map(normalizeStockSchedule);}
-function normalizeSystemSettings(settings){return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules)};}
-function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
+function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3};}
+function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);stockOverdueDays=normalized.stockOverdueDays;try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
 function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0,10)+'T00:00:00').getDay()===6;}
@@ -2327,7 +2339,7 @@ function editStockSchedule(index){
   document.getElementById('stockScheduleName').value=schedule.name;document.getElementById('stockScheduleWeekday').value=String(schedule.weekday);document.getElementById('stockScheduleDueTime').value=schedule.dueTime;renderStockScheduleCategoryChoices(schedule.categories);document.getElementById('stockScheduleName').focus();
 }
 async function persistStockSchedules(action,detail){
-  const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules});
+  const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays});
   if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
   await window.FB.fbSaveSystemSettings(settings);applySystemSettings(settings);renderStockSchedulesAdmin();renderStockScheduleOptions();await writeAuditLog(action,'settings',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
 }
@@ -2482,9 +2494,18 @@ async function submitStockRequest(){
   try{
     isSavingStockRequest=true;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=true;
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));const changeDetail=old?stockRecordChangeSummary(old,record):'';await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}${changeDetail?` — ${changeDetail}`:''}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
   finally{isSavingStockRequest=false;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=false;}
+}
+function stockRecordChangeSummary(oldRecord,newRecord){
+  const changes=[];const add=(label,before,after)=>{if(String(before??'')!==String(after??''))changes.push(`${label}: “${String(before??'—')}” → “${String(after??'—')}”`);};
+  add('วันที่',oldRecord?.date,newRecord?.date);add('รอบตรวจ',oldRecord?.scheduleName,newRecord?.scheduleName);add('ผู้ช่วย',oldRecord?.responsible,newRecord?.responsible);add('หมายเหตุรวม',oldRecord?.overallNote,newRecord?.overallNote);
+  const oldItems=new Map((oldRecord?.items||[]).map(item=>[String(item.id||item.name),item]));
+  (newRecord?.items||[]).forEach(item=>{const previous=oldItems.get(String(item.id||item.name));if(!previous){changes.push(`เพิ่มรายการ ${item.name}`);return;}add(`${item.name} คงเหลือ`,previous.currentQty,item.currentQty);add(`${item.name} เบิก`,previous.requestQty,item.requestQty);add(`${item.name} สถานะ`,previous.issueStatus,item.issueStatus);add(`${item.name} หมายเหตุ`,previous.note,item.note);oldItems.delete(String(item.id||item.name));});
+  oldItems.forEach(item=>changes.push(`ลบรายการ ${item.name}`));
+  const visible=changes.slice(0,12);if(changes.length>visible.length)visible.push(`และอีก ${changes.length-visible.length} จุด`);
+  return(visible.join(' • ')||'ไม่พบค่าที่เปลี่ยน').slice(0,1800);
 }
 function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
 function stockPerformanceStats(record){
@@ -3452,8 +3473,9 @@ function fillSystemSettingsForm(settings){
     cutoffPtSaturday:normalized.deadlines.pt.saturday
   };
   Object.entries(map).forEach(([id,minutes])=>{const el=document.getElementById(id);if(el)el.value=minutesToTimeText(minutes);});
+  const overdue=document.getElementById('stockOverdueDays');if(overdue)overdue.value=String(normalized.stockOverdueDays);
 }
-function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHIFT_DEADLINES});}
+function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHIFT_DEADLINES,stockOverdueDays:3});}
 async function saveSystemSettings(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
   const values={
@@ -3461,12 +3483,13 @@ async function saveSystemSettings(){
     pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffPtSaturday')?.value)}
   };
   if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
-  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
+  const overdueDays=Math.round(Number(document.getElementById('stockOverdueDays')?.value));if(!Number.isFinite(overdueDays)||overdueDays<1||overdueDays>30)return showToast('⚠️ จำนวนวันแจ้งงานค้างต้องอยู่ระหว่าง 1–30 วัน','warning');
+  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),stockOverdueDays:overdueDays,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
   try{
     applySystemSettings(settings);
     if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
     if(window.FB?.fbSaveSystemSettings)await window.FB.fbSaveSystemSettings(settings);
-    await writeAuditLog('update','settings','แก้ไขเวลา Cutoff ระบบ',{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    await writeAuditLog('update','settings',`แก้ไขเวลา Cutoff และตั้งแจ้งงานเบิกค้างเกิน ${overdueDays} วัน`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     buildChecklist();refreshWebAlerts(false);loadDashboard();
     showToast('✅ บันทึกเวลาระบบแล้ว — ทุกเครื่องจะใช้เวลานี้หลังโหลดข้อมูลใหม่','success');
   }catch(e){
@@ -3478,7 +3501,7 @@ function renderSettings(){
   if(!isAdminLoggedIn) return;
   const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
-  fillSystemSettingsForm({deadlines:SHIFT_DEADLINES});
+  fillSystemSettingsForm({deadlines:SHIFT_DEADLINES,stockOverdueDays});
   renderStockScheduleCategoryChoices();renderStockSchedulesAdmin();
   renderClItems();
 }
@@ -3564,7 +3587,7 @@ function firebaseBackupCounts(data){
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
@@ -4027,7 +4050,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260726-fair-stock-confirm-v42';
+const APP_VERSION = 'v20260726-stock-overdue-audit-v43';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
