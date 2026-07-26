@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-workflow-v26">
+<meta name="version" content="v20260726-mobile-history-evaluation-v27">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -594,9 +594,9 @@ tr:hover td{background:var(--g1)}
 .loading-overlay.hidden{display:none}
 .spin{width:44px;height:44px;border:4px solid var(--g2);border-top-color:var(--bd);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));padding:5px 7px env(safe-area-inset-bottom);background:rgba(255,255,255,.98);border-top:1px solid var(--g2);box-shadow:0 -4px 18px rgba(15,76,129,.14);z-index:300;align-items:stretch;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));padding:5px 7px env(safe-area-inset-bottom);background:rgba(255,255,255,.98);border-top:1px solid var(--g2);box-shadow:0 -4px 18px rgba(15,76,129,.14);z-index:300;align-items:stretch;overflow:hidden}
 .mobile-nav::-webkit-scrollbar{display:none}
-.mn-item{flex:0 0 78px;min-width:78px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:var(--g6);background:none;border:none;border-radius:12px;padding:7px 5px;transition:color .15s,background .15s,transform .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;scroll-snap-align:center}
+.mn-item{flex:1 1 20%;min-width:0;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:var(--g6);background:none;border:none;border-radius:12px;padding:7px 2px;transition:color .15s,background .15s,transform .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .mn-item.active{color:var(--bd);background:var(--bl)}
 .mn-item:active{background:var(--bl)}
 .mn-icon{font-size:23px;line-height:1}
@@ -642,7 +642,6 @@ tr:hover td{background:var(--g1)}
 @media(max-width:768px){
   #adminPanel-settings .card>div[style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
-  .mobile-nav:after{content:"";flex:0 0 1px}
   .mn-item:active{transform:scale(.96);background:#DCEEFF}
 }
 @media print{.topbar,.sidebar,.act-row,.ci-acts,.mobile-nav{display:none!important}.main{padding:0}}
@@ -767,6 +766,10 @@ tr:hover td{background:var(--g1)}
   <div class="stock-hero">
     <div><div class="stock-hero-title">เช็กของคงเหลือ แล้วระบบช่วยคำนวณจำนวนที่ควรเบิก</div><div class="stock-hero-note">หากของไม่มี หรือต้องทำบันทึกข้อความเพิ่มเติม ให้เลือกสถานะและเขียนหมายเหตุเพื่อแจ้งนักกายภาพบำบัดกับหัวหน้างาน</div></div>
     <span class="stock-week-badge" id="stockDueBadge">📅 รอบประจำสัปดาห์</span>
+  </div>
+  <div class="card" style="margin-bottom:14px;border-left:4px solid #2563EB;background:#F8FBFF">
+    <h3 style="margin-bottom:6px">ℹ️ สถานะในแบบฟอร์มนี้ใช้เมื่อ “ตรวจของ”</h3>
+    <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>ปกติ/เพียงพอ</strong> = ของยังใช้ได้ตามปกติ • <strong>ไม่พบของในหน่วยงาน</strong> = ของหมดหรือหาไม่พบตอนตรวจ • <strong>ต้องทำบันทึกเพิ่มเติม</strong> = มีเหตุผลหรือเอกสารที่ต้องแจ้งเพิ่ม<br><span style="color:#1D4ED8;font-weight:700">หลังบันทึกแล้ว แอดมินจะเป็นผู้เปลี่ยนผลพัสดุเป็น รอส่งเบิก / ส่งเบิกแล้ว / ได้บางส่วน / พัสดุแจ้งไม่มี / รับครบ / ยกเลิก ผู้ช่วยไม่ต้องย้อนมาแก้เอง</span></div>
   </div>
   <div class="card stock-meta-grid">
     <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" onchange="updateStockWeekBadge()"></div>
@@ -974,6 +977,7 @@ tr:hover td{background:var(--g1)}
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px" onclick="resetHisFilter()">ล้าง</button>
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px;margin-left:auto" onclick="exportCSV()">📥 Export CSV</button>
   </div>
+  <div id="historyStockPerformance"></div>
   <div class="card" style="margin-bottom:16px;border-left:4px solid #DC3545">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div>
@@ -1403,10 +1407,8 @@ tr:hover td{background:var(--g1)}
   <button class="mn-item active" id="mnav-checklist" onclick="switchView('checklist',document.getElementById('nav-checklist'));setMobileNav('checklist')"><span class="mn-icon">✅</span><span class="mn-label">Checklist</span></button>
   <button class="mn-item" id="mnav-stock" onclick="switchView('stock',document.getElementById('nav-stock'));setMobileNav('stock')"><span class="mn-icon">📦</span><span class="mn-label">เบิกของ</span></button>
   <button class="mn-item" id="mnav-review" onclick="switchView('review',document.getElementById('nav-review'));setMobileNav('review')"><span class="mn-icon">🔍</span><span class="mn-label">ประเมิน</span></button>
-  <button class="mn-item" id="mnav-dashboard" onclick="switchView('dashboard',document.getElementById('nav-dashboard'));setMobileNav('dashboard')"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></button>
   <button class="mn-item" id="mnav-history" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
-  <button class="mn-item" id="mnav-evaluation" onclick="switchView('evaluation',document.getElementById('nav-evaluation'));setMobileNav('evaluation')"><span class="mn-icon">📝</span><span class="mn-label">ประเมินส่วนตัว</span></button>
-  <button class="mn-item" id="mnav-supervisor" onclick="switchView('supervisor',document.getElementById('nav-supervisor'));setMobileNav('supervisor')"><span class="mn-icon">👔</span><span class="mn-label">หัวหน้า</span></button>
+  <button class="mn-item" id="mnav-evaluation" onclick="switchView('evaluation',document.getElementById('nav-evaluation'));setMobileNav('evaluation')"><span class="mn-icon">📝</span><span class="mn-label">รายบุคคล</span></button>
 </nav>
 
 <!-- MODALS -->
@@ -1444,6 +1446,30 @@ tr:hover td{background:var(--g1)}
       <button class="btn btn-line" onclick="shareToLine()">💬 แชร์ผ่าน LINE</button>
       <button class="btn btn-out" onclick="closeModal('shareModal')">ปิด</button>
     </div>
+  </div>
+</div>
+
+<div class="mo" id="stockShareModal">
+  <div class="modal">
+    <div class="mh"><h2>✅ บันทึกงานเบิกของสำเร็จ</h2><button class="mc-btn" onclick="closeModal('stockShareModal')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13.5px;color:var(--g6);margin-bottom:12px">ข้อมูลขึ้น Firebase แล้ว ส่งลิงก์นี้ให้ PT เปิดหน้าเบิกของและประเมินได้ทันที</p>
+      <div id="stockShareSummary" style="background:#EEF7FF;padding:12px;border-radius:8px;color:var(--bd);font-size:13px;margin-bottom:12px"></div>
+      <div class="link-box"><span id="stockShareLink">https://ptkth14.github.io/pt-kth/</span><button class="link-copy" onclick="copyStockShareLink()">📋 Copy</button></div>
+    </div>
+    <div class="mf"><button class="btn btn-line" onclick="shareStockToLine()">💬 ส่งลิงก์ผ่าน LINE</button><button class="btn btn-out" onclick="closeModal('stockShareModal')">ปิด</button></div>
+  </div>
+</div>
+
+<div class="mo" id="stockWorkflowModal">
+  <div class="modal" style="max-width:700px">
+    <div class="mh"><h2>🚚 อัปเดตผลการเบิกจากพัสดุ</h2><button class="mc-btn" onclick="closeModal('stockWorkflowModal')">✕</button></div>
+    <div class="mb">
+      <div id="stockWorkflowTitle" style="padding:10px 12px;background:var(--g1);border-radius:8px;margin-bottom:12px;font-weight:700;color:var(--bd)"></div>
+      <div style="font-size:12px;color:var(--g6);margin-bottom:12px">แอดมินอัปเดตเมื่อส่งคำขอหรือได้รับคำตอบจากพัสดุ ระบบบันทึกวันเวลาและผู้แก้ไขไว้ในประวัติ</div>
+      <div id="stockWorkflowItems"></div>
+    </div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockWorkflowModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockWorkflow()">💾 บันทึกสถานะพัสดุ</button></div>
   </div>
 </div>
 
@@ -1643,7 +1669,7 @@ const DEFAULT_STOCK_CATALOG=[
   {id:'alcohol-gel',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Gel Alcohol (ล้างมือ)',targetQty:null,targetLabel:'กำหนดตามการใช้งาน',unit:'ขวด'}
 ];
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
-let editingStockRecordId=null, editingStockCatalogIndex=null, activeStockReviewId=null;
+let editingStockRecordId=null, editingStockCatalogIndex=null, activeStockReviewId=null, activeStockWorkflowId=null, lastStockShareRecord=null, stockWorkflowDraftItems=[];
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
@@ -2134,8 +2160,8 @@ function updateStockWeekBadge(){
   if(badge){const isMonday=selected.getDay()===1;badge.textContent=isMonday?'✅ วันจันทร์ — ถึงรอบตรวจสต็อก':'📅 บันทึกย้อนหลัง/เพิ่มเติม';badge.style.color=isMonday?'#176B38':'#8A5A00';badge.style.borderColor=isMonday?'#B9DEC8':'#E8D29B';}
 }
 function stockStatusInfo(item){
-  if(item.issueStatus==='unavailable')return{label:'ไม่มีของ — แจ้งต่อ',className:'issue'};
-  if(item.issueStatus==='memo')return{label:'ต้องทำบันทึกเพิ่ม',className:'issue'};
+  if(item.issueStatus==='unavailable')return{label:'ไม่พบของในหน่วยงาน',className:'issue'};
+  if(item.issueStatus==='memo')return{label:'ต้องทำบันทึกเพิ่มเติม',className:'issue'};
   const request=Number(item.requestQty||0);
   if(request>0)return{label:`ต้องเบิก ${request} ${item.unit||''}`.trim(),className:'order'};
   if(item.currentQty==='')return{label:'รอตรวจ',className:''};
@@ -2154,7 +2180,7 @@ function renderStockGroups(){
       <div class="stock-target">${item.targetQty===null?escapeHtml(item.targetLabel||'ตามความเหมาะสม'):`${item.targetQty} ${escapeHtml(item.unit)}`}</div>
       <div class="stock-current-wrap"><input class="stock-input" type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(item.currentQty)}" oninput="setStockValue(${index},'currentQty',this.value)" aria-label="จำนวนคงเหลือ ${escapeHtml(item.name)}"></div>
       <div class="stock-request-wrap"><input class="stock-input" id="stockRequest-${index}" type="number" min="0" step="1" inputmode="numeric" value="${escapeHtml(item.requestQty)}" oninput="setStockValue(${index},'requestQty',this.value)" aria-label="จำนวนที่เบิก ${escapeHtml(item.name)}"></div>
-      <div class="stock-state-wrap"><select class="stock-select" onchange="setStockValue(${index},'issueStatus',this.value)"><option value="normal"${item.issueStatus==='normal'?' selected':''}>ปกติ</option><option value="unavailable"${item.issueStatus==='unavailable'?' selected':''}>ไม่มีของ</option><option value="memo"${item.issueStatus==='memo'?' selected':''}>ทำบันทึกเพิ่ม</option></select><div id="stockStatus-${index}" style="margin-top:4px">${stockStatusMarkup(index)}</div></div>
+      <div class="stock-state-wrap"><select class="stock-select" onchange="setStockValue(${index},'issueStatus',this.value)"><option value="normal"${item.issueStatus==='normal'?' selected':''}>ปกติ / เพียงพอ</option><option value="unavailable"${item.issueStatus==='unavailable'?' selected':''}>ไม่พบของในหน่วยงาน</option><option value="memo"${item.issueStatus==='memo'?' selected':''}>ต้องทำบันทึกเพิ่มเติม</option></select><div id="stockStatus-${index}" style="margin-top:4px">${stockStatusMarkup(index)}</div></div>
       <div class="stock-note-wrap"><input class="stock-input" maxlength="300" value="${escapeHtml(item.note)}" oninput="setStockValue(${index},'note',this.value)" placeholder="หมายเหตุ (ถ้ามี)"></div>
     </div>`).join('');
     return`<section class="stock-group"><div class="stock-group-head"><h3>${category.icon} ${escapeHtml(category.label)}</h3><span class="stock-group-count">${indexed.length} รายการ</span></div><div class="stock-columns"><span>รายการ</span><span>สต็อกเป้าหมาย</span><span>คงเหลือ</span><span>จำนวนเบิก</span><span>สถานะ</span><span>หมายเหตุ</span></div>${rows}</section>`;
@@ -2198,12 +2224,12 @@ async function submitStockRequest(){
   const missing=stockDraftItems.find(item=>item.currentQty===''&&item.issueStatus==='normal');if(missing)return showToast(`⚠️ กรุณากรอกจำนวนคงเหลือ: ${missing.name}`,'warning');
   const incompleteExtra=stockExtraItems.find(item=>!item.name.trim()||item.currentQty==='');if(incompleteExtra)return showToast('⚠️ กรุณากรอกชื่อและจำนวนคงเหลือของรายการเพิ่มเติมให้ครบ','warning');
   const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&record.responsible===responsible&&Number(record.id)!==Number(editingStockRecordId)))return showToast('⚠️ ผู้รับผิดชอบคนนี้มีบันทึกในสัปดาห์นี้แล้ว','warning');
-  const normalizedBase=stockDraftItems.map(item=>({id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty:Number(item.requestQty||0),issueStatus:item.issueStatus,note:String(item.note||'').trim()}));
-  const normalizedExtra=stockExtraItems.map((item,index)=>({id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty:Number(item.requestQty||0),issueStatus:'normal',note:String(item.note||'').trim()}));
+  const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
+  const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
   const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const record={id:old?.id||Date.now(),date,weekKey,responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',evaluationStatus:old?.evaluationStatus||'pending',ptVerdict:old?.ptVerdict||'',ptReviewer:old?.ptReviewer||'',ptComment:old?.ptComment||'',reviewedAt:old?.reviewedAt||'',reviewTimeDisplay:old?.reviewTimeDisplay||''};
   try{
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}ตรวจสต็อกประจำสัปดาห์โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}ตรวจสต็อกประจำสัปดาห์โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');if(!old)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
 }
 function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
@@ -2213,6 +2239,24 @@ function stockPerformanceStats(record){
   const autoScore=Math.round(completionPct*.4+clarityPct*.3);const reviewScore=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?18:0;return{completionPct,clarityPct,totalScore:Math.min(100,autoScore+reviewScore),reviewed:Boolean(record?.ptVerdict)};
 }
 function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':'รอ PT ประเมิน';}
+const STOCK_FULFILLMENT_META={
+  not_required:{label:'ไม่ต้องเบิก',color:'#6C757D'},pending:{label:'รอส่งพัสดุ',color:'#9A6700'},submitted:{label:'ส่งเบิกแล้ว',color:'#1565C0'},
+  partial:{label:'ได้รับบางส่วน',color:'#C2410C'},unavailable:{label:'พัสดุแจ้งไม่มี',color:'#B02A37'},received:{label:'รับของครบ',color:'#176B38'},cancelled:{label:'ยกเลิก',color:'#6C757D'}
+};
+function stockFulfillmentInfo(item){return STOCK_FULFILLMENT_META[item?.fulfillmentStatus]||STOCK_FULFILLMENT_META.pending;}
+function stockShareUrl(record){return`https://ptkth14.github.io/pt-kth/?stock=${encodeURIComponent(record?.id||'')}`;}
+function openStockShare(record){lastStockShareRecord=record;const link=stockShareUrl(record);const linkEl=document.getElementById('stockShareLink');if(linkEl)linkEl.textContent=link;const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${thaiDate(record.date)} • ${record.responsible} • รอ PT ประเมิน`;document.getElementById('stockShareModal').classList.add('open');}
+async function copyStockShareLink(){const link=stockShareUrl(lastStockShareRecord);await navigator.clipboard.writeText(link);showToast('📋 คัดลอกลิงก์งานเบิกของแล้ว','success');}
+function shareStockToLine(){const record=lastStockShareRecord;if(!record)return;const msg=encodeURIComponent(`📦 มีงานเบิกของและตรวจสต็อกรอ PT ประเมิน\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}\nเปิดระบบ: ${stockShareUrl(record)}`);window.open('https://line.me/R/share?text='+msg,'_blank');}
+function openStockWorkflow(id){
+  if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;activeStockWorkflowId=record.id;stockWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:item.fulfillmentStatus||'pending',fulfillmentNote:item.fulfillmentNote||''}));
+  document.getElementById('stockWorkflowTitle').textContent=`${thaiDate(record.date)} • ${record.responsible}`;const wrap=document.getElementById('stockWorkflowItems');wrap.innerHTML=stockWorkflowDraftItems.length?stockWorkflowDraftItems.map((item,index)=>`<div style="display:grid;grid-template-columns:minmax(160px,1.3fr) minmax(150px,.8fr) minmax(170px,1fr);gap:9px;align-items:center;padding:10px;border:1px solid var(--g2);border-radius:9px;margin-bottom:8px"><div><strong>${escapeHtml(item.name)}</strong><div style="font-size:11px;color:var(--g6)">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" onchange="setStockWorkflowValue(${index},'fulfillmentStatus',this.value)">${Object.entries(STOCK_FULFILLMENT_META).filter(([key])=>key!=='not_required').map(([key,meta])=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${meta.label}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:20px">รายการนี้ไม่มีจำนวนที่ขอเบิก</div>';document.getElementById('stockWorkflowModal').classList.add('open');
+}
+function setStockWorkflowValue(index,field,value){if(stockWorkflowDraftItems[index])stockWorkflowDraftItems[index][field]=value;}
+async function saveStockWorkflow(){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const record=stockRecords.find(item=>Number(item.id)===Number(activeStockWorkflowId));if(!record)return;const draftMap=new Map(stockWorkflowDraftItems.map(item=>[item.id,item]));const now=new Date();const updated={...record,items:(record.items||[]).map(item=>draftMap.has(item.id)?{...item,fulfillmentStatus:draftMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(draftMap.get(item.id).fulfillmentNote||'').trim()}:item),procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:currentAdminEmail()};
+  try{await window.FB.fbSaveStockRequest(updated);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`อัปเดตผลพัสดุของ ${record.responsible}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});closeModal('stockWorkflowModal');renderStockHistory();renderStockPerformancePanels();showToast('✅ อัปเดตสถานะพัสดุแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
 function renderStockHistory(){
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
