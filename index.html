@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-3stage-v35">
+<meta name="version" content="v20260726-fair-stock-confirm-v42">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -131,6 +131,13 @@
         const snap = await db.collection('submissions').get();
         return snap.docs.map(function(d) { return d.data(); });
       },
+      fbGetRecentSubmissions: async function(limitCount) {
+        const recent = await db.collection('submissions').orderBy('date', 'desc').limit(Number(limitCount)||500).get();
+        const pending = await db.collection('submissions').where('status', '==', 'pending').get();
+        const map = new Map();
+        recent.docs.concat(pending.docs).forEach(function(d) { map.set(d.id, d.data()); });
+        return Array.from(map.values());
+      },
       fbSaveSubmission: async function(record) {
         await db.collection('submissions').doc(String(record.id)).set(record);
       },
@@ -157,6 +164,13 @@
       fbGetStockRequests: async function() {
         const snap = await db.collection('stock_requests').get();
         return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetRecentStockRequests: async function(limitCount) {
+        const recent = await db.collection('stock_requests').orderBy('date', 'desc').limit(Number(limitCount)||300).get();
+        const open = await db.collection('stock_requests').where('ptVerdict', '==', '').get();
+        const map = new Map();
+        recent.docs.concat(open.docs).forEach(function(d) { map.set(d.id, d.data()); });
+        return Array.from(map.values());
       },
       fbSaveStockRequest: async function(record) {
         await db.collection('stock_requests').doc(String(record.id)).set(record);
@@ -217,6 +231,39 @@
       fbGetMissedEvaluations: async function() {
         const snap = await db.collection('missed_evaluations').get();
         return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetRecentMissedEvaluations: async function(limitCount) {
+        const snap = await db.collection('missed_evaluations').orderBy('date', 'desc').limit(Number(limitCount)||500).get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetReportRange: async function(startDate, endDate) {
+        const range = function(name) {
+          return db.collection(name).where('date', '>=', String(startDate)).where('date', '<=', String(endDate)).get();
+        };
+        const results = await Promise.all([
+          range('submissions'), range('stock_requests'), range('missed_evaluations'),
+          range('assistant_evaluations'), range('supervisor_notes')
+        ]);
+        const rows = function(snap) { return snap.docs.map(function(d) { return d.data(); }); };
+        return {
+          submissions: rows(results[0]), stockRequests: rows(results[1]),
+          missedEvaluations: rows(results[2]), assistantEvaluations: rows(results[3]),
+          supervisorNotes: rows(results[4])
+        };
+      },
+      fbGetPublicHistoryRange: async function(startDate, endDate) {
+        const range = function(name) {
+          return db.collection(name).where('date', '>=', String(startDate)).where('date', '<=', String(endDate)).get();
+        };
+        const results = await Promise.all([
+          range('submissions'), range('stock_requests'), range('missed_evaluations')
+        ]);
+        const rows = function(snap) { return snap.docs.map(function(d) { return d.data(); }); };
+        return {
+          submissions: rows(results[0]),
+          stockRequests: rows(results[1]),
+          missedEvaluations: rows(results[2])
+        };
       },
       fbSaveMissedEvaluation: async function(record) {
         await db.collection('missed_evaluations').doc(String(record.id)).set(record);
@@ -362,7 +409,7 @@
   --r8:8px;--r12:12px;--mobile-nav-h:74px;--topbar-h:80px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);min-height:100vh}
+body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);min-height:100vh;overflow-x:hidden}
 .topbar{background:linear-gradient(118deg,#082F52 0%,#0E4C80 54%,#176EA5 100%);color:#fff;padding:0 28px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 8px 28px rgba(6,39,68,.24);border-bottom:1px solid rgba(255,255,255,.16);isolation:isolate;overflow:visible}
 .topbar::before{content:'';position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 18% -60%,rgba(91,190,244,.32),transparent 43%),linear-gradient(90deg,transparent 0%,rgba(255,255,255,.035) 48%,transparent 75%);pointer-events:none}
 .topbar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#55D87A 0%,#70D7FF 48%,rgba(112,215,255,0) 88%);opacity:.78;pointer-events:none}
@@ -405,8 +452,10 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .sf-av{width:32px;height:32px;background:var(--bl);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--bd);flex-shrink:0}
 .sf-name{font-size:13px;font-weight:700}
 .sf-role{font-size:11px;color:var(--g4)}
-.main{flex:1;overflow-y:auto;padding:18px 22px;padding-bottom:80px}
-.view{display:none}.view.active{display:block}
+.main{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;padding:18px 22px;padding-bottom:80px}
+.view{display:none;min-width:0;max-width:100%}.view.active{display:block}
+.card,.stock-group,.stock-history-card,.monthly-report-preview{min-width:0;max-width:100%}
+img,svg,canvas{max-width:100%}
 .ph{margin-bottom:18px}
 .ph h1{font-size:21px;font-weight:800;color:var(--bd)}
 .ph p{font-size:13px;color:var(--g6);margin-top:3px}
@@ -552,7 +601,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .card canvas{max-width:100%;display:block}
 .card h3{font-size:14.5px;font-weight:800;margin-bottom:14px;color:var(--g8)}
 .chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
-.tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow:hidden}
+.tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse}
 th{background:var(--bd);color:#fff;font-size:12px;font-weight:700;padding:10px 13px;text-align:left}
 td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--g2)}
@@ -563,14 +612,14 @@ tr:hover td{background:var(--g1)}
 .tw2{background:var(--yb);color:#856404}.td0{background:var(--g2);color:var(--g6)}
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:16px}
 .mo.open{display:flex}
-.modal{background:#fff;border-radius:var(--r12);width:100%;max-width:540px;box-shadow:var(--sh3);overflow:hidden;animation:su .2s ease}
+.modal{background:#fff;border-radius:var(--r12);width:100%;max-width:540px;max-height:calc(100dvh - 32px);box-shadow:var(--sh3);overflow:hidden;animation:su .2s ease;display:flex;flex-direction:column}
 .modal.wide{max-width:680px}
 @keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .mh{padding:18px 22px 14px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between}
 .mh h2{font-size:17px;font-weight:800;color:var(--bd)}
 .mc-btn{background:none;border:none;font-size:19px;cursor:pointer;color:var(--g4);padding:4px;line-height:1}
 .mc-btn:hover{color:var(--g8)}
-.mb{padding:18px 22px;max-height:62vh;overflow-y:auto}
+.mb{padding:18px 22px;max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .mf{padding:14px 22px;border-top:1px solid var(--g2);display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
 .fg{margin-bottom:14px}
 .fg label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}
@@ -644,6 +693,50 @@ tr:hover td{background:var(--g1)}
   .topbar{padding:0 13px}.alert-bell{width:38px;height:38px}
 }
 @media(min-width:769px) and (max-width:1050px){.live{display:none}.tsubtitle{max-width:360px}}
+@media(min-width:769px) and (max-width:1180px){
+  .sidebar{width:200px}
+  .main{padding:16px 16px 70px}
+  .clock{display:none}
+  .tsubtitle{max-width:260px}
+  .stock-meta-grid{grid-template-columns:1fr 1fr}
+  .stock-columns{display:none}
+  .stock-item-row{grid-template-columns:1fr 1fr;padding:13px}
+  .stock-item-name{grid-column:1/-1;font-size:14px}
+  .stock-item-row>*{min-width:0}
+  .stock-item-row>*::before{display:block;font-size:9.5px;color:var(--g4);font-weight:700;margin-bottom:3px}
+  .stock-target::before{content:'สต็อกเป้าหมาย'}
+  .stock-current-wrap::before{content:'คงเหลือปัจจุบัน'}
+  .stock-request-wrap::before{content:'จำนวนที่เบิก'}
+  .stock-state-wrap::before{content:'สถานะพิเศษ'}
+  .stock-note-wrap::before{content:'หมายเหตุ'}
+  .stock-note-wrap{grid-column:1/-1}
+  .stock-extra-row{grid-template-columns:1fr 1fr}
+  .stock-extra-row>*{min-width:0}
+  .stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note{grid-column:1/-1}
+  .stock-extra-row .btn{grid-column:1/-1;justify-content:center}
+  .stock-review-item{grid-template-columns:minmax(150px,1fr) minmax(170px,1fr)}
+  .stock-review-item>input{grid-column:1/-1}
+  .stock-schedule-row{grid-template-columns:1fr auto}
+  .stock-schedule-row>div:nth-child(2){display:none}
+  .report-filter-grid{grid-template-columns:1fr 1fr}
+  .report-filter-grid .fg:last-child{grid-column:1/-1}
+  .chart-grid{grid-template-columns:1fr}
+  .modal.wide{max-width:min(760px,calc(100vw - 32px))}
+  #adminPanel-settings .card>div[style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
+  #adminPanel-settings .card>div[style*="minmax(200px,1.4fr)"]{grid-template-columns:1fr!important}
+  #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:560px){
+  .stock-item-row,.stock-extra-row{grid-template-columns:1fr}
+  .stock-item-name,.stock-note-wrap,.stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note,.stock-extra-row .btn{grid-column:1}
+  .card{padding:14px}
+  .mo{padding:8px}
+  .modal{max-height:calc(100dvh - 16px);border-radius:10px}
+  .mh{padding:14px 15px 11px}.mh h2{font-size:15px}
+  .mb{padding:14px 15px}.mf{padding:11px 15px}
+  .link-box{align-items:stretch;flex-direction:column}
+  .link-copy{width:100%}
+}
 .toast{position:fixed;bottom:calc(var(--mobile-nav-h) + 12px);right:22px;background:var(--g8);color:#fff;padding:11px 18px;border-radius:var(--r8);font-size:13.5px;box-shadow:var(--sh3);z-index:9999;display:flex;align-items:center;gap:9px;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--g)}.toast.error{background:var(--r)}.toast.warning{background:var(--o)}
@@ -780,7 +873,7 @@ tr:hover td{background:var(--g1)}
   </div>
   <div class="card" style="margin-bottom:14px;border-left:4px solid #2563EB;background:#F8FBFF">
     <h3 style="margin-bottom:6px">ℹ️ วิธีบันทึกการตรวจสต็อก</h3>
-    <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">หลัง PT ประเมิน ผู้ช่วยเจ้าของรายการหรือแอดมินอัปเดตผลพัสดุได้ โดยไม่เปลี่ยนคะแนนเดิม</span></div>
+    <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
   </div>
   <div class="card stock-meta-grid">
     <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" onchange="handleStockDateChange()"></div>
@@ -798,7 +891,7 @@ tr:hover td{background:var(--g1)}
     <div class="act-row" style="margin-top:0;padding-top:4px"><button id="stockSaveBtn" class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">แสดงรายการล่าสุดและของที่ต้องติดตาม</div></div><span class="tag" id="stockHistoryCount">0 รอบ</span></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">แสดง 20 รายการล่าสุด ส่วนประวัติรวมดูได้จากหน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')">ดูประวัติรวม</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
     <div id="stockHistorySummary" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="stockHistoryList" class="stock-history-list"><div style="text-align:center;color:var(--g4);padding:20px">ยังไม่มีประวัติ</div></div>
   </div>
@@ -985,7 +1078,7 @@ tr:hover td{background:var(--g1)}
       <option value="partial">ผ่านบางส่วน</option>
       <option value="fail">ไม่ผ่าน</option>
     </select>
-    <button class="btn btn-pri" style="padding:6px 14px;font-size:13px" onclick="loadHistory()">🔍 ค้นหา</button>
+    <button class="btn btn-pri" style="padding:6px 14px;font-size:13px" onclick="searchHistory()">🔍 ค้นหา</button>
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px" onclick="resetHisFilter()">ล้าง</button>
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px;margin-left:auto" onclick="exportCSV()">📥 Export CSV</button>
   </div>
@@ -1060,6 +1153,10 @@ tr:hover td{background:var(--g1)}
       <thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th></th></tr></thead>
       <tbody id="historyBody"><tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการ</td></tr></tbody>
     </table>
+  </div>
+  <div id="historyLoadMoreWrap" style="display:none;text-align:center;padding:14px 0 4px">
+    <button class="btn btn-out" id="historyLoadMoreBtn" onclick="loadMoreHistory()">แสดงประวัติเพิ่ม</button>
+    <div id="historyCountText" style="margin-top:7px;font-size:12px;color:var(--g5)"></div>
   </div>
 </div>
 
@@ -1480,13 +1577,13 @@ tr:hover td{background:var(--g1)}
 
 <div class="mo" id="stockShareModal">
   <div class="modal">
-    <div class="mh"><h2>✅ บันทึกงานเบิกของสำเร็จ</h2><button class="mc-btn" onclick="closeModal('stockShareModal')">✕</button></div>
+    <div class="mh"><h2 id="stockShareTitle">✅ บันทึกงานเบิกของสำเร็จ</h2><button class="mc-btn" onclick="closeModal('stockShareModal')">✕</button></div>
     <div class="mb">
-      <p style="font-size:13.5px;color:var(--g6);margin-bottom:12px">ข้อมูลขึ้น Firebase แล้ว ส่งลิงก์นี้ให้ PT เปิดหน้าเบิกของและประเมินได้ทันที</p>
+      <p id="stockShareDescription" style="font-size:13.5px;color:var(--g6);margin-bottom:12px">ข้อมูลขึ้น Firebase แล้ว สามารถแจ้ง PT ให้ทราบรายการที่จะดำเนินการเบิกได้</p>
       <div id="stockShareSummary" style="background:#EEF7FF;padding:12px;border-radius:8px;color:var(--bd);font-size:13px;margin-bottom:12px"></div>
       <div class="link-box"><span id="stockShareLink">https://ptkth14.github.io/pt-kth/</span><button class="link-copy" onclick="copyStockShareLink()">📋 Copy</button></div>
     </div>
-    <div class="mf"><button class="btn btn-line" onclick="shareStockToLine()">💬 ส่งลิงก์ผ่าน LINE</button><button class="btn btn-out" onclick="closeModal('stockShareModal')">ปิด</button></div>
+    <div class="mf"><button class="btn btn-line" id="stockShareLineBtn" onclick="shareStockToLine()">💬 แจ้งรายการเบิกผ่าน LINE</button><button class="btn btn-out" onclick="closeModal('stockShareModal')">ปิด</button></div>
   </div>
 </div>
 
@@ -1537,16 +1634,25 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
-<!-- MODAL: รายงานรายเดือน -->
+<!-- MODAL: รายงานตามช่วงเวลา -->
 <div class="mo" id="monthlyReportModal">
   <div class="modal wide">
     <div class="mh">
-      <h2>📋 รายงานประจำเดือน</h2>
+      <h2>📋 รายงานตามช่วงเวลา</h2>
       <button class="mc-btn" onclick="closeModal('monthlyReportModal')">✕</button>
     </div>
     <div class="mb">
       <div class="report-filter-grid">
         <div class="fg">
+          <label style="font-size:12px">รอบรายงาน</label>
+          <select id="reportPeriodType" class="sb-sel" style="padding:8px 10px" onchange="updateReportPeriodFields();previewMonthlyReport()">
+            <option value="month">รายเดือน</option>
+            <option value="quarter">รายไตรมาส</option>
+            <option value="year">รายปี</option>
+            <option value="custom">กำหนดช่วงเอง</option>
+          </select>
+        </div>
+        <div class="fg" id="reportMonthGroup">
           <label style="font-size:12px">เดือน</label>
           <select id="reportMonth" class="sb-sel" style="padding:8px 10px" onchange="previewMonthlyReport()">
             <option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option>
@@ -1557,9 +1663,26 @@ tr:hover td{background:var(--g1)}
             <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
           </select>
         </div>
-        <div class="fg">
+        <div class="fg" id="reportQuarterGroup" style="display:none">
+          <label style="font-size:12px">ไตรมาส</label>
+          <select id="reportQuarter" class="sb-sel" style="padding:8px 10px" onchange="previewMonthlyReport()">
+            <option value="1">ไตรมาส 1 (ม.ค.–มี.ค.)</option>
+            <option value="2">ไตรมาส 2 (เม.ย.–มิ.ย.)</option>
+            <option value="3">ไตรมาส 3 (ก.ค.–ก.ย.)</option>
+            <option value="4">ไตรมาส 4 (ต.ค.–ธ.ค.)</option>
+          </select>
+        </div>
+        <div class="fg" id="reportYearGroup">
           <label style="font-size:12px">ปี (พ.ศ.)</label>
           <input type="number" id="reportYear" style="padding:8px 10px" min="2560" max="2600" onchange="previewMonthlyReport()">
+        </div>
+        <div class="fg" id="reportCustomStartGroup" style="display:none">
+          <label style="font-size:12px">วันที่เริ่มต้น</label>
+          <input type="date" id="reportCustomStart" onchange="previewMonthlyReport()">
+        </div>
+        <div class="fg" id="reportCustomEndGroup" style="display:none">
+          <label style="font-size:12px">วันที่สิ้นสุด</label>
+          <input type="date" id="reportCustomEnd" onchange="previewMonthlyReport()">
         </div>
         <div class="fg">
           <label style="font-size:12px">ผู้ช่วย</label>
@@ -1614,20 +1737,21 @@ tr:hover td{background:var(--g1)}
       <div id="stockReviewTitle" style="padding:10px 12px;background:var(--g1);border-radius:9px;margin-bottom:14px;color:var(--bd);font-weight:700"></div>
       <div class="fg"><label>PT ผู้กรอกผลและประเมิน</label><select id="stockReviewPt"></select></div>
       <div class="stock-review-workflow">
-        <div class="stock-review-workflow-head">🚚 ผลที่ผู้ช่วยกลับมารายงานหลังเบิกของ</div>
-        <div class="stock-review-workflow-note">PT เลือกผลตามที่ผู้ช่วยรายงานในแต่ละรายการ หากได้รับบางส่วน พัสดุไม่มีของ หรือยกเลิก ต้องระบุหมายเหตุ</div>
+        <div class="stock-review-workflow-head">🚚 ผลที่ผู้ช่วยกลับมารายงานหลังเบิกของ <span class="tag tp" style="margin-left:6px">ไม่คิดคะแนน</span></div>
+        <div class="stock-review-workflow-note">ส่วนนี้ใช้ติดตามผลจากพัสดุเท่านั้น “ได้รับบางส่วน” หรือ “พัสดุไม่มีของ” ไม่ใช่ความผิดผู้ช่วยและไม่ลดคะแนน</div>
         <div id="stockReviewWorkflowItems"></div>
       </div>
       <div style="padding:11px 12px;background:#F8FBFF;border:1px solid #D9EAF7;border-radius:9px;margin-bottom:12px">
         <div style="font-weight:800;color:var(--bd);margin-bottom:4px">1. ความครบถ้วน — 40 คะแนน</div>
         <div id="stockReviewCompletion" style="font-size:12px;color:var(--g6)">ระบบตรวจจากช่องจำนวนคงเหลือให้อัตโนมัติ</div>
       </div>
-      <div class="fg"><label>2. จำนวนที่ขอเบิกเหมาะสม — 30 คะแนน</label><select id="stockReviewAccuracy" onchange="updateStockReviewScorePreview()"><option value="">— เลือกผล —</option><option value="30">เหมาะสม (30)</option><option value="15">คลาดเคลื่อนเล็กน้อย (15)</option><option value="0">ไม่เหมาะสม (0)</option></select></div>
-      <div class="fg"><label>3. การระบุปัญหาและหมายเหตุ — 30 คะแนน</label><select id="stockReviewCommunication" onchange="updateStockReviewScorePreview()"><option value="">— เลือกผล —</option><option value="30">ชัดเจน หรือไม่มีปัญหา (30)</option><option value="15">เข้าใจได้แต่รายละเอียดไม่ครบ (15)</option><option value="0">ไม่ระบุทั้งที่พบปัญหา (0)</option></select></div>
+      <div class="fg"><label>2. จำนวนที่ขอเบิกเหมาะสม — 30 คะแนน</label><select id="stockReviewAccuracy" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">เหมาะสมตามสต็อกและการใช้งาน (30)</option><option value="15">คลาดเคลื่อนจากความต้องการเล็กน้อย (15)</option><option value="0">ไม่มีเหตุผลรองรับจำนวนที่ขอเบิก (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ตัดสินจากจำนวนที่ผู้ช่วยขอ ไม่ใช่จำนวนที่พัสดุจ่ายให้จริง</div></div>
+      <div class="fg"><label>3. การระบุปัญหาและการส่งต่องาน — 30 คะแนน</label><select id="stockReviewCommunication" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">ข้อมูลชัดเจนและทำตามขั้นตอนครบ (30)</option><option value="15">ข้อมูลเข้าใจได้แต่รายละเอียดไม่ครบ (15)</option><option value="0">ไม่แจ้งข้อมูลสำคัญหรือข้ามขั้นตอน (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ห้ามลดคะแนนเพียงเพราะพัสดุให้ของไม่ครบหรือไม่มีของ</div></div>
       <div id="stockReviewScorePreview" style="padding:12px 14px;border-radius:9px;background:#EEF7FF;color:var(--bd);font-weight:800;margin-bottom:12px">คะแนนรวม —</div>
-      <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="ข้อเสนอแนะหรือสิ่งที่ต้องแก้ไข..."></textarea></div>
+      <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="หากหักคะแนน กรุณาระบุสิ่งที่ผู้ช่วยต้องปรับปรุง..."></textarea></div>
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #B7DFC4;background:#F3FBF5;border-radius:9px;font-size:12px;line-height:1.55;cursor:pointer"><input type="checkbox" id="stockReviewFairConfirm" onchange="updateStockReviewReadiness()" style="margin-top:3px"><span><strong style="color:#176B38">ยืนยันก่อนบันทึก</strong><br>ฉันประเมินจากผลงานของผู้ช่วยครบทั้ง 2 หัวข้อ และไม่ได้นำผลที่พัสดุจ่ายของไม่ครบหรือไม่มีของมาหักคะแนน</span></label>
     </div>
-    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" onclick="saveStockReview()">💾 บันทึกผลพัสดุและคะแนน</button></div>
+    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" id="stockReviewSaveBtn" onclick="saveStockReview()" disabled>💾 บันทึกผลพัสดุและคะแนน</button></div>
   </div>
 </div>
 
@@ -1701,7 +1825,9 @@ const DEFAULT_STOCK_SCHEDULES=[
 ];
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
 let stockSchedules=DEFAULT_STOCK_SCHEDULES.map(item=>({...item,categories:[...item.categories]}));
-let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[];
+let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[], isSavingStockRequest=false, isSavingStockReview=false;
+const HISTORY_PAGE_SIZE=25;
+let historyVisibleCount=HISTORY_PAGE_SIZE;
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
@@ -1845,11 +1971,11 @@ async function init(){
       }
       _applyCLCustom();
       setLoadingDetail('โหลด submissions...');
-      const subs = await withTimeout(window.FB.fbGetSubmissions());
+      const subs = await withTimeout(window.FB.fbGetRecentSubmissions(500));
       submissions = Array.isArray(subs) ? subs : [];
       setLoadingDetail('โหลดรายการไม่ได้ประเมิน...');
       try {
-        const missed = await withTimeout(window.FB.fbGetMissedEvaluations());
+        const missed = await withTimeout(window.FB.fbGetRecentMissedEvaluations(500));
         missedEvaluations = Array.isArray(missed) ? missed : [];
       } catch (missedError) {
         missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
@@ -1865,7 +1991,7 @@ async function init(){
       }
       setLoadingDetail('โหลดข้อมูลเบิกของและสต็อก...');
       try {
-        const stocks = await withTimeout(window.FB.fbGetStockRequests());
+        const stocks = await withTimeout(window.FB.fbGetRecentStockRequests(300));
         stockRecords = Array.isArray(stocks) ? stocks : [];
       } catch (stockError) {
         stockRecords = JSON.parse(localStorage.getItem('pt_stock_requests')||'[]');
@@ -1915,6 +2041,11 @@ async function init(){
   const linkedStockId=new URLSearchParams(window.location.search).get('stock');
   if(linkedStockId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockId))){
     switchView('review',document.getElementById('nav-review'));setMobileNav('review');openStockReview(Number(linkedStockId));
+  }
+  const linkedStockInfoId=new URLSearchParams(window.location.search).get('stockInfo');
+  if(linkedStockInfoId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockInfoId))){
+    switchView('stock',document.getElementById('nav-stock'));setMobileNav('stock');
+    showToast('📦 เปิดรายการที่ผู้ช่วยแจ้งว่าจะดำเนินการเบิกแล้ว','success');
   }
   if(isAdminLoggedIn)await migrateLegacySupervisorNotes();
   // sync mobile/desktop inputs
@@ -2337,19 +2468,23 @@ function resetStockDraft(withConfirm){
   if(withConfirm)showConfirm('ล้างจำนวนคงเหลือและรายการเบิกทั้งหมดใช่หรือไม่?',reset);else reset();
 }
 async function submitStockRequest(){
+  if(isSavingStockRequest)return showToast('⏳ ระบบกำลังบันทึก กรุณารอสักครู่','warning');
   const date=document.getElementById('stockDate')?.value||'';const responsible=document.getElementById('stockResponsible')?.value||'';const overallNote=(document.getElementById('stockOverallNote')?.value||'').trim();const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);
   if(!date)return showToast('⚠️ กรุณาเลือกวันที่ตรวจสต็อก','warning');if(!schedule)return showToast('⚠️ กรุณาเลือกรอบตรวจสต็อก','warning');if(!responsible)return showToast('⚠️ กรุณาเลือกผู้รับผิดชอบ','warning');if(!stockDraftItems.length)return showToast('⚠️ รอบนี้ยังไม่มีรายการวัสดุ กรุณาให้แอดมินตรวจหมวดของรอบ','warning');
   const missing=stockDraftItems.find(item=>item.currentQty==='');if(missing)return showToast(`⚠️ กรุณากรอกจำนวนคงเหลือ: ${missing.name}`,'warning');
   const problemWithoutNote=stockDraftItems.find(item=>item.issueStatus!=='normal'&&!String(item.note||'').trim());if(problemWithoutNote)return showToast(`⚠️ กรุณาอธิบายปัญหา: ${problemWithoutNote.name}`,'warning');
   const incompleteExtra=stockExtraItems.find(item=>!item.name.trim()||item.currentQty==='');if(incompleteExtra)return showToast('⚠️ กรุณากรอกชื่อและจำนวนคงเหลือของรายการเพิ่มเติมให้ครบ','warning');
-  const weekKey=mondayKeyFromDate(date);if(stockRecords.some(record=>record.weekKey===weekKey&&(record.scheduleId||'weekly-all')===schedule.id&&record.responsible===responsible&&Number(record.id)!==Number(editingStockRecordId)))return showToast(`⚠️ ผู้รับผิดชอบคนนี้บันทึกรอบ “${schedule.name}” ในสัปดาห์นี้แล้ว`,'warning');
+  const weekKey=mondayKeyFromDate(date);
   const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
   const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
-  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',procurementStage:old?.procurementStage||'awaiting_dispatch',stageUpdatedAt:old?.stageUpdatedAt||now.toISOString(),evaluationStatus:old?.evaluationStatus||'pending',ptVerdict:old?.ptVerdict||'',ptReviewer:old?.ptReviewer||'',ptComment:old?.ptComment||'',ptAccuracyScore:Number(old?.ptAccuracyScore||0),ptCommunicationScore:Number(old?.ptCommunicationScore||0),stockScore:Number(old?.stockScore||0),reviewedAt:old?.reviewedAt||'',reviewTimeDisplay:old?.reviewTimeDisplay||'',procurementUpdatedAt:old?.procurementUpdatedAt||'',procurementUpdatedBy:old?.procurementUpdatedBy||''};
+  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const hasRequestedItems=items.some(item=>Number(item.requestQty||0)>0);const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const resetReview=Boolean(old?.ptVerdict);
+  const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',procurementStage:resetReview?(hasRequestedItems?'awaiting_dispatch':'ready_for_review'):(old?.procurementStage||(hasRequestedItems?'awaiting_dispatch':'ready_for_review')),stageUpdatedAt:resetReview?now.toISOString():(old?.stageUpdatedAt||now.toISOString()),evaluationStatus:resetReview?'pending':(old?.evaluationStatus||'pending'),ptVerdict:resetReview?'':(old?.ptVerdict||''),ptReviewer:resetReview?'':(old?.ptReviewer||''),ptComment:resetReview?'':(old?.ptComment||''),ptAccuracyScore:resetReview?0:Number(old?.ptAccuracyScore||0),ptCommunicationScore:resetReview?0:Number(old?.ptCommunicationScore||0),stockScore:resetReview?0:Number(old?.stockScore||0),reviewedAt:resetReview?'':(old?.reviewedAt||''),reviewTimeDisplay:resetReview?'':(old?.reviewTimeDisplay||''),procurementUpdatedAt:resetReview?'':(old?.procurementUpdatedAt||''),procurementUpdatedBy:resetReview?'':(old?.procurementUpdatedBy||'')};
   try{
+    isSavingStockRequest=true;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=true;
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกแล้ว และส่งเข้าคิวรอ PT ประเมิน','success');if(!old)openStockShare(record);
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
+  finally{isSavingStockRequest=false;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=false;}
 }
 function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
 function stockPerformanceStats(record){
@@ -2360,31 +2495,52 @@ function stockPerformanceStats(record){
   const totalScore=record?.ptVerdict?Math.min(100,completionScore+accuracyScore+communicationScore):completionScore;
   return{completionPct,completionScore,accuracyScore,communicationScore,totalScore,reviewed:Boolean(record?.ptVerdict)};
 }
-function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':'รอ PT ประเมิน';}
+function stockScoreBreakdown(record){
+  const stats=stockPerformanceStats(record);
+  return `ครบถ้วน ${stats.completionScore}/40 • จำนวนเบิก ${stats.accuracyScore}/30 • การส่งต่องาน ${stats.communicationScore}/30`;
+}
+function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':stockStageLabel(record);}
 function stockStage(record){return record?.ptVerdict?'reviewed':record?.procurementStage||'awaiting_dispatch';}
 function stockStageLabel(record){const stage=stockStage(record);return stage==='awaiting_dispatch'?'รอผู้ช่วยส่งเบิก':stage==='procuring'?'กำลังเบิกของ':stage==='ready_for_review'?'รับของแล้ว — รอ PT ประเมิน':'ประเมินแล้ว';}
 function stockWorkflowActionButton(record){
   const stage=stockStage(record);const id=Number(record.id);
   if(stage==='awaiting_dispatch')return`<button class="btn btn-pri" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'procuring')">📦 กำลังส่งเบิก</button>`;
   if(stage==='procuring')return`<button class="btn btn-suc" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'ready_for_review')">✅ รับของแล้ว แจ้ง PT</button>`;
-  if(stage==='ready_for_review')return'<span class="tag tw2">⏳ รอ PT ประเมิน</span>';
+  if(stage==='ready_for_review')return`<button class="btn btn-line" style="padding:4px 9px;font-size:11px" onclick="openStockShareById(${id})">💬 แชร์ LINE ให้ PT ประเมิน</button>`;
   return'<span class="tag tp">✅ ประเมินแล้ว</span>';
 }
 async function updateStockStage(id,nextStage){
   const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
   const current=stockStage(record);const allowed=current==='awaiting_dispatch'&&nextStage==='procuring'||current==='procuring'&&nextStage==='ready_for_review';if(!allowed)return showToast('⚠️ สถานะรายการเปลี่ยนไปแล้ว กรุณารีเฟรช','warning');
   const patch={procurementStage:nextStage,stageUpdatedAt:new Date().toISOString()};
-  try{if(!window.FB?.fbUpdateStockStage)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockStage(id,patch);Object.assign(record,patch);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast(nextStage==='procuring'?'📦 แจ้ง PT แล้วว่ากำลังส่งเบิก':'✅ แจ้ง PT แล้วว่ารับของกลับมาและพร้อมประเมิน','success');}catch(error){showToast('❌ เปลี่ยนสถานะไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  try{if(!window.FB?.fbUpdateStockStage)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockStage(id,patch);Object.assign(record,patch);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast(nextStage==='procuring'?'📦 เปลี่ยนสถานะเป็นกำลังส่งเบิกแล้ว':'✅ รับของแล้ว ขั้นต่อไปกดแชร์ LINE ให้ PT ประเมิน','success');}catch(error){showToast('❌ เปลี่ยนสถานะไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 const STOCK_FULFILLMENT_META={
   not_required:{label:'ไม่ต้องเบิก',color:'#6C757D'},pending:{label:'รอตรวจสอบ',color:'#9A6700'},submitted:{label:'ส่งเบิกแล้ว',color:'#1565C0'},
   partial:{label:'ได้รับบางส่วน',color:'#C2410C'},unavailable:{label:'พัสดุแจ้งไม่มี',color:'#B02A37'},received:{label:'รับของครบ',color:'#176B38'},cancelled:{label:'ยกเลิก',color:'#6C757D'}
 };
+const STOCK_REVIEW_RESULT_KEYS=['received','partial','unavailable','cancelled'];
 function stockFulfillmentInfo(item){return STOCK_FULFILLMENT_META[item?.fulfillmentStatus]||STOCK_FULFILLMENT_META.pending;}
-function stockShareUrl(record){return`https://ptkth14.github.io/pt-kth/?stock=${encodeURIComponent(record?.id||'')}`;}
-function openStockShare(record){lastStockShareRecord=record;const link=stockShareUrl(record);const linkEl=document.getElementById('stockShareLink');if(linkEl)linkEl.textContent=link;const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible} • รอ PT ประเมิน`;document.getElementById('stockShareModal').classList.add('open');}
+function stockShareUrl(record){const ready=stockStage(record)==='ready_for_review'||stockStage(record)==='reviewed';const key=ready?'stock':'stockInfo';return`https://ptkth14.github.io/pt-kth/?${key}=${encodeURIComponent(record?.id||'')}`;}
+function openStockShareById(id){const record=stockRecords.find(item=>Number(item.id)===Number(id));if(record)openStockShare(record);}
+function openStockShare(record){
+  lastStockShareRecord=record;const ready=stockStage(record)==='ready_for_review';const link=stockShareUrl(record);
+  const linkEl=document.getElementById('stockShareLink');if(linkEl)linkEl.textContent=link;
+  const title=document.getElementById('stockShareTitle');if(title)title.textContent=ready?'✅ รับของแล้ว — พร้อมส่งให้ PT ประเมิน':'📦 แจ้งรายการที่จะดำเนินการเบิก';
+  const description=document.getElementById('stockShareDescription');if(description)description.textContent=ready?'แชร์ลิงก์นี้ให้ PT เปิดรายการและบันทึกผลประเมินได้ทันที':'แชร์ข้อความนี้เพื่อแจ้ง PT ให้ทราบรายการที่ผู้ช่วยกำลังจะดำเนินการเบิก ยังไม่ใช่การขอให้ประเมิน';
+  const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible} • ${ready?'พร้อมให้ PT ประเมิน':'แจ้งรายการก่อนดำเนินการเบิก'}`;
+  const button=document.getElementById('stockShareLineBtn');if(button)button.textContent=ready?'💬 แชร์ LINE ให้ PT ประเมิน':'💬 แจ้งรายการเบิกผ่าน LINE';
+  document.getElementById('stockShareModal').classList.add('open');
+}
 async function copyStockShareLink(){const link=stockShareUrl(lastStockShareRecord);await navigator.clipboard.writeText(link);showToast('📋 คัดลอกลิงก์งานเบิกของแล้ว','success');}
-function shareStockToLine(){const record=lastStockShareRecord;if(!record)return;const msg=encodeURIComponent(`📦 มีงานเบิกของและตรวจสต็อกรอ PT ประเมิน\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}\nเปิดระบบ: ${stockShareUrl(record)}`);window.open('https://line.me/R/share?text='+msg,'_blank');}
+function shareStockToLine(){
+  const record=lastStockShareRecord;if(!record)return;const ready=stockStage(record)==='ready_for_review';
+  const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>`• ${item.name} ${Number(item.requestQty||0)} ${item.unit||''}`).join('\n');
+  const heading=ready?'✅ รับของแล้ว พร้อมให้ PT ประเมินงานเบิกของ':'📦 แจ้งรายการที่กำลังจะดำเนินการเบิก';
+  const action=ready?'กรุณาเปิดระบบเพื่อตรวจรายการและประเมินผล':'แจ้งให้ PT ทราบก่อน ผู้ช่วยจะดำเนินการเบิกตามรายการนี้';
+  const msg=encodeURIComponent(`${heading}\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}\n${requested||'• ไม่มีรายการที่ต้องเบิก'}\n${action}\nเปิดระบบ: ${stockShareUrl(record)}`);
+  window.open('https://line.me/R/share?text='+msg,'_blank');
+}
 function renderStockHistory(){
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
@@ -2400,21 +2556,22 @@ function renderStockHistory(){
 }
 function editStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
+  if(record.ptVerdict&&!record._editConfirmed){showConfirm('รายการนี้มีผลประเมินจาก PT แล้ว หากแก้ไข ระบบจะล้างผลเดิมและส่งกลับเข้ากระบวนการใหม่ เพื่อไม่ให้คะแนนขัดกับข้อมูลที่แก้ไข ต้องการดำเนินการต่อหรือไม่?',()=>{record._editConfirmed=true;editStockRecord(id);});return;}
   editingStockRecordId=record.id;stockDraftItems=(record.items||[]).filter(item=>!String(item.id||'').startsWith('extra-')).map(saved=>{const catalogItem=stockCatalog.find(item=>item.id===saved.id)||{};return Object.assign({},catalogItem,saved,{currentQty:saved.currentQty??'',requestQty:saved.requestQty??'',issueStatus:saved.issueStatus||'normal',note:saved.note||''});});stockExtraItems=(record.items||[]).filter(item=>String(item.id||'').startsWith('extra-')).map(item=>({...item}));
   switchView('stock');document.getElementById('stockDate').value=record.date;const scheduleSelect=document.getElementById('stockSchedule');const scheduleId=record.scheduleId||'weekly-all';if(scheduleSelect&&!Array.from(scheduleSelect.options).some(option=>option.value===scheduleId))scheduleSelect.add(new Option(`${record.scheduleName||'รอบตรวจเดิม'} — ประวัติเดิม`,scheduleId));if(scheduleSelect)scheduleSelect.value=scheduleId;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
 }
 function openStockReview(id){
   const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');activeStockReviewId=record.id;
   document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';
-  stockReviewWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:item.fulfillmentStatus||'pending',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
+  stockReviewWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
   const stats=stockPerformanceStats(record);document.getElementById('stockReviewCompletion').textContent=`กรอกครบ ${stats.completionPct}% = ${stats.completionScore}/40 คะแนน`;
-  document.getElementById('stockReviewAccuracy').value=Object.prototype.hasOwnProperty.call(record,'ptAccuracyScore')?String(record.ptAccuracyScore):'';
-  document.getElementById('stockReviewCommunication').value=Object.prototype.hasOwnProperty.call(record,'ptCommunicationScore')?String(record.ptCommunicationScore):'';
-  document.getElementById('stockReviewComment').value=record.ptComment||'';updateStockReviewScorePreview();document.getElementById('stockReviewModal').classList.add('open');
+  document.getElementById('stockReviewAccuracy').value=record.ptVerdict?String(Number(record.ptAccuracyScore||0)):'';
+  document.getElementById('stockReviewCommunication').value=record.ptVerdict?String(Number(record.ptCommunicationScore||0)):'';
+  document.getElementById('stockReviewComment').value=record.ptComment||'';document.getElementById('stockReviewFairConfirm').checked=false;updateStockReviewScorePreview();updateStockReviewReadiness();document.getElementById('stockReviewModal').classList.add('open');
 }
 function renderStockReviewWorkflowItems(){
   const wrap=document.getElementById('stockReviewWorkflowItems');if(!wrap)return;
-  wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" aria-label="ผลพัสดุ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)">${Object.entries(STOCK_FULFILLMENT_META).filter(([key])=>key!=='not_required').map(([key,meta])=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(meta.label)}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ (ถ้ามี)"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
+  wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" aria-label="ผลที่ได้รับ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)"><option value="">— เลือกผลที่ได้รับ —</option>${STOCK_REVIEW_RESULT_KEYS.map(key=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(STOCK_FULFILLMENT_META[key].label)}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ (ถ้ามี)"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
 }
 function setStockReviewWorkflowValue(index,field,value){if(stockReviewWorkflowDraftItems[index])stockReviewWorkflowDraftItems[index][field]=value;}
 function updateStockReviewScorePreview(){
@@ -2423,21 +2580,31 @@ function updateStockReviewScorePreview(){
   if(accuracyRaw===''||communicationRaw===''){preview.textContent=`คะแนนอัตโนมัติ ${completion}/40 • กรุณาเลือกอีก 2 ข้อ`;preview.style.background='#EEF7FF';preview.style.color='var(--bd)';return;}
   const total=completion+Number(accuracyRaw)+Number(communicationRaw);const verdict=total>=80?'ผ่าน':total>=60?'ต้องปรับปรุง':'ไม่ผ่าน';preview.textContent=`คะแนนรวม ${total}/100 — ${verdict}`;preview.style.background=total>=80?'#E8F5E9':total>=60?'#FFF8E1':'#FFEBEE';preview.style.color=total>=80?'#176B38':total>=60?'#8A5A00':'#B02A37';
 }
+function updateStockReviewReadiness(){
+  const accuracy=document.getElementById('stockReviewAccuracy')?.value||'';
+  const communication=document.getElementById('stockReviewCommunication')?.value||'';
+  const confirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);
+  const button=document.getElementById('stockReviewSaveBtn');
+  if(button)button.disabled=accuracy===''||communication===''||!confirmed||isSavingStockReview;
+}
 async function saveStockReview(){
-  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();if(!record)return;if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');
+  if(isSavingStockReview)return showToast('⏳ ระบบกำลังบันทึกผลประเมิน กรุณารอสักครู่','warning');
+  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();const fairConfirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);if(!record)return;if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');if(!fairConfirmed)return showToast('⚠️ กรุณาติ๊กยืนยันว่าไม่ได้หักคะแนนจากผลของพัสดุ','warning');
+  if((Number(accuracyRaw)<30||Number(communicationRaw)<30)&&!comment)return showToast('⚠️ หากหักคะแนน กรุณาระบุเหตุผลที่ผู้ช่วยต้องปรับปรุง','warning');
+  const missingResult=stockReviewWorkflowDraftItems.find(item=>!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));if(missingResult)return showToast(`⚠️ กรุณาเลือกผลที่ได้รับ: ${missingResult.name}`,'warning');
   const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
   const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
   const reviewPatch={items:updatedItems,procurementUpdatedAt:updated.procurementUpdatedAt,procurementUpdatedBy:updated.procurementUpdatedBy,evaluationStatus:updated.evaluationStatus,ptVerdict:updated.ptVerdict,ptReviewer:updated.ptReviewer,ptComment:updated.ptComment,ptAccuracyScore:updated.ptAccuracyScore,ptCommunicationScore:updated.ptCommunicationScore,stockScore:updated.stockScore,reviewedAt:updated.reviewedAt,reviewTimeDisplay:updated.reviewTimeDisplay};
-  try{if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  try{isSavingStockReview=true;updateStockReviewReadiness();if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{isSavingStockReview=false;updateStockReviewReadiness();}
 }
 function stockPerformanceMarkup(records,title){
   const reviewed=records.filter(record=>record.ptVerdict);const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
   const people={};records.forEach(record=>{if(!people[record.responsible])people[record.responsible]=[];people[record.responsible].push(record);});
-  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">ความครบถ้วน 40 คะแนน • จำนวนเบิกเหมาะสม 30 คะแนน • การระบุปัญหา 30 คะแนน</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th><th style="text-align:center">รายการ</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;const encodedName=encodeURIComponent(name).replace(/'/g,'%27');return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td><td style="text-align:center"><button class="btn btn-out stock-eye-btn" title="ดูรายการที่เบิก" aria-label="ดูรายการที่เบิกของ ${escapeHtml(name)}" onclick="showStockPersonDetail(decodeURIComponent('${encodedName}'))">👁</button></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
+  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:5px">ความครบถ้วน 40 คะแนน • จำนวนเบิกเหมาะสม 30 คะแนน • การส่งต่องาน 30 คะแนน</div><div style="font-size:11.5px;color:#176B38;font-weight:700;margin-bottom:12px">ผลจากพัสดุ เช่น ได้รับบางส่วนหรือไม่มีของ ไม่นำมาหักคะแนนผู้ช่วย</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th><th style="text-align:center">รายการ</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;const encodedName=encodeURIComponent(name).replace(/'/g,'%27');return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td><td style="text-align:center"><button class="btn btn-out stock-eye-btn" title="ดูรายการที่เบิก" aria-label="ดูรายการที่เบิกของ ${escapeHtml(name)}" onclick="showStockPersonDetail(decodeURIComponent('${encodedName}'))">👁</button></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
 }
 function showStockPersonDetail(name){
   const records=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));document.getElementById('detailTitle').textContent=`📦 รายการเบิกของ — ${name}`;
-  const html=records.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);const stats=stockPerformanceStats(record);const itemHtml=requested.length?requested.map(item=>{const info=stockFulfillmentInfo(item);return`<div style="display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--g2);font-size:12px"><div><strong>${escapeHtml(item.name)}</strong><div style="color:var(--g6);margin-top:2px">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}${item.fulfillmentNote?` • ${escapeHtml(item.fulfillmentNote)}`:''}</div></div><span class="tag" style="background:${info.color}18;color:${info.color}">${escapeHtml(info.label)}</span></div>`;}).join(''):'<div style="color:var(--g4);font-size:12px;padding:8px 0">รอบนี้ไม่มีรายการที่ขอเบิก</div>';return`<div class="stock-history-card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>PT ${escapeHtml(record.ptReviewer||'ยังไม่ประเมิน')}</span></div></div><div><span class="tag ${record.ptVerdict==='pass'?'tp':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='fail'?'tf':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span> ${record.ptVerdict?`<strong style="color:var(--bd)">${stats.totalScore}%</strong>`:''}</div></div><div style="margin-top:8px">${itemHtml}</div>${record.ptComment?`<div style="margin-top:9px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}</div>`;}).join('');
+  const html=records.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);const stats=stockPerformanceStats(record);const itemHtml=requested.length?requested.map(item=>{const info=stockFulfillmentInfo(item);return`<div style="display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--g2);font-size:12px"><div><strong>${escapeHtml(item.name)}</strong><div style="color:var(--g6);margin-top:2px">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}${item.fulfillmentNote?` • ${escapeHtml(item.fulfillmentNote)}`:''}</div></div><span class="tag" style="background:${info.color}18;color:${info.color}">${escapeHtml(info.label)}</span></div>`;}).join(''):'<div style="color:var(--g4);font-size:12px;padding:8px 0">รอบนี้ไม่มีรายการที่ขอเบิก</div>';return`<div class="stock-history-card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>PT ${escapeHtml(record.ptReviewer||'ยังไม่ประเมิน')}</span></div></div><div><span class="tag ${record.ptVerdict==='pass'?'tp':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='fail'?'tf':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span> ${record.ptVerdict?`<strong style="color:var(--bd)">${stats.totalScore}%</strong>`:''}</div></div>${record.ptVerdict?`<div style="font-size:11.5px;color:var(--g6);margin-top:6px">${escapeHtml(stockScoreBreakdown(record))}</div>`:''}<div style="margin-top:8px">${itemHtml}</div>${record.ptComment?`<div style="margin-top:9px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>เหตุผล/ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}</div>`;}).join('');
   document.getElementById('detailBody').innerHTML=html||'<div style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการเบิกของ</div>';document.getElementById('detailModal').classList.add('open');
 }
 function stockAdminManageMarkup(records){
@@ -2753,7 +2920,24 @@ function resumePendingMissedAlertAction(){
   setTimeout(()=>document.getElementById('missedEvalAdminForm')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
   return true;
 }
-function resetHisFilter(){document.getElementById('hisStartDate').value='';document.getElementById('hisEndDate').value='';document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';loadHistory();}
+function resetHisFilter(){document.getElementById('hisStartDate').value='';document.getElementById('hisEndDate').value='';document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
+async function searchHistory(){
+  historyVisibleCount=HISTORY_PAGE_SIZE;
+  const start=document.getElementById('hisStartDate')?.value;
+  const end=document.getElementById('hisEndDate')?.value;
+  if(start&&end&&window.FB?.fbGetPublicHistoryRange){
+    try{
+      showToast('⏳ กำลังค้นข้อมูลตามช่วงวันที่...','info');
+      const rangeStart=start<=end?start:end;const rangeEnd=start<=end?end:start;
+      const bundle=await window.FB.fbGetPublicHistoryRange(rangeStart,rangeEnd);
+      submissions=mergeReportRecords(submissions,bundle.submissions);
+      stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
+      missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
+    }catch(error){showToast('⚠️ โหลดประวัติเก่าไม่สำเร็จ: '+friendlyErrorMessage(error),'warning');}
+  }
+  loadHistory();
+}
+function loadMoreHistory(){historyVisibleCount+=HISTORY_PAGE_SIZE;loadHistory();}
 function updateHistoryFilters(){const sel=document.getElementById('hisFilterStaff');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${escapeHtml(n)}"${cur===n?' selected':''}>${escapeHtml(n)}</option>`).join('');}
 function missedEvalDate(){return document.getElementById('missedEvalDate')?.value||fmtDate(new Date());}
 function checkedMissedValues(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input=>input.value);}
@@ -2881,8 +3065,13 @@ function loadHistory(){
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   updateMissedEvalAdminPanel();renderMissedEvalSummary();
   const tb=document.getElementById('historyBody');if(!tb)return;
-  if(data.length===0){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';return;}
-  tb.innerHTML=data.map(s=>{
+  const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
+  if(data.length===0){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';if(loadMoreWrap)loadMoreWrap.style.display='none';return;}
+  const visibleData=data.slice(0,historyVisibleCount);
+  if(loadMoreWrap)loadMoreWrap.style.display='block';
+  if(countText)countText.textContent=`แสดง ${visibleData.length.toLocaleString('th-TH')} จาก ${data.length.toLocaleString('th-TH')} รายการ`;
+  if(loadMoreBtn){loadMoreBtn.style.display=visibleData.length<data.length?'inline-flex':'none';loadMoreBtn.textContent=`แสดงเพิ่มอีก ${Math.min(HISTORY_PAGE_SIZE,data.length-visibleData.length)} รายการ`;}
+  tb.innerHTML=visibleData.map(s=>{
     const pct=calcCompletion(s);
     const stTag=s.status==='pending'?'<span class="tag tw2">รอ PT ประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
     const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
@@ -3838,7 +4027,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260726-stock-3stage-v35';
+const APP_VERSION = 'v20260726-fair-stock-confirm-v42';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -4084,14 +4273,11 @@ function getPrivateReportFilter() {
 }
 
 async function getPrivateMonthlyRecords() {
-  const month = parseInt(document.getElementById('reportMonth')?.value || new Date().getMonth() + 1);
-  const yearBE = parseInt(document.getElementById('reportYear')?.value || new Date().getFullYear() + 543);
-  const prefix = (yearBE - 543) + '-' + String(month).padStart(2, '0');
+  const range=activeReportRange||getSelectedReportRange();
   const filter = getPrivateReportFilter();
-  evaluationRecords = await fetchEvaluationRecords();
-  return { month, yearBE, records: evaluationRecords.filter(function(record) {
+  return { month:range.month, yearBE:range.yearBE, records: evaluationRecords.filter(function(record) {
     const recordDate = record.date || String(record.createdAt || '').slice(0, 10);
-    return recordDate.startsWith(prefix) && (filter === 'all' || record.assistantName === filter);
+    return reportDateInRange(recordDate,range) && (filter === 'all' || record.assistantName === filter);
   }) };
 }
 
@@ -4412,6 +4598,72 @@ _applyCLCustom();
 // ══ MONTHLY REPORT ══
 let monthlyReportPrivateRecords=[];
 let monthlyReportPreviewToken=0;
+let activeReportRange=null;
+let reportRangeLoadKey='';
+function isoDateFromParts(year,month,day) {
+  return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function getSelectedReportRange() {
+  const type=document.getElementById('reportPeriodType')?.value||'month';
+  const month=parseInt(document.getElementById('reportMonth')?.value||new Date().getMonth()+1);
+  const quarter=parseInt(document.getElementById('reportQuarter')?.value||1);
+  const yearBE=parseInt(document.getElementById('reportYear')?.value||new Date().getFullYear()+543);
+  const yearCE=yearBE-543;
+  let start='',end='',label='',fileKey='';
+  if(type==='quarter'){
+    const startMonth=(quarter-1)*3+1;
+    start=isoDateFromParts(yearCE,startMonth,1);
+    end=isoDateFromParts(yearCE,startMonth+2,new Date(yearCE,startMonth+2,0).getDate());
+    label=`ไตรมาส ${quarter} ปี ${yearBE}`;
+    fileKey=`${yearCE}-Q${quarter}`;
+  }else if(type==='year'){
+    start=isoDateFromParts(yearCE,1,1);end=isoDateFromParts(yearCE,12,31);
+    label=`ปี ${yearBE}`;fileKey=String(yearCE);
+  }else if(type==='custom'){
+    start=document.getElementById('reportCustomStart')?.value||'';
+    end=document.getElementById('reportCustomEnd')?.value||'';
+    if(start&&end&&start>end)[start,end]=[end,start];
+    label=start&&end?`${thaiDate(start)} ถึง ${thaiDate(end)}`:'ช่วงวันที่ที่เลือก';
+    fileKey=start&&end?`${start}_to_${end}`:'custom';
+  }else{
+    start=isoDateFromParts(yearCE,month,1);
+    end=isoDateFromParts(yearCE,month,new Date(yearCE,month,0).getDate());
+    label=`เดือน ${thaiMonthName(month)} ${yearBE}`;
+    fileKey=`${yearCE}-${String(month).padStart(2,'0')}`;
+  }
+  return {type,month,quarter,yearBE,yearCE,start,end,label,fileKey};
+}
+function updateReportPeriodFields() {
+  const type=document.getElementById('reportPeriodType')?.value||'month';
+  const show=(id,visible)=>{const element=document.getElementById(id);if(element)element.style.display=visible?'':'none';};
+  show('reportMonthGroup',type==='month');
+  show('reportQuarterGroup',type==='quarter');
+  show('reportYearGroup',type!=='custom');
+  show('reportCustomStartGroup',type==='custom');
+  show('reportCustomEndGroup',type==='custom');
+}
+function reportDateInRange(date,range=activeReportRange) {
+  const value=String(date||'').slice(0,10);
+  return !!(range?.start&&range?.end&&value>=range.start&&value<=range.end);
+}
+function mergeReportRecords(current,incoming) {
+  const map=new Map((current||[]).map(record=>[String(record.id||`${record.date}|${record.staffName||record.responsible||record.assistantName||''}|${record.createdAt||''}`),record]));
+  (incoming||[]).forEach(record=>map.set(String(record.id||`${record.date}|${record.staffName||record.responsible||record.assistantName||''}|${record.createdAt||''}`),record));
+  return Array.from(map.values());
+}
+async function ensureReportRangeData(range) {
+  if(!range?.start||!range?.end)throw new Error('กรุณาเลือกช่วงวันที่ให้ครบ');
+  const key=`${range.start}|${range.end}`;
+  if(reportRangeLoadKey===key)return;
+  if(!window.FB?.fbGetReportRange)return;
+  const bundle=await window.FB.fbGetReportRange(range.start,range.end);
+  submissions=mergeReportRecords(submissions,bundle.submissions);
+  stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
+  missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
+  evaluationRecords=mergeReportRecords(evaluationRecords,bundle.assistantEvaluations);
+  if(typeof supervisorNotes!=='undefined')supervisorNotes=mergeReportRecords(supervisorNotes,bundle.supervisorNotes);
+  reportRangeLoadKey=key;
+}
 function openMonthlyReportModal() {
   if(!isAdminLoggedIn && !isSupLoggedIn) return showToast('⛔ รายงานนี้เปิดได้เฉพาะหัวหน้างานและแอดมิน','error');
   const now = new Date();
@@ -4419,6 +4671,13 @@ function openMonthlyReportModal() {
   const yr  = document.getElementById('reportYear');
   if(sel) sel.value = now.getMonth() + 1;
   if(yr)  yr.value  = now.getFullYear() + 543;
+  const period=document.getElementById('reportPeriodType');
+  if(period) period.value='month';
+  const start=document.getElementById('reportCustomStart');
+  const end=document.getElementById('reportCustomEnd');
+  if(start)start.value=isoDateFromParts(now.getFullYear(),now.getMonth()+1,1);
+  if(end)end.value=isoDateFromParts(now.getFullYear(),now.getMonth()+1,new Date(now.getFullYear(),now.getMonth()+1,0).getDate());
+  updateReportPeriodFields();
   updateEvaluationDropdowns();
   const reportStaff = document.getElementById('reportStaff');
   if(reportStaff) reportStaff.value = 'all';
@@ -4427,14 +4686,11 @@ function openMonthlyReportModal() {
 }
 
 function getReportData() {
-  const month = parseInt(document.getElementById('reportMonth')?.value || new Date().getMonth()+1);
-  const yearBE = parseInt(document.getElementById('reportYear')?.value || new Date().getFullYear()+543);
-  const yearCE = yearBE - 543;
-  // กรอง submissions ตามเดือน/ปี
-  const prefix = yearCE + '-' + String(month).padStart(2,'0');
+  const range=getSelectedReportRange();
+  activeReportRange=range;
   const reportStaff = document.getElementById('reportStaff')?.value || 'all';
-  const data = submissions.filter(s => s.date && s.date.startsWith(prefix) && (reportStaff === 'all' || s.staffName === reportStaff));
-  return { month, yearBE, yearCE, prefix, reportStaff, data };
+  const data = submissions.filter(s => reportDateInRange(s.date,range) && (reportStaff === 'all' || s.staffName === reportStaff));
+  return {...range,reportStaff,data};
 }
 
 function thaiMonthName(m) {
@@ -4444,18 +4700,28 @@ function thaiMonthName(m) {
 
 async function previewMonthlyReport() {
   const token=++monthlyReportPreviewToken;
-  const { month, yearBE, data } = getReportData();
+  let report=getReportData();
   const el = document.getElementById('monthlyReportPreview');
   if(!el) return;
   const pdfButton=document.getElementById('monthlyPdfBtn');const excelButton=document.getElementById('monthlyExcelBtn');
   if(pdfButton)pdfButton.disabled=true;if(excelButton)excelButton.disabled=true;
   el.innerHTML='<div style="text-align:center;color:var(--g4);padding:40px">กำลังรวม Checklist และรายงานลับ...</div>';
+  try{
+    await ensureReportRangeData(report);
+    report=getReportData();
+  }catch(error){
+    if(token!==monthlyReportPreviewToken)return;
+    el.innerHTML=`<div style="text-align:center;color:#B02A37;padding:40px">${escapeHtml(error.message||'โหลดรายงานไม่สำเร็จ')}</div>`;
+    if(pdfButton)pdfButton.disabled=false;if(excelButton)excelButton.disabled=false;
+    return;
+  }
+  const {month,yearBE,data}=report;
   const privateResult=await getPrivateMonthlyRecords();
   if(token!==monthlyReportPreviewToken)return;
   monthlyReportPrivateRecords=privateResult.records;
-  const hasMonthlyStock=stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`));
+  const hasMonthlyStock=stockRecords.some(record=>reportDateInRange(record.date,report));
   if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!hasMonthlyStock) {
-    el.innerHTML = `<div style="text-align:center;color:var(--g4);padding:40px">ไม่พบข้อมูลเดือน ${thaiMonthName(month)} ${yearBE}</div>`;
+    el.innerHTML = `<div style="text-align:center;color:var(--g4);padding:40px">ไม่พบข้อมูลใน${escapeHtml(report.label)}</div>`;
     if(pdfButton)pdfButton.disabled=false;if(excelButton)excelButton.disabled=false;
     return;
   }
@@ -4484,9 +4750,9 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const failed   = data.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
   const reportStaff=document.getElementById('reportStaff')?.value||'all';
-  const reportPrefix=`${yearBE-543}-${String(month).padStart(2,'0')}`;
-  const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>String(record.date||'').startsWith(reportPrefix)&&(reportStaff==='all'||record.responsible===reportStaff));
-  const missedAssistantRecords=missedEvaluations.filter(record=>String(record.date||'').startsWith(reportPrefix)&&(record.assistantNames||[]).some(name=>reportStaff==='all'||name===reportStaff));
+  const reportRange=activeReportRange||getSelectedReportRange();
+  const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>reportDateInRange(record.date,reportRange)&&(reportStaff==='all'||record.responsible===reportStaff));
+  const missedAssistantRecords=missedEvaluations.filter(record=>reportDateInRange(record.date,reportRange)&&(record.assistantNames||[]).some(name=>reportStaff==='all'||name===reportStaff));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff).length,0);
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
@@ -4510,12 +4776,12 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
     <!-- หัวรายงาน -->
     <div style="text-align:center;border-bottom:3px solid #0F4C81;padding-bottom:16px;margin-bottom:20px">
       <div style="font-size:22px;font-weight:800;color:#0F4C81">รายงานผลการประเมินผู้ช่วยนักกายภาพบำบัด</div>
-      <div style="font-size:13px;color:#6C757D;margin-top:5px">ประจำเดือน ${thaiMonthName(month)} ${yearBE}</div>
+      <div style="font-size:13px;color:#6C757D;margin-top:5px">${escapeHtml(reportRange.label)}</div>
     </div>
 
     <!-- KPI Summary -->
     <div style="background:#EAF6FF;border-radius:8px;padding:16px;margin-bottom:20px">
-      <div style="font-size:14px;font-weight:800;color:#0F4C81;margin-bottom:12px">📊 สรุปภาพรวมประจำเดือน</div>
+      <div style="font-size:14px;font-weight:800;color:#0F4C81;margin-bottom:12px">📊 สรุปภาพรวมช่วงรายงาน</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
         <div style="text-align:center;background:#fff;border-radius:6px;padding:10px">
           <div style="font-size:24px;font-weight:800;color:#0F4C81">${data.length}</div>
@@ -4652,7 +4918,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
 
     <!-- Ranking -->
     <div style="background:#F8F9FA;border-radius:8px;padding:14px;margin-top:16px">
-      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🏆 Ranking ประจำเดือน</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🏆 Ranking ช่วงรายงาน</div>
       ${Object.entries(byStaff)
         .map(([n,recs])=>{
           const rev=recs.filter(r=>r.status!=='pending');
@@ -4675,12 +4941,15 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   </div>`;
 }
 
-function generateMonthlyPDF() {
+async function generateMonthlyPDF() {
   if(!isAdminLoggedIn && !isSupLoggedIn) return showToast('⛔ รายงานนี้เปิดได้เฉพาะหัวหน้างานและแอดมิน','error');
-  const { month, yearBE, data } = getReportData();
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`))) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
+  let report=getReportData();
+  try{await ensureReportRangeData(report);report=getReportData();monthlyReportPrivateRecords=(await getPrivateMonthlyRecords()).records;}
+  catch(error){return showToast(`❌ ${error.message||'โหลดข้อมูลรายงานไม่สำเร็จ'}`,'error');}
+  const { month, yearBE, data } = report;
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report))) return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
   const reportHTML = buildReportHTML(month, yearBE, data, false, monthlyReportPrivateRecords);
-  const filename='PT_KTH_Monthly_Report_' + (yearBE - 543) + '-' + String(month).padStart(2, '0') + '.pdf';
+  const filename='PT_KTH_Report_' + report.fileKey + '.pdf';
   if(openPrintableReport(reportHTML,filename,'landscape'))showToast('🖨️ ในหน้าต่างพิมพ์ เลือกเครื่องพิมพ์ “บันทึกเป็น PDF”','success');
   else showToast('⚠️ กรุณาอนุญาต Pop-up แล้วกดใหม่อีกครั้ง','warning');
 }
@@ -4699,12 +4968,12 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
   const avgCompletion = data.length ? Math.round(data.reduce((sum,record)=>sum+calcCompletion(record),0)/data.length) : 0;
   const successRate = reviewed.length ? Math.round(successful.length/reviewed.length*100) : 0;
   const staffFilter = document.getElementById('reportStaff')?.value || 'all';
-  const reportPrefix=`${yearBE-543}-${String(month).padStart(2,'0')}`;
-  const missedAssistantRecords=missedEvaluations.filter(record=>String(record.date||'').startsWith(reportPrefix)&&(record.assistantNames||[]).some(name=>staffFilter==='all'||name===staffFilter));
+  const reportRange=activeReportRange||getSelectedReportRange();
+  const missedAssistantRecords=missedEvaluations.filter(record=>reportDateInRange(record.date,reportRange)&&(record.assistantNames||[]).some(name=>staffFilter==='all'||name===staffFilter));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>staffFilter==='all'||name===staffFilter).length,0);
   const rows = [
     ['รายงานผลการประเมินผู้ช่วยนักกายภาพบำบัด'],
-    ['ประจำเดือน', thaiMonthName(month) + ' ' + yearBE],
+    ['ช่วงรายงาน', reportRange.label],
     ['ผู้ช่วย', staffFilter === 'all' ? 'ทั้งหมด' : staffFilter],
     [],
     ['สรุปผล', 'ค่า'],
@@ -4729,7 +4998,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
       record.ptReviewer || '', missedPTText(record), record.ptComment || ''
     ]);
   });
-  const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>String(record.date||'').startsWith(reportPrefix)&&(staffFilter==='all'||record.responsible===staffFilter));
+  const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>reportDateInRange(record.date,reportRange)&&(staffFilter==='all'||record.responsible===staffFilter));
   if(monthlyStock.length){
     rows.push([],['ผลงานเบิกของและตรวจสต็อก'],['วันที่','ผู้ช่วย','สถานะรายการ','ผล PT','PT ผู้ประเมิน','คะแนนผลงาน (%)','ความคิดเห็น PT']);
     monthlyStock.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).forEach(record=>rows.push([thaiDate(record.date),record.responsible||'',record.status==='attention'?'ต้องติดตาม':'ครบถ้วน',stockVerdictLabel(record),record.ptReviewer||'',stockPerformanceStats(record).totalScore,record.ptComment||'']));
@@ -4755,13 +5024,19 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
   return rows;
 }
 
-function generateMonthlyExcel() {
+async function generateMonthlyExcel() {
   if(!isAdminLoggedIn && !isSupLoggedIn) return showToast('⛔ รายงานนี้เปิดได้เฉพาะหัวหน้างานและแอดมิน','error');
-  const { month, yearBE, data } = getReportData();
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>String(record.date||'').startsWith(`${yearBE-543}-${String(month).padStart(2,'0')}`))) return showToast('⚠️ ไม่มีข้อมูลเดือนที่เลือก','warning');
   const button=document.getElementById('monthlyExcelBtn');const oldLabel=button?.innerHTML;
   if(button){button.disabled=true;button.innerHTML='⏳ กำลังสร้าง Excel...';}
-  try{downloadRowsAsExcel('PT_KTH_Monthly_Report_' + (yearBE - 543) + '-' + String(month).padStart(2, '0') + '.xlsx', monthlyExcelRows(month, yearBE, data, monthlyReportPrivateRecords));showToast('✅ ดาวน์โหลดไฟล์ Excel .xlsx เรียบร้อย','success');}
+  try{
+    let report=getReportData();
+    await ensureReportRangeData(report);
+    report=getReportData();
+    monthlyReportPrivateRecords=(await getPrivateMonthlyRecords()).records;
+    if(report.data.length===0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report)))return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
+    downloadRowsAsExcel('PT_KTH_Report_' + report.fileKey + '.xlsx', monthlyExcelRows(report.month, report.yearBE, report.data, monthlyReportPrivateRecords));
+    showToast('✅ ดาวน์โหลดไฟล์ Excel .xlsx เรียบร้อย','success');
+  }
   catch(error){console.error('Monthly Excel error:',error);showToast('❌ สร้างไฟล์ Excel ไม่สำเร็จ','error');}
   finally{if(button){button.disabled=false;button.innerHTML=oldLabel;}}
 }
