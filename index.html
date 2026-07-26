@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-dashboard-clean-v33">
+<meta name="version" content="v20260726-stock-history-meta-v34">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -2426,9 +2426,22 @@ function stockAdminManageMarkup(records){
   if(!isAdminLoggedIn)return'';const sorted=[...records].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   return`<div class="card" style="margin-bottom:16px;border-left:4px solid var(--r)"><h3 style="margin-bottom:4px">🛠️ จัดการบันทึกสต็อกและเบิกของ</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">แอดมินแก้ไข เปิดหน้าผลพัสดุและประเมิน หรือลบบันทึกได้จากตารางนี้</div>${sorted.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>ผล PT</th><th>คะแนน</th><th>จัดการ</th></tr></thead><tbody>${sorted.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockVerdictLabel(record))}</td><td>${record.ptVerdict?stockPerformanceStats(record).totalScore+'%':'—'}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="openStockReview(${Number(record.id)})">ผลพัสดุ/ประเมิน</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีรายการ</div>'}</div>`;
 }
+function enhanceHistoryStockPerformanceTable(container){
+  const table=container?.querySelector('table');if(!table)return;
+  const headerRow=table.querySelector('thead tr');if(!headerRow||headerRow.dataset.historyMeta==='1')return;
+  const actionHeader=headerRow.lastElementChild;
+  ['วันที่ตรวจล่าสุด','เวลาส่งล่าสุด','PT ผู้ประเมินล่าสุด'].forEach(label=>{const th=document.createElement('th');th.textContent=label;headerRow.insertBefore(th,actionHeader);});
+  headerRow.dataset.historyMeta='1';
+  table.querySelectorAll('tbody tr').forEach(row=>{
+    const name=row.firstElementChild?.textContent?.trim()||'';
+    const latest=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))[0];
+    const actionCell=row.lastElementChild;
+    [latest?.date?thaiDate(latest.date):'—',latest?.timeDisplay||'—',latest?.ptReviewer||'รอ PT ประเมิน'].forEach(value=>{const td=document.createElement('td');td.textContent=value;row.insertBefore(td,actionCell);});
+  });
+}
 function renderStockPerformancePanels(){
   const targets=[['stockPerformanceDashboard','ผลงานเบิกของและตรวจสต็อก'],['historyStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['supervisorStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['adminStockPerformance','สรุปผลงานเบิกของและตรวจสต็อก']];
-  targets.forEach(([id,title])=>{const el=document.getElementById(id);if(el)el.innerHTML=stockPerformanceMarkup(stockRecords,title)+(id==='adminStockPerformance'?stockAdminManageMarkup(stockRecords):'');});
+  targets.forEach(([id,title])=>{const el=document.getElementById(id);if(el){el.innerHTML=stockPerformanceMarkup(stockRecords,title)+(id==='adminStockPerformance'?stockAdminManageMarkup(stockRecords):'');if(id==='historyStockPerformance')enhanceHistoryStockPerformanceTable(el);}});
 }
 function deleteStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้นที่ลบได้','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));
@@ -3806,7 +3819,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260726-dashboard-clean-v33';
+  const APP_VERSION = 'v20260726-stock-history-meta-v34';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
