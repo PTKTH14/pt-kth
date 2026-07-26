@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-review-patch-v32">
+<meta name="version" content="v20260726-dashboard-clean-v33">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -650,6 +650,8 @@ tr:hover td{background:var(--g1)}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
   .mn-item:active{transform:scale(.96);background:#DCEEFF}
 }
+#stockPerformanceDashboard table th:last-child,
+#stockPerformanceDashboard table td:last-child{display:none}
 @media print{.topbar,.sidebar,.act-row,.ci-acts,.mobile-nav{display:none!important}.main{padding:0}}
 </style>
 </head>
@@ -3804,7 +3806,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-  const APP_VERSION = 'v20260726-stock-review-patch-v32';
+  const APP_VERSION = 'v20260726-dashboard-clean-v33';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {

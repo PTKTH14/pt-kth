@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260726-stock-review-patch-v32';
+const CACHE_NAME = 'pt-kth-v20260726-dashboard-clean-v33';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
