@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260726-fair-stock-confirm-v42';
+const CACHE_NAME = 'pt-kth-v20260728-touch-review-fix-v44-1';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
