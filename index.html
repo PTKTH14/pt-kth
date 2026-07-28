@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-mobile-more-v51">
+<link rel="manifest" href="manifest.json?v=20260728-unified-line-v52">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-mobile-more-v51">
+<meta name="version" content="v20260728-unified-line-v52">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -665,6 +665,8 @@ tr:hover td{background:var(--g1)}
 .photo-grid,.detail-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
 .photo-card,.detail-photo-card{position:relative;border:1px solid var(--g2);border-radius:var(--r8);overflow:hidden;background:#fff;box-shadow:var(--sh1)}
 .photo-card img,.detail-photo-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--g1)}
+.photo-file-fallback{width:100%;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#EDF6FC,#F8FBFD);color:var(--bd);font-size:34px}
+.photo-file-fallback small{font-size:10.5px;color:var(--g6);font-weight:700}
 .photo-remove{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(0,0,0,.68);color:#fff;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .photo-caption{padding:6px 8px;font-size:11px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .detail-photo-title{font-size:12px;font-weight:800;color:var(--bd);margin:10px 0 6px}
@@ -1430,6 +1432,7 @@ tr:hover td{background:var(--g1)}
             <div class="photo-actions">
               <button type="button" class="btn btn-pri" onclick="document.getElementById('retroPhotoInput').click()">📷 ถ่ายรูป / เลือกรูป</button>
               <button type="button" class="btn btn-out" style="color:#06C755;border-color:#06C755" onclick="shareRetrospectivePhotosToLine()">💬 ส่งรูปเข้า LINE</button>
+              <button type="button" class="btn btn-out" id="copyRetrospectiveLinkBtn" onclick="copyRetrospectiveLink()">🔗 คัดลอกลิงก์</button>
               <button type="button" class="btn btn-out" onclick="clearRetrospectivePhotos()">ล้างรูป</button>
             </div>
             <div class="photo-hint">แนบได้สูงสุด 3 รูป มือถือและแท็บเล็ตสามารถเลือก LINE จากเมนูแชร์ได้ รูปใช้สำหรับส่งเท่านั้นและจะไม่ถูกเก็บในระบบ</div>
@@ -2192,6 +2195,12 @@ async function init(){
   if(linkedStockInfoId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockInfoId))){
     switchView('stock',document.getElementById('nav-stock'));setMobileNav('stock');
     showToast('📦 เปิดรายการที่ผู้ช่วยแจ้งว่าจะดำเนินการเบิกแล้ว','success');
+  }
+  const linkedRetrospectiveId=new URLSearchParams(window.location.search).get('retrospective');
+  if(linkedRetrospectiveId){
+    switchView('history',document.getElementById('nav-history'));setMobileNav('history');
+    setTimeout(()=>document.getElementById('retrospectivePublicList')?.scrollIntoView({behavior:'smooth',block:'start'}),250);
+    showToast('🔎 เปิดประวัติผลตรวจสอบย้อนหลังแล้ว','success');
   }
   if(isAdminLoggedIn)await migrateLegacySupervisorNotes();
   // sync mobile/desktop inputs
@@ -3020,7 +3029,7 @@ function cancelReview(){document.getElementById('reviewFormWrap').style.display=
 function renderReviewPhotos(){
   const box=document.getElementById('ptPhotoPreview');if(!box)return;
   if(!reviewPhotos.length){box.innerHTML='';return;}
-  box.innerHTML=reviewPhotos.map((photo,i)=>`<div class="photo-card"><img src="${photo.dataUrl}" alt="รูปประกอบ ${i+1}"><button type="button" class="photo-remove" onclick="removeReviewPhoto(${i})" aria-label="ลบรูป">×</button><div class="photo-caption">${escapeHtml(photo.name||('รูปที่ '+(i+1)))}</div></div>`).join('');
+  box.innerHTML=reviewPhotos.map((photo,i)=>`<div class="photo-card">${photo.previewable===false?'<div class="photo-file-fallback">🖼️<small>ไฟล์รูปต้นฉบับ</small></div>':`<img src="${photo.dataUrl}" alt="รูปประกอบ ${i+1}">`}<button type="button" class="photo-remove" onclick="removeReviewPhoto(${i})" aria-label="ลบรูป">×</button><div class="photo-caption">${escapeHtml(photo.name||('รูปที่ '+(i+1)))}</div></div>`).join('');
 }
 function removeReviewPhoto(index){reviewPhotos.splice(index,1);renderReviewPhotos();}
 function clearReviewPhotos(){reviewPhotos=[];const input=document.getElementById('ptPhotoInput');if(input)input.value='';renderReviewPhotos();}
@@ -3084,13 +3093,18 @@ function resizeReviewPhoto(file){
     reader.onload=()=>{
       const img=new Image();
       img.onload=()=>{
-        const max=640;let w=img.width,h=img.height;
-        if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
-        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
-        resolve({name:file.name||'photo.jpg',dataUrl:canvas.toDataURL('image/jpeg',0.55),createdAt:new Date().toISOString()});
+        try{
+          const max=1280;let w=img.width,h=img.height;
+          if(w>h&&w>max){h=Math.round(h*max/w);w=max;}else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+          const canvas=document.createElement('canvas');canvas.width=Math.max(1,w);canvas.height=Math.max(1,h);
+          const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas unavailable');
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          resolve({name:file.name||'photo.jpg',dataUrl:canvas.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),previewable:true});
+        }catch(error){
+          resolve({name:file.name||'photo',dataUrl:String(reader.result||''),createdAt:new Date().toISOString(),previewable:false,original:true});
+        }
       };
-      img.onerror=()=>reject(new Error('อ่านรูปไม่สำเร็จ'));
+      img.onerror=()=>resolve({name:file.name||'photo',dataUrl:String(reader.result||''),createdAt:new Date().toISOString(),previewable:false,original:true});
       img.src=reader.result;
     };
     reader.onerror=()=>reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'));
@@ -3835,6 +3849,10 @@ function rebuildRetrospectiveSubmission(submission,checks){
 function retrospectiveResponsibilityLabel(value){
   return {assistant:'ผู้ช่วย',pt:'PT',both:'ทั้งสองฝ่าย',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
 }
+function retrospectiveShareUrl(recordOrId){
+  const id=typeof recordOrId==='object'?recordOrId?.id:recordOrId;
+  return`https://ptkth14.github.io/pt-kth/?retrospective=${encodeURIComponent(id||'')}`;
+}
 function retrospectiveLineMessage(record){
   return `🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน
 พบข้อบกพร่องใน Checklist วันที่ ${thaiDate(record.date)} ${shiftLabel(record.shift)}
@@ -3842,7 +3860,8 @@ function retrospectiveLineMessage(record){
 รายละเอียด: ${record.details}
 ผู้รับผิดชอบ: ${retrospectiveResponsibilityLabel(record.responsibility)}
 การดำเนินการ: ปรับคะแนนและบันทึกค่าเสียหายเรียบร้อย
-ผู้ส่งข้อมูลจากระบบ: แอดมิน`;
+ผู้ส่งข้อมูลจากระบบ: แอดมิน
+เปิดดูประวัติ: ${retrospectiveShareUrl(record)}`;
 }
 function retrospectiveDraft(){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
@@ -3856,8 +3875,14 @@ function retrospectiveDraft(){
 function updateRetrospectiveAmountFields(){
   const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
   const assistant=document.getElementById('retroAssistantAmount');const pt=document.getElementById('retroPtAmount');
-  if(assistant){assistant.disabled=!['assistant','both'].includes(responsibility);if(!assistant.disabled&&Number(assistant.value)===0)assistant.value=10;}
-  if(pt){pt.disabled=!['pt','both'].includes(responsibility);if(!pt.disabled&&Number(pt.value)===0)pt.value=10;}
+  if(assistant){
+    assistant.disabled=!['assistant','both'].includes(responsibility);
+    assistant.value=assistant.disabled?0:(Number(assistant.value)||10);
+  }
+  if(pt){
+    pt.disabled=!['pt','both'].includes(responsibility);
+    pt.value=pt.disabled?0:(Number(pt.value)||10);
+  }
 }
 function updateRetrospectiveItemOptions(selectedKey){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
@@ -3910,10 +3935,24 @@ async function shareRetrospectiveRecord(id){
 }
 function renderRetrospectivePhotos(){
   const box=document.getElementById('retroPhotoPreview');if(!box)return;
-  box.innerHTML=retrospectivePhotos.map((photo,index)=>`<div class="photo-card"><img src="${photo.dataUrl}" alt="รูปหลักฐาน ${index+1}"><button type="button" class="photo-remove" onclick="removeRetrospectivePhoto(${index})" aria-label="ลบรูป">×</button><div class="photo-caption">${escapeHtml(photo.name||('รูปที่ '+(index+1)))}</div></div>`).join('');
+  box.innerHTML=retrospectivePhotos.map((photo,index)=>`<div class="photo-card">${photo.previewable===false?'<div class="photo-file-fallback">🖼️<small>ไฟล์รูปต้นฉบับ</small></div>':`<img src="${photo.dataUrl}" alt="รูปหลักฐาน ${index+1}">`}<button type="button" class="photo-remove" onclick="removeRetrospectivePhoto(${index})" aria-label="ลบรูป">×</button><div class="photo-caption">${escapeHtml(photo.name||('รูปที่ '+(index+1)))}</div></div>`).join('');
 }
 function removeRetrospectivePhoto(index){retrospectivePhotos.splice(index,1);renderRetrospectivePhotos();}
 function clearRetrospectivePhotos(){retrospectivePhotos=[];const input=document.getElementById('retroPhotoInput');if(input)input.value='';renderRetrospectivePhotos();}
+async function copyTextValue(text){
+  if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return true;}
+  const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
+  const copied=document.execCommand('copy');area.remove();return copied;
+}
+async function copyRetrospectiveLink(){
+  const id=editingRetrospectiveId||lastRetrospectiveShareId;
+  if(!id)return showToast('⚠️ กรุณาบันทึกผลตรวจสอบก่อนคัดลอกลิงก์','warning');
+  try{
+    await copyTextValue(retrospectiveShareUrl(id));
+    const button=document.getElementById('copyRetrospectiveLinkBtn');if(button){button.textContent='✅ คัดลอกแล้ว';setTimeout(()=>button.textContent='🔗 คัดลอกลิงก์',1600);}
+    showToast('📋 คัดลอกลิงก์ผลตรวจสอบแล้ว','success');
+  }catch(error){showToast('⚠️ คัดลอกลิงก์ไม่สำเร็จ กรุณาลองใหม่','warning');}
+}
 async function handleRetrospectivePhotos(event){
   const files=Array.from(event.target.files||[]).filter(file=>file.type&&file.type.startsWith('image/'));
   const room=Math.max(0,3-retrospectivePhotos.length);
@@ -4508,7 +4547,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-mobile-more-v51';
+const APP_VERSION = 'v20260728-unified-line-v52';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
