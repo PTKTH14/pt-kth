@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260728-clean-history-v55';
+const CACHE_NAME = 'pt-kth-v20260728-collapsible-history-v56';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {

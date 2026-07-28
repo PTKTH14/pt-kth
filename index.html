@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-clean-history-v55">
+<meta name="version" content="v20260728-collapsible-history-v56">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -637,6 +637,11 @@ img,svg,canvas{max-width:100%}
 table{width:100%;border-collapse:collapse}
 .retro-damage{font-weight:800;color:#B02A37;white-space:nowrap}
 .retro-damage small{display:block;margin-top:2px;color:var(--g5);font-size:10.5px;font-weight:600;white-space:normal}
+.retro-disclosure>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;-webkit-tap-highlight-color:transparent}
+.retro-disclosure>summary::-webkit-details-marker{display:none}
+.retro-disclosure-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.retro-disclosure-toggle{min-height:38px;padding:7px 12px;border:1px solid var(--g2);border-radius:9px;background:#fff;color:var(--bd);font:700 12px var(--font);cursor:pointer;pointer-events:none}
+.retro-disclosure-content{margin-top:12px}
 th{background:var(--bd);color:#fff;font-size:12px;font-weight:700;padding:10px 13px;text-align:left}
 td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--g2)}
 tr:last-child td{border-bottom:none}
@@ -699,6 +704,9 @@ tr:hover td{background:var(--g1)}
 .mobile-more-item:active{background:var(--bl);border-color:var(--bm);transform:scale(.98)}
 .mobile-more-item>span{font-size:28px;line-height:1}.mobile-more-item>strong{font-size:13px}.mobile-more-item>small{font-size:10.5px;color:var(--g6);line-height:1.35}
 @media(max-width:768px){
+  .retro-disclosure>summary{align-items:center}
+  .retro-disclosure>summary p{display:none}
+  .retro-disclosure-toggle{min-height:42px}
   .retro-table{overflow:visible!important;background:transparent;box-shadow:none}
   .retro-table table,.retro-table tbody,.retro-table tr,.retro-table td{display:block;width:100%}
   .retro-table thead{display:none}
@@ -1219,13 +1227,17 @@ tr:hover td{background:var(--g1)}
       <div id="missedEvalSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
       <div id="missedEvalList"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
     </div>
-    <div class="card" style="margin-top:14px;border-left:4px solid #7B1FA2">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+    <details class="card retro-disclosure" id="retrospectivePublicDetails" style="margin-top:14px;border-left:4px solid #7B1FA2" open>
+      <summary>
         <div><h3 style="margin-bottom:4px">🔎 ผลตรวจสอบย้อนหลัง</h3><p style="font-size:12px;color:var(--g6)">แสดงรายการปรับคะแนนและค่าเสียหายที่แอดมินยืนยันแล้ว</p></div>
-        <span id="retrospectivePublicTotal" class="badge badge-purple">0 บาท</span>
-      </div>
-      <div id="retrospectivePublicList"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
-    </div>
+        <div class="retro-disclosure-meta">
+          <span id="retrospectivePublicCount" class="badge">0 รายการ</span>
+          <span id="retrospectivePublicTotal" class="badge badge-purple">0 บาท</span>
+          <span id="retrospectiveDisclosureLabel" class="retro-disclosure-toggle">ยุบรายการ ▲</span>
+        </div>
+      </summary>
+      <div id="retrospectivePublicList" class="retro-disclosure-content"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
+    </details>
   </div>
   <div class="tw" style="overflow-x:auto">
     <table>
@@ -2193,6 +2205,10 @@ async function init(){
   updateDashFilter();
   renderMissedEvalOptions();
   renderRetrospectiveHistory();
+  const retrospectiveDetails=document.getElementById('retrospectivePublicDetails');
+  if(retrospectiveDetails)retrospectiveDetails.addEventListener('toggle',syncRetrospectiveDisclosureLabel);
+  if(retrospectiveDetails&&window.matchMedia('(max-width: 768px)').matches)retrospectiveDetails.open=false;
+  syncRetrospectiveDisclosureLabel();
   loadHistory();
   const linkedStockId=new URLSearchParams(window.location.search).get('stock');
   if(linkedStockId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockId))){
@@ -2206,6 +2222,7 @@ async function init(){
   const linkedRetrospectiveId=new URLSearchParams(window.location.search).get('retrospective');
   if(linkedRetrospectiveId){
     switchView('history',document.getElementById('nav-history'));setMobileNav('history');
+    const details=document.getElementById('retrospectivePublicDetails');if(details)details.open=true;
     setTimeout(()=>document.getElementById('retrospectivePublicList')?.scrollIntoView({behavior:'smooth',block:'start'}),250);
     showToast('🔎 เปิดประวัติผลตรวจสอบย้อนหลังแล้ว','success');
   }
@@ -3930,11 +3947,16 @@ function renderRetrospectiveAdmin(){
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div>';return;}
   list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
 }
+function syncRetrospectiveDisclosureLabel(){
+  const details=document.getElementById('retrospectivePublicDetails');
+  const label=document.getElementById('retrospectiveDisclosureLabel');
+  if(label)label.textContent=details?.open?'ยุบรายการ ▲':'ดูรายการ ▼';
+}
 function renderRetrospectiveHistory(){
-  const total=document.getElementById('retrospectivePublicTotal');const list=document.getElementById('retrospectivePublicList');if(!list)return;
+  const total=document.getElementById('retrospectivePublicTotal');const count=document.getElementById('retrospectivePublicCount');const list=document.getElementById('retrospectivePublicList');if(!list)return;
   const start=document.getElementById('hisStartDate')?.value||'';const end=document.getElementById('hisEndDate')?.value||'';
   const rows=[...retrospectiveChecks].filter(item=>isDateInRange(item.date,start,end)).sort(newestRecordFirst);
-  const amount=rows.reduce((sum,item)=>sum+(Number(item.amount)||0),0);if(total)total.textContent=amount.toLocaleString('th-TH')+' บาท';
+  const amount=rows.reduce((sum,item)=>sum+(Number(item.amount)||0),0);if(total)total.textContent=amount.toLocaleString('th-TH')+' บาท';if(count)count.textContent=rows.length.toLocaleString('th-TH')+' รายการ';
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการตามช่วงวันที่</div>';return;}
   list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="ผู้ช่วย / PT">${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="หัวข้อ"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -4565,7 +4587,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-clean-history-v55';
+const APP_VERSION = 'v20260728-collapsible-history-v56';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
