@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-unified-line-v52">
+<meta name="version" content="v20260728-retrospective-ux-v53">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -635,6 +635,8 @@ img,svg,canvas{max-width:100%}
 .chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
 .tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse}
+.retro-damage{font-weight:800;color:#B02A37;white-space:nowrap}
+.retro-damage small{display:block;margin-top:2px;color:var(--g5);font-size:10.5px;font-weight:600;white-space:normal}
 th{background:var(--bd);color:#fff;font-size:12px;font-weight:700;padding:10px 13px;text-align:left}
 td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--g2)}
 tr:last-child td{border-bottom:none}
@@ -697,6 +699,15 @@ tr:hover td{background:var(--g1)}
 .mobile-more-item:active{background:var(--bl);border-color:var(--bm);transform:scale(.98)}
 .mobile-more-item>span{font-size:28px;line-height:1}.mobile-more-item>strong{font-size:13px}.mobile-more-item>small{font-size:10.5px;color:var(--g6);line-height:1.35}
 @media(max-width:768px){
+  .retro-table{overflow:visible!important;background:transparent;box-shadow:none}
+  .retro-table table,.retro-table tbody,.retro-table tr,.retro-table td{display:block;width:100%}
+  .retro-table thead{display:none}
+  .retro-table tr{margin-bottom:12px;padding:14px;background:#fff;border:1px solid var(--g2);border-left:4px solid var(--bd);border-radius:12px;box-shadow:var(--sh1)}
+  .retro-table td{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;padding:7px 0!important;border:0!important;white-space:normal!important;overflow-wrap:anywhere}
+  .retro-table td::before{content:attr(data-label);color:var(--g5);font-size:11.5px;font-weight:700}
+  .retro-table .retro-actions{display:flex;gap:7px;flex-wrap:wrap}
+  .retro-table .retro-actions .btn{min-height:42px;padding:8px 13px!important;font-size:12px!important}
+  .retro-damage{white-space:normal}
   .sidebar{display:none}
   .main{padding:14px;padding-bottom:calc(var(--mobile-nav-h) + 14px)}
   .mobile-nav{display:flex}
@@ -1431,7 +1442,7 @@ tr:hover td{background:var(--g1)}
             <input class="photo-input" type="file" id="retroPhotoInput" accept="image/*" multiple onchange="handleRetrospectivePhotos(event)">
             <div class="photo-actions">
               <button type="button" class="btn btn-pri" onclick="document.getElementById('retroPhotoInput').click()">📷 ถ่ายรูป / เลือกรูป</button>
-              <button type="button" class="btn btn-out" style="color:#06C755;border-color:#06C755" onclick="shareRetrospectivePhotosToLine()">💬 ส่งรูปเข้า LINE</button>
+              <button type="button" class="btn btn-out" style="color:#06C755;border-color:#06C755" onclick="shareRetrospectivePhotosToLine()">💬 ส่งรายละเอียด / รูปเข้า LINE</button>
               <button type="button" class="btn btn-out" id="copyRetrospectiveLinkBtn" onclick="copyRetrospectiveLink()">🔗 คัดลอกลิงก์</button>
               <button type="button" class="btn btn-out" onclick="clearRetrospectivePhotos()">ล้างรูป</button>
             </div>
@@ -1440,7 +1451,6 @@ tr:hover td{background:var(--g1)}
           </div>
         </div>
         <div class="act-row">
-          <button class="btn btn-out" id="retrospectiveLineBtn" type="button" onclick="shareRetrospectiveToLine()">💬 เปิด LINE เพื่อส่งรายละเอียด</button>
           <button class="btn btn-blue" type="button" id="saveRetrospectiveBtn" onclick="saveRetrospectiveCheck()">💾 บันทึกผลตรวจสอบ</button>
           <button class="btn btn-out" type="button" id="cancelRetrospectiveBtn" onclick="resetRetrospectiveForm()" style="display:none">ยกเลิกการแก้ไข</button>
         </div>
@@ -2776,8 +2786,8 @@ function openLineShare(text){
 }
 function applyDeviceAwareShareLabels(){
   const touch=isTouchShareDevice();
-  const retrospectiveButton=document.getElementById('retrospectiveLineBtn');
-  if(retrospectiveButton)retrospectiveButton.textContent=touch?'💬 ส่งรายละเอียดเข้า LINE':'💬 เปิด LINE เพื่อส่งรายละเอียด';
+  const retrospectiveButton=document.querySelector('[onclick="shareRetrospectivePhotosToLine()"]');
+  if(retrospectiveButton)retrospectiveButton.textContent=touch?'💬 ส่งรายละเอียด / รูปเข้า LINE':'💬 เปิด LINE พร้อมรายละเอียด / รูป';
 }
 async function shareTextPreferNative(title,text){
   if(isTouchShareDevice()&&navigator.share){
@@ -3849,6 +3859,16 @@ function rebuildRetrospectiveSubmission(submission,checks){
 function retrospectiveResponsibilityLabel(value){
   return {assistant:'ผู้ช่วย',pt:'PT',both:'ทั้งสองฝ่าย',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
 }
+function retrospectiveDamageHtml(record){
+  const assistant=Math.max(0,Number(record?.assistantAmount)||0);
+  const pt=Math.max(0,Number(record?.ptAmount)||0);
+  const total=assistant+pt;
+  if(!total)return'<span style="color:var(--g5);font-weight:700">0 บาท</span><small>บันทึกข้อมูลเท่านั้น</small>';
+  const parts=[];
+  if(assistant)parts.push(`ผู้ช่วย ${assistant.toLocaleString('th-TH')} บาท`);
+  if(pt)parts.push(`PT ${pt.toLocaleString('th-TH')} บาท`);
+  return`${total.toLocaleString('th-TH')} บาท<small>${parts.join(' • ')}</small>`;
+}
 function retrospectiveShareUrl(recordOrId){
   const id=typeof recordOrId==='object'?recordOrId?.id:recordOrId;
   return`https://ptkth14.github.io/pt-kth/?retrospective=${encodeURIComponent(id||'')}`;
@@ -3913,7 +3933,7 @@ function renderRetrospectiveAdmin(){
   const list=document.getElementById('retrospectiveAdminList');if(!list)return;
   const rows=[...retrospectiveChecks].sort(newestRecordFirst);
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div>';return;}
-  list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td>${escapeHtml(item.details)}</td><td>${retrospectiveResponsibilityLabel(item.responsibility)}</td><td>${Number(item.amount||0).toLocaleString('th-TH')} บาท</td><td style="white-space:nowrap"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="shareRetrospectiveRecord('${item.id}')">LINE</button> <button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button> <button class="btn" style="padding:5px 9px;font-size:11px;background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></td></tr>`).join('')}</tbody></table></div>`;
+  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="shareRetrospectiveRecord('${item.id}')">LINE</button><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
 }
 function renderRetrospectiveHistory(){
   const total=document.getElementById('retrospectivePublicTotal');const list=document.getElementById('retrospectivePublicList');if(!list)return;
@@ -3921,7 +3941,7 @@ function renderRetrospectiveHistory(){
   const rows=[...retrospectiveChecks].filter(item=>isDateInRange(item.date,start,end)).sort(newestRecordFirst);
   const amount=rows.reduce((sum,item)=>sum+(Number(item.amount)||0),0);if(total)total.textContent=amount.toLocaleString('th-TH')+' บาท';
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการตามช่วงวันที่</div>';return;}
-  list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td>${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td>${retrospectiveResponsibilityLabel(item.responsibility)}</td><td>${Number(item.amount||0).toLocaleString('th-TH')} บาท</td></tr>`).join('')}</tbody></table></div>`;
+  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="ผู้ช่วย / PT">${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="หัวข้อ"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function shareRetrospectiveToLine(){
   const id=editingRetrospectiveId||lastRetrospectiveShareId;
@@ -3966,11 +3986,14 @@ async function handleRetrospectivePhotos(event){
   event.target.value='';
 }
 async function shareRetrospectivePhotosToLine(){
-  if(!retrospectivePhotos.length)return showToast('⚠️ กรุณาถ่ายหรือเลือกรูปก่อน','warning');
   const id=editingRetrospectiveId||lastRetrospectiveShareId;
-  if(!id)return showToast('⚠️ กรุณาบันทึกผลตรวจสอบก่อนส่งรูป เพื่อให้ข้อความตรงกับข้อมูลจริง','warning');
+  if(!id)return showToast('⚠️ กรุณาบันทึกผลตรวจสอบก่อนส่ง LINE เพื่อให้ข้อความตรงกับข้อมูลจริง','warning');
   const record=retrospectiveChecks.find(item=>String(item.id)===String(id));
   if(!record)return showToast('⚠️ ไม่พบรายการตรวจสอบที่บันทึกแล้ว','warning');
+  if(!retrospectivePhotos.length){
+    await shareTextPreferNative('แจ้งผลตรวจสอบย้อนหลัง',retrospectiveLineMessage(record));
+    return;
+  }
   const files=retrospectivePhotos.map((photo,index)=>dataUrlToFile(photo.dataUrl,photo.name||`retrospective-${index+1}.jpg`));
   const shareData={title:'ตรวจสอบย้อนหลัง PT KTH',text:retrospectiveLineMessage(record),files};
   try{
@@ -4547,7 +4570,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-unified-line-v52';
+const APP_VERSION = 'v20260728-retrospective-ux-v53';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
