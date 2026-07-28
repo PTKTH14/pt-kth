@@ -3,9 +3,12 @@
   "short_name": "PT KTH",
   "description": "ระบบ Checklist และประเมินงานผู้ช่วยนักกายภาพบำบัด",
   "lang": "th",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "launch_handler": {"client_mode": "navigate-existing"},
+  "handle_links": "preferred",
   "background_color": "#F0F4F8",
   "theme_color": "#0F4C81",
   "icons": [
