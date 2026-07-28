@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-retrospective-ux-v53">
+<meta name="version" content="v20260728-deduplicated-ui-v54">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -965,7 +965,7 @@ tr:hover td{background:var(--g1)}
     <div class="act-row" style="margin-top:0;padding-top:4px"><button id="stockSaveBtn" class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">แสดง 20 รายการล่าสุด ส่วนประวัติรวมดูได้จากหน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')">ดูประวัติรวม</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อกล่าสุด</h3><div style="font-size:11.5px;color:var(--g6)">แสดงเพียง 5 รายการล่าสุด ส่วนประวัติทั้งหมดอยู่หน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')">ดูประวัติทั้งหมด</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
     <div id="stockHistorySummary" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="stockHistoryList" class="stock-history-list"><div style="text-align:center;color:var(--g4);padding:20px">ยังไม่มีประวัติ</div></div>
   </div>
@@ -1128,7 +1128,6 @@ tr:hover td{background:var(--g1)}
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="showWebAlertDemo()">👁 ดูตัวอย่างป๊อปอัป</button>
-        <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="refreshWebAlerts(false)">🔄 ตรวจใหม่</button>
       </div>
     </div>
     <div id="webAlertNow" style="margin-top:10px;font-size:12px;color:var(--g4)"></div>
@@ -1156,7 +1155,6 @@ tr:hover td{background:var(--g1)}
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px" onclick="resetHisFilter()">ล้าง</button>
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px;margin-left:auto" onclick="exportCSV()">📥 Export CSV</button>
   </div>
-  <div id="historyStockPerformance"></div>
   <div class="card" style="margin-bottom:16px;border-left:4px solid #DC3545">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div>
@@ -1331,7 +1329,6 @@ tr:hover td{background:var(--g1)}
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span id="supPrivateEvaluationCount" class="tag" style="background:#F3E5F5;color:#6A1B9A">— รายการ</span>
-        <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="loadSupervisor()">🔄 รีเฟรช</button>
       </div>
     </div>
     <div id="supPrivateEvaluationList"></div>
@@ -2811,7 +2808,7 @@ function renderStockHistory(){
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
   if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=stockSummaryMetric('รอบที่บันทึก',sorted.length,'var(--bd)')+stockSummaryMetric('รอติดตาม',attentionCount,'var(--r)')+stockSummaryMetric('รวมจำนวนเบิก',requestedTotal,'#9A6700');
   if(!sorted.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:22px">ยังไม่มีประวัติการตรวจสต็อก</div>';return;}
-  list.innerHTML=sorted.slice(0,20).map(record=>{
+  list.innerHTML=sorted.slice(0,5).map(record=>{
     const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const roundName=record.scheduleName||'ตรวจสต็อกประจำสัปดาห์';
     const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus!=='normal'?' — พบปัญหา':''}${item.note?` (${escapeHtml(item.note)})`:''}${Number(item.requestQty||0)>0?` — <span style="color:${stockFulfillmentInfo(item).color}">${escapeHtml(stockFulfillmentInfo(item).label)}</span>`:''}${item.fulfillmentNote?` (${escapeHtml(item.fulfillmentNote)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';
     const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';
@@ -2891,6 +2888,13 @@ function stockPerformanceMarkup(records,title){
   const people={};records.forEach(record=>{if(!people[record.responsible])people[record.responsible]=[];people[record.responsible].push(record);});
   return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><h3 style="margin-bottom:4px">📦 ${escapeHtml(title||'ผลงานเบิกของและตรวจสต็อก')}</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:5px">ความครบถ้วน 40 คะแนน • จำนวนเบิกเหมาะสม 30 คะแนน • การส่งต่องาน 30 คะแนน</div><div style="font-size:11.5px;color:#176B38;font-weight:700;margin-bottom:12px">ผลจากพัสดุ เช่น ได้รับบางส่วนหรือไม่มีของ ไม่นำมาหักคะแนนผู้ช่วย</div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div>${records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>ผู้ช่วย</th><th>จำนวนรอบ</th><th>ประเมินแล้ว</th><th>คะแนนเฉลี่ย</th><th style="text-align:center">รายการ</th></tr></thead><tbody>${Object.entries(people).map(([name,items])=>{const done=items.filter(item=>item.ptVerdict);const avg=done.length?Math.round(done.reduce((sum,item)=>sum+stockPerformanceStats(item).totalScore,0)/done.length):0;const encodedName=encodeURIComponent(name).replace(/'/g,'%27');return`<tr><td>${escapeHtml(name)}</td><td>${items.length}</td><td>${done.length}</td><td><strong>${avg}%</strong></td><td style="text-align:center"><button class="btn btn-out stock-eye-btn" title="ดูรายการที่เบิก" aria-label="ดูรายการที่เบิกของ ${escapeHtml(name)}" onclick="showStockPersonDetail(decodeURIComponent('${encodedName}'))">👁</button></td></tr>`;}).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีผลงานเบิกของ</div>'}</div>`;
 }
+function stockPerformanceSummaryMarkup(records){
+  const reviewed=records.filter(record=>record.ptVerdict);
+  const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;
+  const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;
+  const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
+  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">📦 สรุปงานเบิกของและตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">รายละเอียดรายบุคคลและรายงานเต็มอยู่ในหน้าหัวหน้างาน</div></div></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div></div>`;
+}
 function showStockPersonDetail(name){
   const records=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));document.getElementById('detailTitle').textContent=`📦 รายการเบิกของ — ${name}`;
   const html=records.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);const stats=stockPerformanceStats(record);const itemHtml=requested.length?requested.map(item=>{const info=stockFulfillmentInfo(item);return`<div style="display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--g2);font-size:12px"><div><strong>${escapeHtml(item.name)}</strong><div style="color:var(--g6);margin-top:2px">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}${item.fulfillmentNote?` • ${escapeHtml(item.fulfillmentNote)}`:''}</div></div><span class="tag" style="background:${info.color}18;color:${info.color}">${escapeHtml(info.label)}</span></div>`;}).join(''):'<div style="color:var(--g4);font-size:12px;padding:8px 0">รอบนี้ไม่มีรายการที่ขอเบิก</div>';return`<div class="stock-history-card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>PT ${escapeHtml(record.ptReviewer||'ยังไม่ประเมิน')}</span></div></div><div><span class="tag ${record.ptVerdict==='pass'?'tp':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='fail'?'tf':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span> ${record.ptVerdict?`<strong style="color:var(--bd)">${stats.totalScore}%</strong>`:''}</div></div>${record.ptVerdict?`<div style="font-size:11.5px;color:var(--g6);margin-top:6px">${escapeHtml(stockScoreBreakdown(record))}</div>`:''}<div style="margin-top:8px">${itemHtml}</div>${record.ptComment?`<div style="margin-top:9px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>เหตุผล/ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}</div>`;}).join('');
@@ -2900,22 +2904,13 @@ function stockAdminManageMarkup(records){
   if(!isAdminLoggedIn)return'';const sorted=[...records].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   return`<div class="card" style="margin-bottom:16px;border-left:4px solid var(--r)"><h3 style="margin-bottom:4px">🛠️ จัดการบันทึกสต็อกและเบิกของ</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">แอดมินแก้ไข เปิดหน้าผลพัสดุและประเมิน หรือลบบันทึกได้จากตารางนี้</div>${sorted.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>ผล PT</th><th>คะแนน</th><th>จัดการ</th></tr></thead><tbody>${sorted.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockVerdictLabel(record))}</td><td>${record.ptVerdict?stockPerformanceStats(record).totalScore+'%':'—'}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="openStockReview(${Number(record.id)})">ผลพัสดุ/ประเมิน</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีรายการ</div>'}</div>`;
 }
-function enhanceHistoryStockPerformanceTable(container){
-  const table=container?.querySelector('table');if(!table)return;
-  const headerRow=table.querySelector('thead tr');if(!headerRow||headerRow.dataset.historyMeta==='1')return;
-  const actionHeader=headerRow.lastElementChild;
-  ['วันที่ตรวจล่าสุด','เวลาส่งล่าสุด','PT ผู้ประเมินล่าสุด'].forEach(label=>{const th=document.createElement('th');th.textContent=label;headerRow.insertBefore(th,actionHeader);});
-  headerRow.dataset.historyMeta='1';
-  table.querySelectorAll('tbody tr').forEach(row=>{
-    const name=row.firstElementChild?.textContent?.trim()||'';
-    const latest=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))[0];
-    const actionCell=row.lastElementChild;
-    [latest?.date?thaiDate(latest.date):'—',latest?.timeDisplay||'—',latest?.ptReviewer||'รอ PT ประเมิน'].forEach(value=>{const td=document.createElement('td');td.textContent=value;row.insertBefore(td,actionCell);});
-  });
-}
 function renderStockPerformancePanels(){
-  const targets=[['stockPerformanceDashboard','ผลงานเบิกของและตรวจสต็อก'],['historyStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['supervisorStockPerformance','ผลงานเบิกของและตรวจสต็อก'],['adminStockPerformance','สรุปผลงานเบิกของและตรวจสต็อก']];
-  targets.forEach(([id,title])=>{const el=document.getElementById(id);if(el){el.innerHTML=stockPerformanceMarkup(stockRecords,title)+(id==='adminStockPerformance'?stockAdminManageMarkup(stockRecords):'');if(id==='historyStockPerformance')enhanceHistoryStockPerformanceTable(el);}});
+  const dashboard=document.getElementById('stockPerformanceDashboard');
+  const supervisor=document.getElementById('supervisorStockPerformance');
+  const admin=document.getElementById('adminStockPerformance');
+  if(dashboard)dashboard.innerHTML=stockPerformanceSummaryMarkup(stockRecords);
+  if(supervisor)supervisor.innerHTML=stockPerformanceMarkup(stockRecords,'ผลงานเบิกของและตรวจสต็อก');
+  if(admin)admin.innerHTML=stockAdminManageMarkup(stockRecords);
 }
 function deleteStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้นที่ลบได้','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));
@@ -4570,7 +4565,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-retrospective-ux-v53';
+const APP_VERSION = 'v20260728-deduplicated-ui-v54';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
