@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-rules-mobile-alcohol-v45">
+<link rel="manifest" href="manifest.json?v=20260728-performance-qc-v46">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-rules-mobile-alcohol-v45">
+<meta name="version" content="v20260728-performance-qc-v46">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -191,11 +191,19 @@
         const snap = await db.collection('assistant_evaluations').get();
         return snap.docs.map(function(d) { return d.data(); });
       },
+      fbGetRecentAssistantEvaluations: async function(limitCount) {
+        const snap = await db.collection('assistant_evaluations').orderBy('createdAt','desc').limit(Number(limitCount)||500).get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
       fbDeleteAssistantEvaluation: async function(id) {
         await db.collection('assistant_evaluations').doc(String(id)).delete();
       },
       fbGetSupervisorNotes: async function() {
         const snap = await db.collection('supervisor_notes').get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetRecentSupervisorNotes: async function(limitCount) {
+        const snap = await db.collection('supervisor_notes').orderBy('createdAt','desc').limit(Number(limitCount)||500).get();
         return snap.docs.map(function(d) { return d.data(); });
       },
       fbSaveSupervisorNote: async function(record) {
@@ -1816,6 +1824,14 @@ const DEFAULT_CL_ITEMS = {
 
 // ══ STATE ══
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[];
+function readLocalJSON(key,fallback){
+  try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value);}
+  catch(error){console.warn(`อ่านข้อมูลสำรอง ${key} ไม่สำเร็จ:`,error);return fallback;}
+}
+function writeLocalJSON(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value));return true;}
+  catch(error){console.warn(`พื้นที่สำรองในเครื่องไม่พอสำหรับ ${key}:`,error);return false;}
+}
 const DEFAULT_STOCK_CATALOG=[
   {id:'med-glove-xs',category:'medical',categoryLabel:'วัสดุทางการแพทย์',icon:'🩺',name:'ถุงมือ XS',targetQty:1,unit:'กล่อง'},
   {id:'med-glove-m',category:'medical',categoryLabel:'วัสดุทางการแพทย์',icon:'🩺',name:'ถุงมือ M',targetQty:2,unit:'กล่อง'},
@@ -1930,7 +1946,7 @@ async function migrateLegacySupervisorNotes(){
   try{
     const count=await window.FB.fbMigrateLegacySupervisorNotes(legacy);
     submissions=submissions.map(record=>{const clean=Object.assign({},record);delete clean.ptSupervisorNote;return clean;});
-    localStorage.setItem('pt_submissions',JSON.stringify(submissions));
+    writeLocalJSON('pt_submissions',submissions);
     supervisorNotes=await window.FB.fbGetSupervisorNotes();
     await writeAuditLog('update','security',`ย้ายหมายเหตุถึงหัวหน้างาน ${count} รายการเข้าสู่พื้นที่ลับ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     showToast(`🔒 ย้ายหมายเหตุลับ ${count} รายการเรียบร้อย`,'success');
@@ -1951,14 +1967,14 @@ async function init(){
   setLoadingDetail('กำลังดึงข้อมูลจาก Firebase...');
   if(!window.FB) {
     // Firebase โหลดไม่ได้ — ใช้ localStorage offline
-    staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
-    ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
-    submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
-    missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
-    auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
-    applySystemSettings(JSON.parse(localStorage.getItem('pt_system_settings')||'null'));
-    stockCatalog = JSON.parse(localStorage.getItem('pt_stock_catalog')||'null') || DEFAULT_STOCK_CATALOG.map(item=>({...item}));
-    stockRecords = JSON.parse(localStorage.getItem('pt_stock_requests')||'[]');
+    staffList=readLocalJSON('pt_staff',[]);
+    ptList=readLocalJSON('pt_ptlist',[]);
+    submissions=readLocalJSON('pt_submissions',[]);
+    missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
+    auditLogs=readLocalJSON('pt_audit_logs',[]);
+    applySystemSettings(readLocalJSON('pt_system_settings',null));
+    stockCatalog=readLocalJSON('pt_stock_catalog',null)||DEFAULT_STOCK_CATALOG.map(item=>({...item}));
+    stockRecords=readLocalJSON('pt_stock_requests',[]);
     setSyncBadge('error','⚠️ Offline');
     showToast('⚠️ ใช้ข้อมูล offline (Firebase ไม่ตอบสนอง)','warning');
   } else {
@@ -1968,7 +1984,20 @@ async function init(){
         promise,
         new Promise((_,reject) => setTimeout(()=>reject(new Error('Firestore timeout')), ms))
       ]);
-      const config = await withTimeout(window.FB.fbGetConfig());
+      setLoadingDetail('กำลังโหลดข้อมูลหลักพร้อมกัน...');
+      const cachedMissed=readLocalJSON('pt_missed_evaluations',[]);
+      const cachedAudit=readLocalJSON('pt_audit_logs',[]);
+      const cachedStock=readLocalJSON('pt_stock_requests',[]);
+      const loadTasks=[
+        withTimeout(window.FB.fbGetConfig()),
+        withTimeout(window.FB.fbGetRecentSubmissions(500)),
+        withTimeout(window.FB.fbGetRecentMissedEvaluations(500)),
+        withTimeout(window.FB.fbGetRecentStockRequests(300))
+      ];
+      if(isAdminLoggedIn)loadTasks.push(withTimeout(window.FB.fbGetAuditLogs()));
+      const loaded=await Promise.allSettled(loadTasks);
+      const config=loaded[0].status==='fulfilled'?loaded[0].value:null;
+      if(!config&&loaded[0].status==='rejected')throw loaded[0].reason;
       staffList = (config && config.staffList) ? config.staffList : [];
       ptList    = (config && config.ptList)    ? config.ptList    : [];
       applySystemSettings(config && config.systemSettings);
@@ -1984,51 +2013,33 @@ async function init(){
         localStorage.setItem('custom_cl_stars',JSON.stringify(config.checklistItems.stars&&typeof config.checklistItems.stars==='object'?config.checklistItems.stars:{}));
       }
       _applyCLCustom();
-      setLoadingDetail('โหลด submissions...');
-      const subs = await withTimeout(window.FB.fbGetRecentSubmissions(500));
+      const subs=loaded[1].status==='fulfilled'?loaded[1].value:readLocalJSON('pt_submissions',[]);
       submissions = Array.isArray(subs) ? subs : [];
-      setLoadingDetail('โหลดรายการไม่ได้ประเมิน...');
-      try {
-        const missed = await withTimeout(window.FB.fbGetRecentMissedEvaluations(500));
-        missedEvaluations = Array.isArray(missed) ? missed : [];
-      } catch (missedError) {
-        missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
-        console.warn('โหลดรายการไม่ได้ประเมินไม่สำเร็จ:', missedError);
-      }
-      setLoadingDetail('โหลดประวัติการใช้งาน...');
-      try {
-        const logs = await withTimeout(window.FB.fbGetAuditLogs());
-        auditLogs = Array.isArray(logs) ? logs : [];
-      } catch (auditError) {
-        auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
-        console.warn('โหลดประวัติการใช้งานไม่สำเร็จ:', auditError);
-      }
-      setLoadingDetail('โหลดข้อมูลเบิกของและสต็อก...');
-      try {
-        const stocks = await withTimeout(window.FB.fbGetRecentStockRequests(300));
-        stockRecords = Array.isArray(stocks) ? stocks : [];
-      } catch (stockError) {
-        stockRecords = JSON.parse(localStorage.getItem('pt_stock_requests')||'[]');
-        console.warn('โหลดข้อมูลเบิกของไม่สำเร็จ:', stockError);
-      }
+      const missed=loaded[2].status==='fulfilled'?loaded[2].value:cachedMissed;
+      missedEvaluations=Array.isArray(missed)?missed:[];
+      const stocks=loaded[3].status==='fulfilled'?loaded[3].value:cachedStock;
+      stockRecords=Array.isArray(stocks)?stocks:[];
+      const logs=isAdminLoggedIn&&loaded[4]?.status==='fulfilled'?loaded[4].value:cachedAudit;
+      auditLogs=isAdminLoggedIn&&Array.isArray(logs)?logs:[];
+      loaded.forEach((result,index)=>{if(result.status==='rejected')console.warn(`Firebase initial load ${index} failed:`,result.reason);});
       // cache ไว้ offline
-      localStorage.setItem('pt_staff',       JSON.stringify(staffList));
-      localStorage.setItem('pt_ptlist',      JSON.stringify(ptList));
-      localStorage.setItem('pt_submissions', JSON.stringify(submissions));
-      localStorage.setItem('pt_missed_evaluations', JSON.stringify(missedEvaluations));
-      localStorage.setItem('pt_audit_logs', JSON.stringify(auditLogs));
-      localStorage.setItem('pt_stock_requests', JSON.stringify(stockRecords));
+      writeLocalJSON('pt_staff',staffList);
+      writeLocalJSON('pt_ptlist',ptList);
+      writeLocalJSON('pt_submissions',submissions);
+      writeLocalJSON('pt_missed_evaluations',missedEvaluations);
+      if(isAdminLoggedIn)writeLocalJSON('pt_audit_logs',auditLogs);
+      writeLocalJSON('pt_stock_requests',stockRecords);
       setSyncBadge('synced','🔥 Firebase');
       showToast('✅ เชื่อมต่อ Firebase สำเร็จ','success');
     } catch(e) {
       // fallback offline
-      staffList   = JSON.parse(localStorage.getItem('pt_staff')||'[]');
-      ptList      = JSON.parse(localStorage.getItem('pt_ptlist')||'[]');
-      submissions = JSON.parse(localStorage.getItem('pt_submissions')||'[]');
-      missedEvaluations = JSON.parse(localStorage.getItem('pt_missed_evaluations')||'[]');
-      auditLogs = JSON.parse(localStorage.getItem('pt_audit_logs')||'[]');
-      applySystemSettings(JSON.parse(localStorage.getItem('pt_system_settings')||'null'));
-      stockRecords = JSON.parse(localStorage.getItem('pt_stock_requests')||'[]');
+      staffList=readLocalJSON('pt_staff',[]);
+      ptList=readLocalJSON('pt_ptlist',[]);
+      submissions=readLocalJSON('pt_submissions',[]);
+      missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
+      auditLogs=isAdminLoggedIn?readLocalJSON('pt_audit_logs',[]):[];
+      applySystemSettings(readLocalJSON('pt_system_settings',null));
+      stockRecords=readLocalJSON('pt_stock_requests',[]);
       setSyncBadge('error','⚠️ Offline');
       showToast('⚠️ ใช้ข้อมูล offline ('+friendlyErrorMessage(e)+')','warning');
       console.error('Firebase init error:', e);
@@ -2530,7 +2541,7 @@ async function submitStockRequest(){
   try{
     isSavingStockRequest=true;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=true;
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));const changeDetail=old?stockRecordChangeSummary(old,record):'';await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}${changeDetail?` — ${changeDetail}`:''}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);writeLocalJSON('pt_stock_requests',stockRecords);const changeDetail=old?stockRecordChangeSummary(old,record):'';await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}${changeDetail?` — ${changeDetail}`:''}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
   finally{isSavingStockRequest=false;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=false;}
 }
@@ -2570,7 +2581,7 @@ async function updateStockStage(id,nextStage){
   const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
   const current=stockStage(record);const allowed=current==='awaiting_dispatch'&&nextStage==='procuring'||current==='procuring'&&nextStage==='ready_for_review';if(!allowed)return showToast('⚠️ สถานะรายการเปลี่ยนไปแล้ว กรุณารีเฟรช','warning');
   const patch={procurementStage:nextStage,stageUpdatedAt:new Date().toISOString()};
-  try{if(!window.FB?.fbUpdateStockStage)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockStage(id,patch);Object.assign(record,patch);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast(nextStage==='procuring'?'📦 เปลี่ยนสถานะเป็นกำลังส่งเบิกแล้ว':'✅ รับของแล้ว ขั้นต่อไปกดแชร์ LINE ให้ PT ประเมิน','success');}catch(error){showToast('❌ เปลี่ยนสถานะไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  try{if(!window.FB?.fbUpdateStockStage)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockStage(id,patch);Object.assign(record,patch);writeLocalJSON('pt_stock_requests',stockRecords);renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast(nextStage==='procuring'?'📦 เปลี่ยนสถานะเป็นกำลังส่งเบิกแล้ว':'✅ รับของแล้ว ขั้นต่อไปกดแชร์ LINE ให้ PT ประเมิน','success');}catch(error){showToast('❌ เปลี่ยนสถานะไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 const STOCK_FULFILLMENT_META={
   not_required:{label:'ไม่ต้องเบิก',color:'#6C757D'},pending:{label:'รอตรวจสอบ',color:'#9A6700'},submitted:{label:'ส่งเบิกแล้ว',color:'#1565C0'},
@@ -2665,7 +2676,7 @@ async function saveStockReview(){
   const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
   const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
   const reviewPatch={items:updatedItems,procurementUpdatedAt:updated.procurementUpdatedAt,procurementUpdatedBy:updated.procurementUpdatedBy,evaluationStatus:updated.evaluationStatus,ptVerdict:updated.ptVerdict,ptReviewer:updated.ptReviewer,ptComment:updated.ptComment,ptAccuracyScore:updated.ptAccuracyScore,ptCommunicationScore:updated.ptCommunicationScore,stockScore:updated.stockScore,reviewedAt:updated.reviewedAt,reviewTimeDisplay:updated.reviewTimeDisplay};
-  try{isSavingStockReview=true;updateStockReviewReadiness();if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{isSavingStockReview=false;updateStockReviewReadiness();}
+  try{isSavingStockReview=true;updateStockReviewReadiness();if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);writeLocalJSON('pt_stock_requests',stockRecords);await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{isSavingStockReview=false;updateStockReviewReadiness();}
 }
 function stockPerformanceMarkup(records,title){
   const reviewed=records.filter(record=>record.ptVerdict);const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
@@ -2700,7 +2711,7 @@ function renderStockPerformancePanels(){
 }
 function deleteStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้นที่ลบได้','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));
-  showConfirm('ลบบันทึกตรวจสต็อกรายการนี้ใช่หรือไม่?',async()=>{try{if(window.FB?.fbDeleteStockRequest)await window.FB.fbDeleteStockRequest(id);stockRecords=stockRecords.filter(item=>Number(item.id)!==Number(id));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));await writeAuditLog('delete','stock_request',`ลบบันทึกตรวจสต็อกของ ${record?.responsible||'—'}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderStockHistory();renderStockPerformancePanels();refreshWebAlerts(false);showToast('🗑️ ลบบันทึกตรวจสต็อกแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+error.message,'error');}});
+  showConfirm('ลบบันทึกตรวจสต็อกรายการนี้ใช่หรือไม่?',async()=>{try{if(window.FB?.fbDeleteStockRequest)await window.FB.fbDeleteStockRequest(id);stockRecords=stockRecords.filter(item=>Number(item.id)!==Number(id));writeLocalJSON('pt_stock_requests',stockRecords);await writeAuditLog('delete','stock_request',`ลบบันทึกตรวจสต็อกของ ${record?.responsible||'—'}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderStockHistory();renderStockPerformancePanels();refreshWebAlerts(false);showToast('🗑️ ลบบันทึกตรวจสต็อกแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+error.message,'error');}});
 }
 
 function openSubmitModal(){
@@ -3095,7 +3106,7 @@ async function saveMissedEvaluation(){
   try{
     if(window.FB)await window.FB.fbSaveMissedEvaluation(record);
     missedEvaluations=missedEvaluations.filter(item=>item.id!==record.id);missedEvaluations.push(record);
-    localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));
+    writeLocalJSON('pt_missed_evaluations',missedEvaluations);
     const peopleSummary=[assistantNames.length?`ผู้ช่วย ${assistantNames.length} คน`:null,ptNames.length?`PT ${ptNames.length} คน`:null].filter(Boolean).join(', ');
     await writeAuditLog(old?'update':'add','missed_evaluation',`${old?'แก้ไข':'เพิ่ม'}ค่าเสียหาย ${date} ${shiftLabel(shift)} — ${peopleSummary}, ${record.amount} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     const completedFromAlert=Boolean(activeMissedAlertKey);
@@ -3109,7 +3120,7 @@ async function deleteMissedEvaluation(id){
   showConfirm('ลบรายการผู้ไม่ปฏิบัติงานตามกำหนดนี้ใช่หรือไม่?',async()=>{
     try{
       if(window.FB)await window.FB.fbDeleteMissedEvaluation(id);
-      missedEvaluations=missedEvaluations.filter(item=>item.id!==id);localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));
+      missedEvaluations=missedEvaluations.filter(item=>item.id!==id);writeLocalJSON('pt_missed_evaluations',missedEvaluations);
       if(deletedRecord)await writeAuditLog('delete','missed_evaluation',`ลบค่าเสียหาย ${deletedRecord.date} ${shiftLabel(deletedRecord.shift||'morning')} — ${deletedRecord.amount||0} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
       if(editingMissedEvaluationId===id)resetMissedEvalForm();renderMissedEvalSummary();loadHistory();loadReviewView();renderAdminTable();if(isSupLoggedIn&&document.getElementById('view-supervisor')?.classList.contains('active'))loadSupervisor();refreshWebAlerts(false);showToast('🗑️ ลบรายการแล้ว','success');
     }catch(e){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
@@ -3215,7 +3226,7 @@ async function saveAdminChecklistEdit(){
   try{
     if(window.FB?.fbUpdateSubmission)await window.FB.fbUpdateSubmission(updated);
     submissions=submissions.map(item=>Number(item.id)===Number(updated.id)?updated:item);
-    localStorage.setItem('pt_submissions',JSON.stringify(submissions));
+    writeLocalJSON('pt_submissions',submissions);
     await writeAuditLog('update','system_data',`แอดมินแก้ Checklist ของ ${updated.staffName} — ${updated.date} ${shiftLabel(updated.shift||'morning')} (${changes} รายการ)`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     renderAdminTable();loadHistory();loadDashboard();loadReviewView();updateHistoryFilters();updateDashFilter();
     closeModal('adminEditChecklistModal');
@@ -3233,7 +3244,7 @@ async function deleteRecord(id){
 
 function exportCSV(){
   const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;const fStaff=document.getElementById('hisFilterStaff')?.value;const fStatus=document.getElementById('hisFilterStatus')?.value;
-  let data=[...submissions].reverse().filter(s=>isDateInRange(s.date,fStart,fEnd));
+  let data=[...submissions].sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   const rows=[['วันที่','เวร','ผู้ช่วย','ความสมบูรณ์%','สถานะ','PT ประเมิน','PT ไม่ประเมิน','ผลประเมิน','ความเห็น PT']];
   data.forEach(s=>{rows.push([thaiDate(s.date),shiftLabel(s.shift||'morning'),s.staffName,calcCompletion(s),s.status,s.ptReviewer||'—',missedPTText(s),s.ptVerdict||'—',s.ptComment||'']);});
@@ -3260,7 +3271,7 @@ function updateDashFilter() {
 
 function refreshDashboard() {
   setSyncBadge('syncing','⏳ Loading...');
-  window.FB.fbGetSubmissions().then(subs => {
+  window.FB.fbGetRecentSubmissions(500).then(subs => {
     submissions = Array.isArray(subs) ? subs : [];
     setSyncBadge('synced','🔥 Firebase');
     loadDashboard();
@@ -3586,14 +3597,14 @@ function auditCategoryLabel(category){return({missed_evaluation:'ค่าเส
 function auditActionLabel(action){return({add:'เพิ่ม',update:'แก้ไข',delete:'ลบ',security:'เปลี่ยนรหัส',login:'เข้าสู่ระบบ',logout:'ออกจากระบบ'})[action]||action||'บันทึก';}
 async function writeAuditLog(action,category,description,options){
   const now=new Date();const extra=options||{};const record={id:Date.now()*1000+Math.floor(Math.random()*1000),action,category,description,actor:extra.actor||currentAdminEmail(),actorRole:extra.actorRole||'แอดมิน',date:localDateKey(now),createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)};
-  if(isAdminLoggedIn){auditLogs=[record,...auditLogs.filter(item=>item.id!==record.id)].slice(0,1000);localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));if(currentAdminTab==='audit')renderAuditLogs();}
+  if(isAdminLoggedIn){auditLogs=[record,...auditLogs.filter(item=>item.id!==record.id)].slice(0,1000);writeLocalJSON('pt_audit_logs',auditLogs);if(currentAdminTab==='audit')renderAuditLogs();}
   try{if(window.FB?.fbSaveAuditLog)await window.FB.fbSaveAuditLog(record);}catch(error){console.warn('บันทึกประวัติไว้ในเครื่อง:',error);}
   return record;
 }
 async function loadAuditLogs(forceRemote){
   if(!isAdminLoggedIn)return;
   const list=document.getElementById('auditLogList');if(list)list.innerHTML='<div style="text-align:center;color:var(--g4);padding:24px">กำลังโหลดประวัติ...</div>';
-  if(forceRemote&&window.FB?.fbGetAuditLogs){try{const remote=await window.FB.fbGetAuditLogs();if(Array.isArray(remote)){auditLogs=remote;localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));}}catch(error){showToast('⚠️ ใช้ประวัติที่สำรองในเครื่อง','warning');}}
+  if(forceRemote&&window.FB?.fbGetAuditLogs){try{const remote=await window.FB.fbGetAuditLogs();if(Array.isArray(remote)){auditLogs=remote;writeLocalJSON('pt_audit_logs',auditLogs);}}catch(error){showToast('⚠️ ใช้ประวัติที่สำรองในเครื่อง','warning');}}
   renderAuditLogs();
 }
 function clearAuditFilters(){const category=document.getElementById('auditCategoryFilter');const date=document.getElementById('auditDateFilter');if(category)category.value='all';if(date)date.value='';renderAuditLogs();}
@@ -3907,8 +3918,8 @@ function attachSupervisorNotes(records){
   return records.map(record=>{const note=noteMap.get(Number(record.id));return Object.assign({},record,{ptSupervisorNote:note?.note||record.ptSupervisorNote||''});});
 }
 async function fetchSupervisorNotes(){
-  if(!isSupLoggedIn||!window.FB?.fbGetSupervisorNotes){supervisorNotes=[];return supervisorNotes;}
-  try{const records=await window.FB.fbGetSupervisorNotes();supervisorNotes=Array.isArray(records)?records:[];}
+  if(!isSupLoggedIn||!window.FB?.fbGetRecentSupervisorNotes){supervisorNotes=[];return supervisorNotes;}
+  try{const records=await window.FB.fbGetRecentSupervisorNotes(500);supervisorNotes=Array.isArray(records)?records:[];}
   catch(error){supervisorNotes=[];console.warn('Load supervisor notes failed:',error);}
   return supervisorNotes;
 }
@@ -3921,7 +3932,7 @@ async function loadSupervisor() {
   const fEnd   = document.getElementById('supEndDate')?.value;
   const fStaff = document.getElementById('supFilterStaff')?.value || 'all';
 
-  let data = attachSupervisorNotes(submissions).reverse().filter(s => isDateInRange(s.date, fStart, fEnd));
+  let data=attachSupervisorNotes(submissions).sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if (fStaff !== 'all') data = data.filter(s => s.staffName === fStaff);
 
   renderExecutiveDashboard(data,'supervisorExecutiveDashboard');
@@ -4103,7 +4114,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-rules-mobile-alcohol-v45';
+const APP_VERSION = 'v20260728-performance-qc-v46';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -4292,10 +4303,10 @@ async function syncPendingAssistantEvaluations(){
 async function fetchEvaluationRecords() {
   if(!isSupLoggedIn)return [];
   let records = await syncPendingAssistantEvaluations();
-  if(window.FB?.fbGetAssistantEvaluations) {
+  if(window.FB?.fbGetRecentAssistantEvaluations) {
     try {
       const remote = await Promise.race([
-        window.FB.fbGetAssistantEvaluations(),
+        window.FB.fbGetRecentAssistantEvaluations(500),
         new Promise((_,reject)=>setTimeout(()=>reject(new Error('Firestore timeout')),10000))
       ]);
       if(Array.isArray(remote)) {
