@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260729-mobile-actions-line-names-v57';
+const CACHE_NAME = 'pt-kth-v20260729-retrospective-delete-v58';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {

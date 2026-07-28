@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260729-mobile-actions-line-names-v57">
+<meta name="version" content="v20260729-retrospective-delete-v58">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -261,7 +261,9 @@
       fbDeleteRetrospectiveCheck: async function(id, submission) {
         const batch = db.batch();
         batch.delete(db.collection('retrospective_checks').doc(String(id)));
-        batch.set(db.collection('submissions').doc(String(submission.id)), submission);
+        if (submission && submission.id !== undefined && submission.id !== null) {
+          batch.set(db.collection('submissions').doc(String(submission.id)), submission);
+        }
         await batch.commit();
       },
       fbGetReportRange: async function(startDate, endDate) {
@@ -1988,7 +1990,7 @@ let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockSchedu
 let editingRetrospectiveId=null;
 const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
-let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], retrospectivePhotos=[], lastRetrospectiveShareId=null, isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false;
+let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], retrospectivePhotos=[], lastRetrospectiveShareId=null, isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false, isDeletingRetrospective=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
 
@@ -4073,16 +4075,30 @@ function confirmDeleteRetrospectiveCheck(id){
 }
 async function deleteRetrospectiveCheck(id){
   if(!isAdminLoggedIn)return showToast('🔒 เฉพาะแอดมินเท่านั้น','error');
-  const record=retrospectiveChecks.find(item=>String(item.id)===String(id));const submission=retrospectiveSubmissionById(record?.submissionId);if(!record||!submission)return;
-  const nextChecks=retrospectiveChecks.filter(item=>String(item.id)!==String(id));const updatedSubmission=rebuildRetrospectiveSubmission(submission,nextChecks);
+  if(isDeletingRetrospective)return showToast('⏳ กำลังลบรายการ กรุณารอสักครู่','warning');
+  const record=retrospectiveChecks.find(item=>String(item.id)===String(id));
+  if(!record)return showToast('⚠️ ไม่พบรายการนี้ กรุณารีเฟรชหน้าแล้วลองใหม่','warning');
+  const submission=retrospectiveSubmissionById(record.submissionId);
+  const nextChecks=retrospectiveChecks.filter(item=>String(item.id)!==String(id));
+  const updatedSubmission=submission?rebuildRetrospectiveSubmission(submission,nextChecks):null;
   try{
+    isDeletingRetrospective=true;
+    showToast('⏳ กำลังลบรายการ...','warning');
     await window.FB.fbDeleteRetrospectiveCheck(id,updatedSubmission);
-    retrospectiveChecks=nextChecks;submissions=submissions.map(item=>String(item.id)===String(updatedSubmission.id)?updatedSubmission:item);
+    retrospectiveChecks=nextChecks;
+    if(updatedSubmission)submissions=submissions.map(item=>String(item.id)===String(updatedSubmission.id)?updatedSubmission:item);
     writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);writeLocalJSON('pt_submissions',submissions);
-    await writeAuditLog('delete','retrospective_check',`ลบผลตรวจสอบย้อนหลัง ${thaiDate(record.date)} ${record.itemText}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     if(String(editingRetrospectiveId)===String(id))resetRetrospectiveForm();
-    renderRetrospectiveAdmin();renderRetrospectiveHistory();renderMissedEvalSummary();loadHistory();loadDashboard();renderAdminTable();showToast('🗑️ ลบรายการและคำนวณผลใหม่แล้ว','success');
-  }catch(error){console.error('Delete retrospective check failed:',error);showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+    renderRetrospectiveAdmin();renderRetrospectiveHistory();renderMissedEvalSummary();loadHistory();loadDashboard();renderAdminTable();
+    showToast(updatedSubmission?'🗑️ ลบรายการและคำนวณผลใหม่แล้ว':'🗑️ ลบรายการแล้ว (ไม่พบ Checklist ต้นทาง)','success');
+    try{await writeAuditLog('delete','retrospective_check',`ลบผลตรวจสอบย้อนหลัง ${thaiDate(record.date)} ${record.itemText}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});}
+    catch(auditError){console.warn('Delete retrospective audit failed:',auditError);}
+  }catch(error){
+    console.error('Delete retrospective check failed:',error);
+    showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');
+  }finally{
+    isDeletingRetrospective=false;
+  }
 }
 
 function renderAuditLogs(){
@@ -4592,7 +4608,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260729-mobile-actions-line-names-v57';
+const APP_VERSION = 'v20260729-retrospective-delete-v58';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
