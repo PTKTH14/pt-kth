@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-performance-qc-v46">
+<link rel="manifest" href="manifest.json?v=20260728-performance-qc-v47">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-performance-qc-v46">
+<meta name="version" content="v20260728-performance-qc-v47">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -757,9 +757,23 @@ tr:hover td{background:var(--g1)}
   #adminPanel-settings .card>div[style*="minmax(200px,1.4fr)"]{grid-template-columns:1fr!important}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
   .mn-item:active{transform:scale(.96);background:#DCEEFF}
+  .shift-btn,.btn-na,.rb{min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .shift-btn{padding:9px 7px;font-size:13px}
+  .btn-na{padding:8px 12px;font-size:12px}
+  .rb{width:44px;height:44px;font-size:15px}
+  .sb-sel,.sb-input,input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}
+  .ci-acts{opacity:1}
+}
+@media(min-width:769px) and (max-width:1100px){
+  .shift-btn,.btn-na,.rb{min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .shift-btn{padding:9px 7px}
+  .btn-na{padding:8px 12px}
+  .rb{width:44px;height:44px}
+  .sb-sel,.sb-input,input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}
+  .ci-acts{opacity:1}
 }
 @media(pointer:coarse){
-  button,.btn,.btn-na,.link-copy{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  button,.btn,.btn-na,.link-copy,.shift-btn,.rb{min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}
   input[type="checkbox"],input[type="radio"]{width:22px!important;height:22px!important;min-width:22px}
   .ci-acts{opacity:1}
@@ -4114,7 +4128,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-performance-qc-v46';
+const APP_VERSION = 'v20260728-performance-qc-v47';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
