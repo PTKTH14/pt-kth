@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260726-stock-overdue-audit-v43">
+<meta name="version" content="v20260728-touch-review-fix-v44-1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -691,6 +691,10 @@ tr:hover td{background:var(--g1)}
   .tsubtitle{display:block;font-size:10.5px;max-width:210px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.84)}
   .tl{gap:10px}.tlogo{width:45px;height:45px;padding:3px;border-radius:13px}.tlogo img{border-radius:10px}
   .topbar{padding:0 13px}.alert-bell{width:38px;height:38px}
+  .review-submit-bar{position:sticky;bottom:calc(var(--mobile-nav-h) + 7px);z-index:40;background:rgba(242,246,250,.96);padding:10px 0 4px;backdrop-filter:blur(8px)}
+  .review-submit-bar .btn{flex:1;min-height:48px;justify-content:center}
+  .mf .btn{min-height:46px}
+  .mc-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 }
 @media(min-width:769px) and (max-width:1050px){.live{display:none}.tsubtitle{max-width:360px}}
 @media(min-width:769px) and (max-width:1180px){
@@ -745,6 +749,13 @@ tr:hover td{background:var(--g1)}
   #adminPanel-settings .card>div[style*="minmax(200px,1.4fr)"]{grid-template-columns:1fr!important}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
   .mn-item:active{transform:scale(.96);background:#DCEEFF}
+}
+@media(pointer:coarse){
+  button,.btn,.btn-na,.link-copy{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}
+  input[type="checkbox"],input[type="radio"]{width:22px!important;height:22px!important;min-width:22px}
+  .ci-acts{opacity:1}
+  .stock-eye-btn{width:44px!important;height:44px!important}
 }
 #stockPerformanceDashboard table th:last-child,
 #stockPerformanceDashboard table td:last-child{display:none}
@@ -949,8 +960,8 @@ tr:hover td{background:var(--g1)}
         <div id="autoVerdictBadge" style="display:none;margin-top:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
       </div>
     </div>
-    <div class="act-row">
-      <button class="btn btn-suc" onclick="submitReview()">✅ บันทึกผลการประเมิน</button>
+    <div class="act-row review-submit-bar">
+      <button class="btn btn-suc" id="checklistReviewSaveBtn" onclick="submitReview()">✅ บันทึกผลการประเมิน</button>
       <button class="btn btn-out" onclick="cancelReview()">↩ ยกเลิก</button>
     </div>
   </div>
@@ -1531,11 +1542,11 @@ tr:hover td{background:var(--g1)}
 
 <!-- MOBILE NAV -->
 <nav class="mobile-nav" id="mobileNav">
-  <button class="mn-item active" id="mnav-checklist" onclick="switchView('checklist',document.getElementById('nav-checklist'));setMobileNav('checklist')"><span class="mn-icon">✅</span><span class="mn-label">Checklist</span></button>
-  <button class="mn-item" id="mnav-stock" onclick="switchView('stock',document.getElementById('nav-stock'));setMobileNav('stock')"><span class="mn-icon">📦</span><span class="mn-label">เบิกของ</span></button>
-  <button class="mn-item" id="mnav-review" onclick="switchView('review',document.getElementById('nav-review'));setMobileNav('review')"><span class="mn-icon">🔍</span><span class="mn-label">ประเมิน</span></button>
-  <button class="mn-item" id="mnav-history" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
-  <button class="mn-item" id="mnav-evaluation" onclick="switchView('evaluation',document.getElementById('nav-evaluation'));setMobileNav('evaluation')"><span class="mn-icon">📝</span><span class="mn-label">รายบุคคล</span></button>
+  <button type="button" class="mn-item active" id="mnav-checklist" onclick="openMobileView('checklist')"><span class="mn-icon">✅</span><span class="mn-label">Checklist</span></button>
+  <button type="button" class="mn-item" id="mnav-stock" onclick="openMobileView('stock')"><span class="mn-icon">📦</span><span class="mn-label">เบิกของ</span></button>
+  <button type="button" class="mn-item" id="mnav-review" onclick="openMobileView('review')"><span class="mn-icon">🔍</span><span class="mn-label">ประเมิน</span></button>
+  <button type="button" class="mn-item" id="mnav-history" onclick="openMobileView('history')"><span class="mn-icon">📋</span><span class="mn-label">ประวัติ</span></button>
+  <button type="button" class="mn-item" id="mnav-evaluation" onclick="openMobileView('evaluation')"><span class="mn-icon">📝</span><span class="mn-label">รายบุคคล</span></button>
 </nav>
 
 <!-- MODALS -->
@@ -1752,7 +1763,7 @@ tr:hover td{background:var(--g1)}
       <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="หากหักคะแนน กรุณาระบุสิ่งที่ผู้ช่วยต้องปรับปรุง..."></textarea></div>
       <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #B7DFC4;background:#F3FBF5;border-radius:9px;font-size:12px;line-height:1.55;cursor:pointer"><input type="checkbox" id="stockReviewFairConfirm" onchange="updateStockReviewReadiness()" style="margin-top:3px"><span><strong style="color:#176B38">ยืนยันก่อนบันทึก</strong><br>ฉันประเมินจากผลงานของผู้ช่วยครบทั้ง 2 หัวข้อ และไม่ได้นำผลที่พัสดุจ่ายของไม่ครบหรือไม่มีของมาหักคะแนน</span></label>
     </div>
-    <div class="mf"><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" id="stockReviewSaveBtn" onclick="saveStockReview()" disabled>💾 บันทึกผลพัสดุและคะแนน</button></div>
+    <div class="mf"><div id="stockReviewReadinessHint" style="width:100%;font-size:12px;color:#8A5A00;text-align:right"></div><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" id="stockReviewSaveBtn" onclick="saveStockReview()" disabled>💾 บันทึกผลพัสดุและคะแนน</button></div>
   </div>
 </div>
 
@@ -1830,7 +1841,7 @@ let stockOverdueDays=3;
 let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[], isSavingStockRequest=false, isSavingStockReview=false;
 const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
-let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false;
+let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null;
 
@@ -2070,6 +2081,12 @@ function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<st
 function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
 function startClock(){const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const minuteKey=localDateKey(now)+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
 function setMobileNav(v){document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));const btn=document.getElementById('mnav-'+v);if(btn)btn.classList.add('active');}
+function openMobileView(viewName){
+  const nav=document.getElementById('nav-'+viewName);
+  switchView(viewName,nav);
+  setMobileNav(viewName);
+  window.scrollTo({top:0,behavior:'auto'});
+}
 function formatItemText(t){return t.replace(/\(([^)]+)\)/g,'(<span style="color:var(--r);font-weight:700">$1</span>)');}
 
 function getWebAlertStatus(now){
@@ -2159,9 +2176,10 @@ function refreshWebAlerts(showPopup){
 function openWebAlerts(){closeModal('webAlertModal');switchView('alerts',null);setMobileNav('alerts');refreshWebAlerts(false);}
 
 function switchView(v,el){
+  const target=document.getElementById('view-'+v);if(!target){showToast('⚠️ ไม่พบหน้าที่เลือก กรุณารีเฟรชเว็บ','warning');return false;}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
+  target.classList.add('active');
   if(el)el.classList.add('active');
   if(v==='review')loadReviewView();
   if(v==='stock')loadStockView();
@@ -2181,6 +2199,7 @@ function switchView(v,el){
   if(v==='evaluation'){
     updateEvaluationDropdowns();
   }
+  return true;
 }
 
 // ══ SHIFT ══
@@ -2583,7 +2602,7 @@ function editStockRecord(id){
 }
 function openStockReview(id){
   const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');activeStockReviewId=record.id;
-  document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';
+  document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';select.onchange=updateStockReviewReadiness;
   stockReviewWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
   const stats=stockPerformanceStats(record);document.getElementById('stockReviewCompletion').textContent=`กรอกครบ ${stats.completionPct}% = ${stats.completionScore}/40 คะแนน`;
   document.getElementById('stockReviewAccuracy').value=record.ptVerdict?String(Number(record.ptAccuracyScore||0)):'';
@@ -2594,7 +2613,7 @@ function renderStockReviewWorkflowItems(){
   const wrap=document.getElementById('stockReviewWorkflowItems');if(!wrap)return;
   wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" aria-label="ผลที่ได้รับ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)"><option value="">— เลือกผลที่ได้รับ —</option>${STOCK_REVIEW_RESULT_KEYS.map(key=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(STOCK_FULFILLMENT_META[key].label)}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ (ถ้ามี)"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
 }
-function setStockReviewWorkflowValue(index,field,value){if(stockReviewWorkflowDraftItems[index])stockReviewWorkflowDraftItems[index][field]=value;}
+function setStockReviewWorkflowValue(index,field,value){if(stockReviewWorkflowDraftItems[index])stockReviewWorkflowDraftItems[index][field]=value;updateStockReviewReadiness();}
 function updateStockReviewScorePreview(){
   const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const preview=document.getElementById('stockReviewScorePreview');if(!record||!preview)return;
   const completion=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;
@@ -2602,11 +2621,15 @@ function updateStockReviewScorePreview(){
   const total=completion+Number(accuracyRaw)+Number(communicationRaw);const verdict=total>=80?'ผ่าน':total>=60?'ต้องปรับปรุง':'ไม่ผ่าน';preview.textContent=`คะแนนรวม ${total}/100 — ${verdict}`;preview.style.background=total>=80?'#E8F5E9':total>=60?'#FFF8E1':'#FFEBEE';preview.style.color=total>=80?'#176B38':total>=60?'#8A5A00':'#B02A37';
 }
 function updateStockReviewReadiness(){
+  const reviewer=document.getElementById('stockReviewPt')?.value||'';
   const accuracy=document.getElementById('stockReviewAccuracy')?.value||'';
   const communication=document.getElementById('stockReviewCommunication')?.value||'';
   const confirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);
+  const missingResult=stockReviewWorkflowDraftItems.find(item=>!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
   const button=document.getElementById('stockReviewSaveBtn');
-  if(button)button.disabled=accuracy===''||communication===''||!confirmed||isSavingStockReview;
+  const reasons=[];if(!reviewer)reasons.push('เลือกชื่อ PT');if(missingResult)reasons.push(`เลือกผลของ ${missingResult.name}`);if(accuracy===''||communication==='')reasons.push('ตอบเกณฑ์คะแนน 2 ข้อ');if(!confirmed)reasons.push('ติ๊กยืนยันความเป็นธรรม');
+  if(button)button.disabled=reasons.length>0||isSavingStockReview;
+  const hint=document.getElementById('stockReviewReadinessHint');if(hint){hint.textContent=isSavingStockReview?'กำลังบันทึก กรุณารอสักครู่':reasons.length?`ก่อนบันทึก: ${reasons.join(' • ')}`:'✅ ข้อมูลครบ พร้อมบันทึก';hint.style.color=reasons.length?'#8A5A00':'#176B38';}
 }
 async function saveStockReview(){
   if(isSavingStockReview)return showToast('⏳ ระบบกำลังบันทึกผลประเมิน กรุณารอสักครู่','warning');
@@ -2862,6 +2885,7 @@ async function handleReviewPhotos(event){
 }
 
 async function submitReview(){
+  if(isSavingChecklistReview)return showToast('⏳ ระบบกำลังบันทึกผลประเมิน กรุณารอสักครู่','warning');
   if(activeRevIdx===null)return;
   const reviewer=document.getElementById('ptReviewerSel').value;const comment=document.getElementById('ptComment').value.trim();const verdict=document.getElementById('ptVerdict').value;const lineShared=!!document.getElementById('ptLineShared')?.checked;
   if(!reviewer)return showToast('⚠️ เลือกชื่อนักกายภาพบำบัดก่อน','warning');
@@ -2878,6 +2902,7 @@ async function submitReview(){
   const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:rec.shift==='afternoon'?'afternoon':'morning',ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
   setSyncBadge('syncing','⏳ Saving...');
   try{
+    isSavingChecklistReview=true;const saveButton=document.getElementById('checklistReviewSaveBtn');if(saveButton){saveButton.disabled=true;saveButton.textContent='⏳ กำลังบันทึก...';}
     // อัปเดต local array ก่อน
     submissions[activeRevIdx] = rec;
     // บันทึก Firebase
@@ -2899,6 +2924,8 @@ async function submitReview(){
     setSyncBadge('error','⚠️ Error');
     console.error('submitReview error:', e);
     showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');
+  }finally{
+    isSavingChecklistReview=false;const saveButton=document.getElementById('checklistReviewSaveBtn');if(saveButton){saveButton.disabled=false;saveButton.textContent='✅ บันทึกผลการประเมิน';}
   }
 }
 
@@ -4050,7 +4077,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260726-stock-overdue-audit-v43';
+const APP_VERSION = 'v20260728-touch-review-fix-v44-1';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
