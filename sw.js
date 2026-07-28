@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260728-line-share-v50';
+const CACHE_NAME = 'pt-kth-v20260728-mobile-more-v51';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
