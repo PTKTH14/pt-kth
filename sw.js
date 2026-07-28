@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260728-rules-mobile-alcohol-v45';
+const CACHE_NAME = 'pt-kth-v20260728-performance-qc-v46';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
@@ -20,21 +20,26 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if(url.origin !== self.location.origin) return;
 
+  if(request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request, { cache:'no-store' })
+        .then(response => {
+          if(response && response.ok)caches.open(CACHE_NAME).then(cache => cache.put('./index.html',response.clone()));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(request, { cache:'no-store' })
-      .then(response => {
-        if(response && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request.mode === 'navigate' ? './index.html' : request, copy));
-        }
+    caches.match(request).then(cached => {
+      const update=fetch(request).then(response => {
+        if(response && response.ok)caches.open(CACHE_NAME).then(cache => cache.put(request,response.clone()));
         return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(request);
-        if(cached) return cached;
-        if(request.mode === 'navigate') return caches.match('./index.html');
-        throw new Error('Offline and no cached response');
-      })
+      }).catch(() => cached);
+      return cached || update;
+    })
   );
 });
 
