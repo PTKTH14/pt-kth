@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-collapsible-history-v56">
+<meta name="version" content="v20260729-mobile-actions-line-names-v57">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -748,7 +748,7 @@ tr:hover td{background:var(--g1)}
   .tsubtitle{display:block;font-size:10.5px;max-width:210px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.84)}
   .tl{gap:10px}.tlogo{width:45px;height:45px;padding:3px;border-radius:13px}.tlogo img{border-radius:10px}
   .topbar{padding:0 13px}.alert-bell{width:38px;height:38px}
-  .review-submit-bar{position:sticky;bottom:calc(var(--mobile-nav-h) + 7px);z-index:40;background:rgba(242,246,250,.96);padding:10px 0 4px;backdrop-filter:blur(8px)}
+  .review-submit-bar{position:static;z-index:auto;background:transparent;padding:12px 0 0;margin-top:4px;backdrop-filter:none}
   .review-submit-bar .btn{flex:1;min-height:48px;justify-content:center}
   .mf .btn{min-height:46px}
   .mc-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
@@ -2817,7 +2817,8 @@ async function shareStockToLine(){
   const heading=ready?'✅ รับของแล้ว พร้อมให้ PT ประเมินงานเบิกของ':'📦 แจ้งรายการที่กำลังจะดำเนินการเบิก';
   const action=ready?'กรุณาเปิดระบบเพื่อตรวจรายการและประเมินผล':'แจ้งให้ PT ทราบก่อน ผู้ช่วยจะดำเนินการเบิกตามรายการนี้';
   const receiveText=Number(record.scheduleReceiveWeekday)>=0?`\nคาดว่ารับของ: ${STOCK_WEEKDAY_LABELS[Number(record.scheduleReceiveWeekday)]}`:'';
-  const msg=`${heading}\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้รับผิดชอบ: ${record.responsible}\nวันที่: ${thaiDate(record.date)}${receiveText}\n${requested||'• ไม่มีรายการที่ต้องเบิก'}\n${action}\nเปิดระบบ: ${stockShareUrl(record)}`;
+  const reviewerText=record.ptReviewer?`\nPT ผู้ประเมิน: ${record.ptReviewer}`:'';
+  const msg=`${heading}\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้ช่วย: ${record.responsible||'-'}${reviewerText}\nวันที่: ${thaiDate(record.date)}${receiveText}\n${requested||'• ไม่มีรายการที่ต้องเบิก'}\n${action}\nเปิดระบบ: ${stockShareUrl(record)}`;
   await shareTextPreferNative('งานเบิกของ PT KTH',msg);
 }
 function renderStockHistory(){
@@ -3078,10 +3079,12 @@ function reviewShareText(){
   const verdict=document.getElementById('ptVerdict')?.value||'';
   const verdictLabel=verdict==='pass'?'ผ่าน':verdict==='partial'?'ผ่านบางส่วน':verdict==='fail'?'ไม่ผ่าน':'ยังไม่เลือกผล';
   const comment=document.getElementById('ptComment')?.value.trim()||'';
+  const reviewer=document.getElementById('ptReviewerSel')?.value||'';
   const rec=activeRevIdx!==null?submissions[activeRevIdx]:null;
   return [
     '📷 รูปประกอบการประเมิน Checklist PT KTH',
     rec?`ผู้ช่วย: ${rec.staffName||'-'}`:'',
+    reviewer?`PT ผู้ประเมิน: ${reviewer}`:'',
     rec?`วันที่: ${thaiDate(rec.date)} | ${shiftLabel(rec.shift||'morning')}`:'',
     `ผลประเมิน: ${verdictLabel}`,
     comment?`ข้อสังเกต: ${comment}`:''
@@ -3888,6 +3891,8 @@ function retrospectiveShareUrl(recordOrId){
 function retrospectiveLineMessage(record){
   return `🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน
 พบข้อบกพร่องใน Checklist วันที่ ${thaiDate(record.date)} ${shiftLabel(record.shift)}
+ผู้ช่วย: ${record.staffName||'-'}
+PT ผู้ประเมิน: ${record.ptReviewer||'ยังไม่มีผู้ประเมิน'}
 หัวข้อ: ${record.itemText}
 รายละเอียด: ${record.details}
 ผู้รับผิดชอบ: ${retrospectiveResponsibilityLabel(record.responsibility)}
@@ -4587,7 +4592,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-collapsible-history-v56';
+const APP_VERSION = 'v20260729-mobile-actions-line-names-v57';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
