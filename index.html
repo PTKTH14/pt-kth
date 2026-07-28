@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-performance-qc-v47">
+<link rel="manifest" href="manifest.json?v=20260728-retrospective-v49">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-performance-qc-v47">
+<meta name="version" content="v20260728-retrospective-v49">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -244,19 +244,39 @@
         const snap = await db.collection('missed_evaluations').orderBy('date', 'desc').limit(Number(limitCount)||500).get();
         return snap.docs.map(function(d) { return d.data(); });
       },
+      fbGetRetrospectiveChecks: async function() {
+        const snap = await db.collection('retrospective_checks').get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetRecentRetrospectiveChecks: async function(limitCount) {
+        const snap = await db.collection('retrospective_checks').orderBy('date', 'desc').limit(Number(limitCount)||500).get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbSaveRetrospectiveCheck: async function(record, submission) {
+        const batch = db.batch();
+        batch.set(db.collection('retrospective_checks').doc(String(record.id)), record);
+        batch.set(db.collection('submissions').doc(String(submission.id)), submission);
+        await batch.commit();
+      },
+      fbDeleteRetrospectiveCheck: async function(id, submission) {
+        const batch = db.batch();
+        batch.delete(db.collection('retrospective_checks').doc(String(id)));
+        batch.set(db.collection('submissions').doc(String(submission.id)), submission);
+        await batch.commit();
+      },
       fbGetReportRange: async function(startDate, endDate) {
         const range = function(name) {
           return db.collection(name).where('date', '>=', String(startDate)).where('date', '<=', String(endDate)).get();
         };
         const results = await Promise.all([
           range('submissions'), range('stock_requests'), range('missed_evaluations'),
-          range('assistant_evaluations'), range('supervisor_notes')
+          range('assistant_evaluations'), range('supervisor_notes'), range('retrospective_checks')
         ]);
         const rows = function(snap) { return snap.docs.map(function(d) { return d.data(); }); };
         return {
           submissions: rows(results[0]), stockRequests: rows(results[1]),
           missedEvaluations: rows(results[2]), assistantEvaluations: rows(results[3]),
-          supervisorNotes: rows(results[4])
+          supervisorNotes: rows(results[4]), retrospectiveChecks: rows(results[5])
         };
       },
       fbGetPublicHistoryRange: async function(startDate, endDate) {
@@ -264,13 +284,14 @@
           return db.collection(name).where('date', '>=', String(startDate)).where('date', '<=', String(endDate)).get();
         };
         const results = await Promise.all([
-          range('submissions'), range('stock_requests'), range('missed_evaluations')
+          range('submissions'), range('stock_requests'), range('missed_evaluations'), range('retrospective_checks')
         ]);
         const rows = function(snap) { return snap.docs.map(function(d) { return d.data(); }); };
         return {
           submissions: rows(results[0]),
           stockRequests: rows(results[1]),
-          missedEvaluations: rows(results[2])
+          missedEvaluations: rows(results[2]),
+          retrospectiveChecks: rows(results[3])
         };
       },
       fbSaveMissedEvaluation: async function(record) {
@@ -352,7 +373,8 @@
           readCollection('supervisor_notes'),
           readCollection('missed_evaluations'),
           readCollection('audit_logs'),
-          readCollection('stock_requests')
+          readCollection('stock_requests'),
+          readCollection('retrospective_checks')
         ]);
         const configSnap = results[0];
         return {
@@ -362,7 +384,8 @@
           supervisorNotes: results[3],
           missedEvaluations: results[4],
           auditLogs: results[5],
-          stockRequests: results[6]
+          stockRequests: results[6],
+          retrospectiveChecks: results[7]
         };
       },
       fbRestoreBackup: async function(data) {
@@ -392,6 +415,7 @@
         counts.missedEvaluations = await restoreCollection('missed_evaluations', data && data.missedEvaluations);
         counts.auditLogs = await restoreCollection('audit_logs', data && data.auditLogs);
         counts.stockRequests = await restoreCollection('stock_requests', data && data.stockRequests);
+        counts.retrospectiveChecks = await restoreCollection('retrospective_checks', data && data.retrospectiveChecks);
         return counts;
       }
     };
@@ -1180,6 +1204,13 @@ tr:hover td{background:var(--g1)}
       <div id="missedEvalSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
       <div id="missedEvalList"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
     </div>
+    <div class="card" style="margin-top:14px;border-left:4px solid #7B1FA2">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+        <div><h3 style="margin-bottom:4px">🔎 ผลตรวจสอบย้อนหลัง</h3><p style="font-size:12px;color:var(--g6)">แสดงรายการปรับคะแนนและค่าเสียหายที่แอดมินยืนยันแล้ว</p></div>
+        <span id="retrospectivePublicTotal" class="badge badge-purple">0 บาท</span>
+      </div>
+      <div id="retrospectivePublicList"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
+    </div>
   </div>
   <div class="tw" style="overflow-x:auto">
     <table>
@@ -1347,6 +1378,7 @@ tr:hover td{background:var(--g1)}
     </div>
     <div class="admin-tabs">
       <button class="admin-tab active" id="adminTab-data" onclick="setAdminTab('data')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--bd);border-bottom:3px solid var(--bd);margin-bottom:-2px">📊 ข้อมูลระบบ</button>
+      <button class="admin-tab" id="adminTab-retrospective" onclick="setAdminTab('retrospective')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">🔎 ตรวจสอบย้อนหลัง</button>
       <button class="admin-tab" id="adminTab-audit" onclick="setAdminTab('audit')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">🕘 ประวัติการใช้งาน</button>
       <button class="admin-tab" id="adminTab-settings" onclick="setAdminTab('settings')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">⚙️ ตั้งค่า & จัดการ</button>
       <button class="admin-tab" id="adminTab-backup" onclick="setAdminTab('backup')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">💾 สำรองข้อมูล</button>
@@ -1372,6 +1404,33 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
 
+    <div id="adminPanel-retrospective" style="display:none">
+      <div class="card" style="border-left:4px solid var(--r)">
+        <div style="margin-bottom:16px">
+          <h3 style="margin-bottom:5px">🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน</h3>
+          <p style="font-size:12.5px;color:var(--g6);line-height:1.7">เมื่อได้รับข้อมูลหรือรูปจากหน้างาน แอดมินเลือก Checklist ต้นทางและบันทึกผล ระบบไม่เก็บรูปและไม่เก็บชื่อผู้แจ้ง</p>
+        </div>
+        <div class="fg"><label>Checklist ต้นทาง *</label><select id="retroSubmissionSelect" onchange="updateRetrospectiveItemOptions()"><option value="">— เลือกรายการ —</option></select></div>
+        <div class="fg"><label>หัวข้อที่พบข้อบกพร่อง *</label><select id="retroItemSelect"><option value="">— เลือก Checklist ต้นทางก่อน —</option></select></div>
+        <div class="fg"><label>รายละเอียด *</label><textarea id="retroDetails" rows="3" placeholder="อธิบายข้อบกพร่องที่ตรวจพบจริง"></textarea></div>
+        <div class="form-grid">
+          <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="pt">PT</option><option value="both">ทั้งสองฝ่าย</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
+          <div class="fg"><label>ค่าเสียหายผู้ช่วย (บาท)</label><input type="number" min="0" step="1" id="retroAssistantAmount" value="10"></div>
+          <div class="fg"><label>ค่าเสียหาย PT (บาท)</label><input type="number" min="0" step="1" id="retroPtAmount" value="0"></div>
+        </div>
+        <div style="padding:10px 12px;background:#FFF7E6;border-radius:8px;color:#8A5700;font-size:12.5px;line-height:1.7;margin-bottom:14px">ระบบจะเปลี่ยนหัวข้อนี้เป็น “ไม่ผ่าน” และคำนวณผลรวมใหม่ แต่เก็บผลประเมินเดิมของ PT ไว้เป็นหลักฐาน</div>
+        <div class="act-row">
+          <button class="btn btn-out" type="button" onclick="shareRetrospectiveToLine()">💬 ส่งรายละเอียดเข้า LINE</button>
+          <button class="btn btn-blue" type="button" id="saveRetrospectiveBtn" onclick="saveRetrospectiveCheck()">💾 บันทึกผลตรวจสอบ</button>
+          <button class="btn btn-out" type="button" id="cancelRetrospectiveBtn" onclick="resetRetrospectiveForm()" style="display:none">ยกเลิกการแก้ไข</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:12px">ประวัติการตรวจสอบย้อนหลัง</h3>
+        <div id="retrospectiveAdminList"><div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div></div>
+      </div>
+    </div>
+
     <div id="adminPanel-audit" style="display:none">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:14px">
@@ -1385,6 +1444,7 @@ tr:hover td{background:var(--g1)}
           <select id="auditCategoryFilter" class="sb-input" style="width:auto;padding:6px 9px" onchange="renderAuditLogs()">
             <option value="all">ทุกประเภท</option>
             <option value="missed_evaluation">ค่าเสียหาย</option>
+            <option value="retrospective_check">ตรวจสอบย้อนหลัง</option>
             <option value="assistant_report">รายงานส่วนตัว</option>
             <option value="stock_request">เบิกของ/สต็อก</option>
             <option value="system_data">ข้อมูลระบบ</option>
@@ -1776,15 +1836,17 @@ tr:hover td{background:var(--g1)}
         <div class="stock-review-workflow-note">ส่วนนี้ใช้ติดตามผลจากพัสดุเท่านั้น “ได้รับบางส่วน” หรือ “พัสดุไม่มีของ” ไม่ใช่ความผิดผู้ช่วยและไม่ลดคะแนน</div>
         <div id="stockReviewWorkflowItems"></div>
       </div>
-      <div style="padding:11px 12px;background:#F8FBFF;border:1px solid #D9EAF7;border-radius:9px;margin-bottom:12px">
-        <div style="font-weight:800;color:var(--bd);margin-bottom:4px">1. ความครบถ้วน — 40 คะแนน</div>
-        <div id="stockReviewCompletion" style="font-size:12px;color:var(--g6)">ระบบตรวจจากช่องจำนวนคงเหลือให้อัตโนมัติ</div>
+      <div id="stockReviewEvaluationFields">
+        <div style="padding:11px 12px;background:#F8FBFF;border:1px solid #D9EAF7;border-radius:9px;margin-bottom:12px">
+          <div style="font-weight:800;color:var(--bd);margin-bottom:4px">1. ความครบถ้วน — 40 คะแนน</div>
+          <div id="stockReviewCompletion" style="font-size:12px;color:var(--g6)">ระบบตรวจจากช่องจำนวนคงเหลือให้อัตโนมัติ</div>
+        </div>
+        <div class="fg"><label>2. จำนวนที่ขอเบิกเหมาะสม — 30 คะแนน</label><select id="stockReviewAccuracy" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">เหมาะสมตามสต็อกและการใช้งาน (30)</option><option value="15">คลาดเคลื่อนจากความต้องการเล็กน้อย (15)</option><option value="0">ไม่มีเหตุผลรองรับจำนวนที่ขอเบิก (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ตัดสินจากจำนวนที่ผู้ช่วยขอ ไม่ใช่จำนวนที่พัสดุจ่ายให้จริง</div></div>
+        <div class="fg"><label>3. การระบุปัญหาและการส่งต่องาน — 30 คะแนน</label><select id="stockReviewCommunication" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">ข้อมูลชัดเจนและทำตามขั้นตอนครบ (30)</option><option value="15">ข้อมูลเข้าใจได้แต่รายละเอียดไม่ครบ (15)</option><option value="0">ไม่แจ้งข้อมูลสำคัญหรือข้ามขั้นตอน (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ห้ามลดคะแนนเพียงเพราะพัสดุให้ของไม่ครบหรือไม่มีของ</div></div>
+        <div id="stockReviewScorePreview" style="padding:12px 14px;border-radius:9px;background:#EEF7FF;color:var(--bd);font-weight:800;margin-bottom:12px">คะแนนรวม —</div>
+        <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="หากหักคะแนน กรุณาระบุสิ่งที่ผู้ช่วยต้องปรับปรุง..."></textarea></div>
+        <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #B7DFC4;background:#F3FBF5;border-radius:9px;font-size:12px;line-height:1.55;cursor:pointer"><input type="checkbox" id="stockReviewFairConfirm" onchange="updateStockReviewReadiness()" style="margin-top:3px"><span><strong style="color:#176B38">ยืนยันก่อนบันทึก</strong><br>ฉันประเมินจากผลงานของผู้ช่วยครบทั้ง 2 หัวข้อ และไม่ได้นำผลที่พัสดุจ่ายของไม่ครบหรือไม่มีของมาหักคะแนน</span></label>
       </div>
-      <div class="fg"><label>2. จำนวนที่ขอเบิกเหมาะสม — 30 คะแนน</label><select id="stockReviewAccuracy" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">เหมาะสมตามสต็อกและการใช้งาน (30)</option><option value="15">คลาดเคลื่อนจากความต้องการเล็กน้อย (15)</option><option value="0">ไม่มีเหตุผลรองรับจำนวนที่ขอเบิก (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ตัดสินจากจำนวนที่ผู้ช่วยขอ ไม่ใช่จำนวนที่พัสดุจ่ายให้จริง</div></div>
-      <div class="fg"><label>3. การระบุปัญหาและการส่งต่องาน — 30 คะแนน</label><select id="stockReviewCommunication" onchange="updateStockReviewScorePreview();updateStockReviewReadiness()"><option value="">— เลือกผล —</option><option value="30">ข้อมูลชัดเจนและทำตามขั้นตอนครบ (30)</option><option value="15">ข้อมูลเข้าใจได้แต่รายละเอียดไม่ครบ (15)</option><option value="0">ไม่แจ้งข้อมูลสำคัญหรือข้ามขั้นตอน (0)</option></select><div style="font-size:11px;color:var(--g6);margin-top:5px">ห้ามลดคะแนนเพียงเพราะพัสดุให้ของไม่ครบหรือไม่มีของ</div></div>
-      <div id="stockReviewScorePreview" style="padding:12px 14px;border-radius:9px;background:#EEF7FF;color:var(--bd);font-weight:800;margin-bottom:12px">คะแนนรวม —</div>
-      <div class="fg"><label>ความคิดเห็น</label><textarea id="stockReviewComment" maxlength="2000" placeholder="หากหักคะแนน กรุณาระบุสิ่งที่ผู้ช่วยต้องปรับปรุง..."></textarea></div>
-      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #B7DFC4;background:#F3FBF5;border-radius:9px;font-size:12px;line-height:1.55;cursor:pointer"><input type="checkbox" id="stockReviewFairConfirm" onchange="updateStockReviewReadiness()" style="margin-top:3px"><span><strong style="color:#176B38">ยืนยันก่อนบันทึก</strong><br>ฉันประเมินจากผลงานของผู้ช่วยครบทั้ง 2 หัวข้อ และไม่ได้นำผลที่พัสดุจ่ายของไม่ครบหรือไม่มีของมาหักคะแนน</span></label>
     </div>
     <div class="mf"><div id="stockReviewReadinessHint" style="width:100%;font-size:12px;color:#8A5A00;text-align:right"></div><button class="btn btn-out" onclick="closeModal('stockReviewModal')">ยกเลิก</button><button class="btn btn-pri" id="stockReviewSaveBtn" onclick="saveStockReview()" disabled>💾 บันทึกผลพัสดุและคะแนน</button></div>
   </div>
@@ -1837,7 +1899,7 @@ const DEFAULT_CL_ITEMS = {
 };
 
 // ══ STATE ══
-let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[];
+let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[];
 function readLocalJSON(key,fallback){
   try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value);}
   catch(error){console.warn(`อ่านข้อมูลสำรอง ${key} ไม่สำเร็จ:`,error);return fallback;}
@@ -1869,7 +1931,8 @@ const DEFAULT_STOCK_SCHEDULES=[
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
 let stockSchedules=DEFAULT_STOCK_SCHEDULES.map(item=>({...item,categories:[...item.categories]}));
 let stockOverdueDays=3;
-let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[], isSavingStockRequest=false, isSavingStockReview=false;
+let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockScheduleIndex=null, activeStockReviewId=null, lastStockShareRecord=null, stockReviewWorkflowDraftItems=[], stockReviewMode='evaluation', isSavingStockRequest=false, isSavingStockReview=false;
+let editingRetrospectiveId=null;
 const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false;
@@ -1985,6 +2048,7 @@ async function init(){
     ptList=readLocalJSON('pt_ptlist',[]);
     submissions=readLocalJSON('pt_submissions',[]);
     missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
+    retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
     auditLogs=readLocalJSON('pt_audit_logs',[]);
     applySystemSettings(readLocalJSON('pt_system_settings',null));
     stockCatalog=readLocalJSON('pt_stock_catalog',null)||DEFAULT_STOCK_CATALOG.map(item=>({...item}));
@@ -2002,11 +2066,13 @@ async function init(){
       const cachedMissed=readLocalJSON('pt_missed_evaluations',[]);
       const cachedAudit=readLocalJSON('pt_audit_logs',[]);
       const cachedStock=readLocalJSON('pt_stock_requests',[]);
+      const cachedRetrospective=readLocalJSON('pt_retrospective_checks',[]);
       const loadTasks=[
         withTimeout(window.FB.fbGetConfig()),
         withTimeout(window.FB.fbGetRecentSubmissions(500)),
         withTimeout(window.FB.fbGetRecentMissedEvaluations(500)),
-        withTimeout(window.FB.fbGetRecentStockRequests(300))
+        withTimeout(window.FB.fbGetRecentStockRequests(300)),
+        withTimeout(window.FB.fbGetRecentRetrospectiveChecks(500))
       ];
       if(isAdminLoggedIn)loadTasks.push(withTimeout(window.FB.fbGetAuditLogs()));
       const loaded=await Promise.allSettled(loadTasks);
@@ -2033,7 +2099,9 @@ async function init(){
       missedEvaluations=Array.isArray(missed)?missed:[];
       const stocks=loaded[3].status==='fulfilled'?loaded[3].value:cachedStock;
       stockRecords=Array.isArray(stocks)?stocks:[];
-      const logs=isAdminLoggedIn&&loaded[4]?.status==='fulfilled'?loaded[4].value:cachedAudit;
+      const retrospective=loaded[4].status==='fulfilled'?loaded[4].value:cachedRetrospective;
+      retrospectiveChecks=Array.isArray(retrospective)?retrospective:[];
+      const logs=isAdminLoggedIn&&loaded[5]?.status==='fulfilled'?loaded[5].value:cachedAudit;
       auditLogs=isAdminLoggedIn&&Array.isArray(logs)?logs:[];
       loaded.forEach((result,index)=>{if(result.status==='rejected')console.warn(`Firebase initial load ${index} failed:`,result.reason);});
       // cache ไว้ offline
@@ -2043,6 +2111,7 @@ async function init(){
       writeLocalJSON('pt_missed_evaluations',missedEvaluations);
       if(isAdminLoggedIn)writeLocalJSON('pt_audit_logs',auditLogs);
       writeLocalJSON('pt_stock_requests',stockRecords);
+      writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);
       setSyncBadge('synced','🔥 Firebase');
       showToast('✅ เชื่อมต่อ Firebase สำเร็จ','success');
     } catch(e) {
@@ -2051,6 +2120,7 @@ async function init(){
       ptList=readLocalJSON('pt_ptlist',[]);
       submissions=readLocalJSON('pt_submissions',[]);
       missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
+      retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
       auditLogs=isAdminLoggedIn?readLocalJSON('pt_audit_logs',[]):[];
       applySystemSettings(readLocalJSON('pt_system_settings',null));
       stockRecords=readLocalJSON('pt_stock_requests',[]);
@@ -2076,6 +2146,7 @@ async function init(){
   updateHistoryFilters();
   updateDashFilter();
   renderMissedEvalOptions();
+  renderRetrospectiveHistory();
   loadHistory();
   const linkedStockId=new URLSearchParams(window.location.search).get('stock');
   if(linkedStockId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockId))){
@@ -2147,6 +2218,7 @@ function getActiveWebAlerts(status){
   ['morning','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
   getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้`,names:[]}));
   const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
+  const deferredAlcohol=stockSource.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&stockDeferredReceiptDue(record));if(deferredAlcohol.length)alerts.push({key:'stock-alcohol-receipt',shift:'stock',personType:'stock',count:deferredAlcohol.length,type:'warning',title:`🧴 มีรายการ Alcohol รอยืนยันรับของ ${deferredAlcohol.length} รอบ`,detail:'ถึงวันรับของแล้ว กรุณาเปิดรายการเดิมและบันทึกผลที่ได้รับจริง โดยระบบจะไม่เปลี่ยนคะแนนผู้ช่วย',names:deferredAlcohol.slice(0,5).map(record=>record.responsible)});
   const overdueStock=getOverdueStockRecords(status.current);if(overdueStock.length)alerts.push({key:'stock-overdue',shift:'stock',personType:'stock',count:overdueStock.length,type:'danger',title:`🚚 มีงานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,detail:'กรุณาติดตามสถานะการรับของ เพื่อป้องกันงานตกหล่น',names:overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`)});
   return alerts;
 }
@@ -2582,13 +2654,16 @@ function stockScoreBreakdown(record){
   return `ครบถ้วน ${stats.completionScore}/40 • จำนวนเบิก ${stats.accuracyScore}/30 • การส่งต่องาน ${stats.communicationScore}/30`;
 }
 function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':stockStageLabel(record);}
-function stockStage(record){return record?.ptVerdict?'reviewed':record?.procurementStage||'awaiting_dispatch';}
-function stockStageLabel(record){const stage=stockStage(record);return stage==='awaiting_dispatch'?'รอผู้ช่วยส่งเบิก':stage==='procuring'?'กำลังเบิกของ':stage==='ready_for_review'?'รับของแล้ว — รอ PT ประเมิน':'ประเมินแล้ว';}
+function stockStage(record){return record?.ptVerdict&&pendingDeferredAlcoholItems(record).length?'reviewed_waiting_receipt':record?.ptVerdict?'reviewed':record?.procurementStage||'awaiting_dispatch';}
+function stockStageLabel(record){const stage=stockStage(record);return stage==='awaiting_dispatch'?'รอผู้ช่วยส่งเบิก':stage==='procuring'?'กำลังเบิกของ':stage==='ready_for_review'?'รับของแล้ว — รอ PT ประเมิน':stage==='reviewed_waiting_receipt'?'ประเมินแล้ว — รอรับ Alcohol วันพฤหัส':'ประเมินแล้ว';}
 function stockWorkflowActionButton(record){
   const stage=stockStage(record);const id=Number(record.id);
   if(stage==='awaiting_dispatch')return`<button class="btn btn-pri" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'procuring')">📦 กำลังส่งเบิก</button>`;
   if(stage==='procuring')return`<button class="btn btn-suc" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'ready_for_review')">✅ รับของแล้ว แจ้ง PT</button>`;
   if(stage==='ready_for_review')return`<button class="btn btn-line" style="padding:4px 9px;font-size:11px" onclick="openStockShareById(${id})">💬 แชร์ LINE ให้ PT ประเมิน</button>`;
+  if(stage==='reviewed_waiting_receipt'){
+    const due=stockExpectedReceiveDate(record);return stockDeferredReceiptDue(record)?`<button class="btn btn-pri" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${id})">🧴 ยืนยันผลรับ Alcohol</button>`:`<span class="tag" style="background:#F3E8FF;color:#6D28D9">🧴 รอรับ ${escapeHtml(thaiDate(due))}</span>`;
+  }
   return'<span class="tag tp">✅ ประเมินแล้ว</span>';
 }
 async function updateStockStage(id,nextStage){
@@ -2599,9 +2674,26 @@ async function updateStockStage(id,nextStage){
 }
 const STOCK_FULFILLMENT_META={
   not_required:{label:'ไม่ต้องเบิก',color:'#6C757D'},pending:{label:'รอตรวจสอบ',color:'#9A6700'},submitted:{label:'ส่งเบิกแล้ว',color:'#1565C0'},
-  partial:{label:'ได้รับบางส่วน',color:'#C2410C'},unavailable:{label:'พัสดุแจ้งไม่มี',color:'#B02A37'},received:{label:'รับของครบ',color:'#176B38'},cancelled:{label:'ยกเลิก',color:'#6C757D'}
+  awaiting_scheduled_receipt:{label:'รอรับวันพฤหัสบดี',color:'#7C3AED'},partial:{label:'ได้รับบางส่วน',color:'#C2410C'},unavailable:{label:'พัสดุแจ้งไม่มี',color:'#B02A37'},received:{label:'รับของครบ',color:'#176B38'},cancelled:{label:'ยกเลิก',color:'#6C757D'}
 };
 const STOCK_REVIEW_RESULT_KEYS=['received','partial','unavailable','cancelled'];
+function isAlcoholStockItem(item){
+  return String(item?.category||'').toLowerCase()==='alcohol'||/alcohol|แอลกอฮอล์/i.test(String(item?.name||''));
+}
+function isDeferredAlcoholItem(record,item){
+  return Number(item?.requestQty||0)>0&&isAlcoholStockItem(item)&&Number(record?.scheduleReceiveWeekday)===4;
+}
+function pendingDeferredAlcoholItems(record){
+  return (record?.items||[]).filter(item=>isDeferredAlcoholItem(record,item)&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
+}
+function stockExpectedReceiveDate(record){
+  const source=new Date(String(record?.date||'')+'T00:00:00');if(Number.isNaN(source.getTime()))return'';
+  const target=Number(record?.scheduleReceiveWeekday);if(!Number.isInteger(target)||target<0||target>6)return'';
+  const offset=(target-source.getDay()+7)%7;source.setDate(source.getDate()+offset);return localDateKey(source);
+}
+function stockDeferredReceiptDue(record,now){
+  const due=stockExpectedReceiveDate(record);return !due||localDateKey(now||new Date())>=due;
+}
 function stockFulfillmentInfo(item){return STOCK_FULFILLMENT_META[item?.fulfillmentStatus]||STOCK_FULFILLMENT_META.pending;}
 function stockShareUrl(record){const ready=stockStage(record)==='ready_for_review'||stockStage(record)==='reviewed';const key=ready?'stock':'stockInfo';return`https://ptkth14.github.io/pt-kth/?${key}=${encodeURIComponent(record?.id||'')}`;}
 function openStockShareById(id){const record=stockRecords.find(item=>Number(item.id)===Number(id));if(record)openStockShare(record);}
@@ -2641,7 +2733,7 @@ function renderStockHistory(){
     const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const roundName=record.scheduleName||'ตรวจสต็อกประจำสัปดาห์';
     const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus!=='normal'?' — พบปัญหา':''}${item.note?` (${escapeHtml(item.note)})`:''}${Number(item.requestQty||0)>0?` — <span style="color:${stockFulfillmentInfo(item).color}">${escapeHtml(stockFulfillmentInfo(item).label)}</span>`:''}${item.fulfillmentNote?` (${escapeHtml(item.fulfillmentNote)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';
     const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';
-    const reviewButton=record.ptVerdict?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">แก้ผลและคะแนน</button>`:stockWorkflowActionButton(record);
+    const reviewButton=stockStage(record)==='reviewed_waiting_receipt'?stockWorkflowActionButton(record):record.ptVerdict?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">แก้ผลและคะแนน</button>`:stockWorkflowActionButton(record);
     return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(roundName)}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">${record.ptVerdict?`ผลงาน ${stats.totalScore}%`:'รอให้คะแนน'}</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;
   }).join('');
 }
@@ -2652,9 +2744,17 @@ function editStockRecord(id){
   switchView('stock');document.getElementById('stockDate').value=record.date;const scheduleSelect=document.getElementById('stockSchedule');const scheduleId=record.scheduleId||'weekly-all';if(scheduleSelect&&!Array.from(scheduleSelect.options).some(option=>option.value===scheduleId))scheduleSelect.add(new Option(`${record.scheduleName||'รอบตรวจเดิม'} — ประวัติเดิม`,scheduleId));if(scheduleSelect)scheduleSelect.value=scheduleId;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
 }
 function openStockReview(id){
-  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');activeStockReviewId=record.id;
+  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');
+  stockReviewMode=record.ptVerdict&&pendingDeferredAlcoholItems(record).length?'deferred_receipt':'evaluation';
+  if(stockReviewMode==='deferred_receipt'&&!stockDeferredReceiptDue(record)&&!isAdminLoggedIn)return showToast(`⏳ รายการ Alcohol กำหนดรับวันที่ ${thaiDate(stockExpectedReceiveDate(record))}`,'warning');
+  activeStockReviewId=record.id;
   document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';select.onchange=updateStockReviewReadiness;
-  stockReviewWorkflowDraftItems=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>({...item,fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
+  stockReviewWorkflowDraftItems=(stockReviewMode==='deferred_receipt'?pendingDeferredAlcoholItems(record):(record.items||[]).filter(item=>Number(item.requestQty||0)>0)).map(item=>({...item,deferredAlcohol:isDeferredAlcoholItem(record,item),fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
+  const evaluationFields=document.getElementById('stockReviewEvaluationFields');if(evaluationFields)evaluationFields.style.display=stockReviewMode==='evaluation'?'block':'none';
+  const workflowHead=document.querySelector('#stockReviewModal .stock-review-workflow-head');const workflowNote=document.querySelector('#stockReviewModal .stock-review-workflow-note');
+  if(workflowHead)workflowHead.innerHTML=stockReviewMode==='deferred_receipt'?'🧴 ยืนยันผลรับ Alcohol วันพฤหัส <span class="tag tp" style="margin-left:6px">ไม่ประเมินซ้ำ</span>':'🚚 ผลที่ผู้ช่วยกลับมารายงานหลังเบิกของ <span class="tag tp" style="margin-left:6px">ไม่คิดคะแนน</span>';
+  if(workflowNote)workflowNote.textContent=stockReviewMode==='deferred_receipt'?'เลือกผลที่ได้รับจริงเฉพาะรายการ Alcohol ระบบจะเก็บต่อท้ายรายการเดิมและไม่เปลี่ยนคะแนนผู้ช่วย':'ของทั่วไปต้องเลือกผลที่ได้รับ ส่วน Alcohol ที่กำหนดรับวันพฤหัสจะพักไว้ก่อนและไม่ขัดขวางการบันทึกคะแนน';
+  const saveButton=document.getElementById('stockReviewSaveBtn');if(saveButton)saveButton.textContent=stockReviewMode==='deferred_receipt'?'💾 บันทึกผลรับ Alcohol':'💾 บันทึกผลพัสดุและคะแนน';
   const stats=stockPerformanceStats(record);document.getElementById('stockReviewCompletion').textContent=`กรอกครบ ${stats.completionPct}% = ${stats.completionScore}/40 คะแนน`;
   document.getElementById('stockReviewAccuracy').value=record.ptVerdict?String(Number(record.ptAccuracyScore||0)):'';
   document.getElementById('stockReviewCommunication').value=record.ptVerdict?String(Number(record.ptCommunicationScore||0)):'';
@@ -2662,7 +2762,10 @@ function openStockReview(id){
 }
 function renderStockReviewWorkflowItems(){
   const wrap=document.getElementById('stockReviewWorkflowItems');if(!wrap)return;
-  wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}</div></div><select class="stock-select" aria-label="ผลที่ได้รับ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)"><option value="">— เลือกผลที่ได้รับ —</option>${STOCK_REVIEW_RESULT_KEYS.map(key=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(STOCK_FULFILLMENT_META[key].label)}</option>`).join('')}</select><input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="หมายเหตุจากพัสดุ (ถ้ามี)"></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
+  wrap.innerHTML=stockReviewWorkflowDraftItems.length?stockReviewWorkflowDraftItems.map((item,index)=>{
+    const waiting=stockReviewMode==='evaluation'&&item.deferredAlcohol;
+    return`<div class="stock-review-item"><div><div class="stock-review-item-name">${escapeHtml(item.name)}</div><div class="stock-review-item-qty">ขอเบิก ${Number(item.requestQty||0)} ${escapeHtml(item.unit||'')}${waiting?' • รับวันพฤหัส':''}</div></div>${waiting?'<div><span class="tag" style="background:#F3E8FF;color:#6D28D9">🧴 รอรับวันพฤหัสบดี</span></div>':`<select class="stock-select" aria-label="ผลที่ได้รับ ${escapeHtml(item.name)}" onchange="setStockReviewWorkflowValue(${index},'fulfillmentStatus',this.value)"><option value="">— เลือกผลที่ได้รับ —</option>${STOCK_REVIEW_RESULT_KEYS.map(key=>`<option value="${key}"${item.fulfillmentStatus===key?' selected':''}>${escapeHtml(STOCK_FULFILLMENT_META[key].label)}</option>`).join('')}</select>`}<input class="stock-input" maxlength="300" value="${escapeHtml(item.fulfillmentNote||'')}" oninput="setStockReviewWorkflowValue(${index},'fulfillmentNote',this.value)" placeholder="${waiting?'หมายเหตุการรอรับ (ถ้ามี)':'หมายเหตุจากพัสดุ (ถ้ามี)'}"></div>`;
+  }).join(''):'<div style="text-align:center;color:var(--g4);padding:12px">รอบนี้ไม่มีรายการที่ขอเบิก PT ให้คะแนนการตรวจสต็อกได้เลย</div>';
 }
 function setStockReviewWorkflowValue(index,field,value){if(stockReviewWorkflowDraftItems[index])stockReviewWorkflowDraftItems[index][field]=value;updateStockReviewReadiness();}
 function updateStockReviewScorePreview(){
@@ -2676,19 +2779,28 @@ function updateStockReviewReadiness(){
   const accuracy=document.getElementById('stockReviewAccuracy')?.value||'';
   const communication=document.getElementById('stockReviewCommunication')?.value||'';
   const confirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);
-  const missingResult=stockReviewWorkflowDraftItems.find(item=>!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
+  const missingResult=stockReviewWorkflowDraftItems.find(item=>!(stockReviewMode==='evaluation'&&item.deferredAlcohol)&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
   const button=document.getElementById('stockReviewSaveBtn');
-  const reasons=[];if(!reviewer)reasons.push('เลือกชื่อ PT');if(missingResult)reasons.push(`เลือกผลของ ${missingResult.name}`);if(accuracy===''||communication==='')reasons.push('ตอบเกณฑ์คะแนน 2 ข้อ');if(!confirmed)reasons.push('ติ๊กยืนยันความเป็นธรรม');
+  const reasons=[];if(!reviewer)reasons.push('เลือกชื่อ PT');if(missingResult)reasons.push(`เลือกผลของ ${missingResult.name}`);if(stockReviewMode==='evaluation'&&(accuracy===''||communication===''))reasons.push('ตอบเกณฑ์คะแนน 2 ข้อ');if(stockReviewMode==='evaluation'&&!confirmed)reasons.push('ติ๊กยืนยันความเป็นธรรม');
   if(button)button.disabled=reasons.length>0||isSavingStockReview;
   const hint=document.getElementById('stockReviewReadinessHint');if(hint){hint.textContent=isSavingStockReview?'กำลังบันทึก กรุณารอสักครู่':reasons.length?`ก่อนบันทึก: ${reasons.join(' • ')}`:'✅ ข้อมูลครบ พร้อมบันทึก';hint.style.color=reasons.length?'#8A5A00':'#176B38';}
 }
 async function saveStockReview(){
   if(isSavingStockReview)return showToast('⏳ ระบบกำลังบันทึกผลประเมิน กรุณารอสักครู่','warning');
-  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();const fairConfirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);if(!record)return;if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');if(!fairConfirmed)return showToast('⚠️ กรุณาติ๊กยืนยันว่าไม่ได้หักคะแนนจากผลของพัสดุ','warning');
+  const record=stockRecords.find(item=>Number(item.id)===Number(activeStockReviewId));const reviewer=document.getElementById('stockReviewPt')?.value||'';const accuracyRaw=document.getElementById('stockReviewAccuracy')?.value;const communicationRaw=document.getElementById('stockReviewCommunication')?.value;const comment=(document.getElementById('stockReviewComment')?.value||'').trim();const fairConfirmed=Boolean(document.getElementById('stockReviewFairConfirm')?.checked);if(!record)return;
+  if(stockReviewMode==='deferred_receipt'){
+    if(!reviewer)return showToast('⚠️ กรุณาเลือกชื่อ PT ผู้ยืนยันผลรับ Alcohol','warning');
+    const missingResult=stockReviewWorkflowDraftItems.find(item=>!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));if(missingResult)return showToast(`⚠️ กรุณาเลือกผลที่ได้รับ: ${missingResult.name}`,'warning');
+    const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
+    const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim(),fulfillmentConfirmedAt:now.toISOString(),fulfillmentConfirmedBy:reviewer}:item);
+    const patch={items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer};
+    try{isSavingStockReview=true;updateStockReviewReadiness();if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(record.id,patch);const updated={...record,...patch};stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?updated:item);writeLocalJSON('pt_stock_requests',stockRecords);await writeAuditLog('update','stock_request',`PT ยืนยันผลรับ Alcohol ของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลรับ Alcohol แล้ว โดยไม่เปลี่ยนคะแนนเดิม','success');}catch(error){showToast('❌ บันทึกผลรับ Alcohol ไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{isSavingStockReview=false;updateStockReviewReadiness();}return;
+  }
+  if(!reviewer||accuracyRaw===''||communicationRaw==='')return showToast('⚠️ กรุณาเลือก PT และตอบเกณฑ์ประเมินทั้ง 2 ข้อ','warning');if(!fairConfirmed)return showToast('⚠️ กรุณาติ๊กยืนยันว่าไม่ได้หักคะแนนจากผลของพัสดุ','warning');
   if((Number(accuracyRaw)<30||Number(communicationRaw)<30)&&!comment)return showToast('⚠️ หากหักคะแนน กรุณาระบุเหตุผลที่ผู้ช่วยต้องปรับปรุง','warning');
-  const missingResult=stockReviewWorkflowDraftItems.find(item=>!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));if(missingResult)return showToast(`⚠️ กรุณาเลือกผลที่ได้รับ: ${missingResult.name}`,'warning');
+  const missingResult=stockReviewWorkflowDraftItems.find(item=>!item.deferredAlcohol&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));if(missingResult)return showToast(`⚠️ กรุณาเลือกผลที่ได้รับ: ${missingResult.name}`,'warning');
   const missingNote=stockReviewWorkflowDraftItems.find(item=>['partial','unavailable','cancelled'].includes(item.fulfillmentStatus)&&!String(item.fulfillmentNote||'').trim());if(missingNote)return showToast(`⚠️ กรุณาใส่หมายเหตุผลพัสดุ: ${missingNote.name}`,'warning');
-  const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
+  const completionScore=stockPerformanceStats({...record,ptVerdict:''}).completionScore;const accuracyScore=Number(accuracyRaw);const communicationScore=Number(communicationRaw);const stockScore=completionScore+accuracyScore+communicationScore;const verdict=stockScore>=80?'pass':stockScore>=60?'partial':'fail';const now=new Date();const workflowMap=new Map(stockReviewWorkflowDraftItems.map(item=>[item.id,item]));const updatedItems=(record.items||[]).map(item=>workflowMap.has(item.id)?{...item,fulfillmentStatus:workflowMap.get(item.id).deferredAlcohol?'awaiting_scheduled_receipt':workflowMap.get(item.id).fulfillmentStatus,fulfillmentNote:String(workflowMap.get(item.id).fulfillmentNote||'').trim()}:item);const updated={...record,items:updatedItems,procurementUpdatedAt:now.toISOString(),procurementUpdatedBy:reviewer,evaluationStatus:'reviewed',ptVerdict:verdict,ptReviewer:reviewer,ptComment:comment,ptAccuracyScore:accuracyScore,ptCommunicationScore:communicationScore,stockScore,reviewedAt:now.toISOString(),reviewTimeDisplay:getThaiTimestamp(now)};
   const reviewPatch={items:updatedItems,procurementUpdatedAt:updated.procurementUpdatedAt,procurementUpdatedBy:updated.procurementUpdatedBy,evaluationStatus:updated.evaluationStatus,ptVerdict:updated.ptVerdict,ptReviewer:updated.ptReviewer,ptComment:updated.ptComment,ptAccuracyScore:updated.ptAccuracyScore,ptCommunicationScore:updated.ptCommunicationScore,stockScore:updated.stockScore,reviewedAt:updated.reviewedAt,reviewTimeDisplay:updated.reviewTimeDisplay};
   try{isSavingStockReview=true;updateStockReviewReadiness();if(!window.FB?.fbUpdateStockReview)throw new Error('กรุณารีเฟรชเว็บเป็นเวอร์ชันล่าสุด');await window.FB.fbUpdateStockReview(updated.id,reviewPatch);stockRecords=stockRecords.map(item=>Number(item.id)===Number(updated.id)?updated:item);writeLocalJSON('pt_stock_requests',stockRecords);await writeAuditLog('update','stock_request',`PT บันทึกผลพัสดุและประเมินงานเบิกของของ ${record.responsible}`,{actor:reviewer,actorRole:'PT'});closeModal('stockReviewModal');renderStockHistory();renderStockPerformancePanels();loadReviewView();refreshWebAlerts(false);showToast('✅ บันทึกผลพัสดุและคะแนนแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{isSavingStockReview=false;updateStockReviewReadiness();}
 }
@@ -2768,12 +2880,13 @@ async function submitChecklist(){
 
 // ══ REVIEW ══
 function loadReviewView(){
-  const pending=submissions.filter(s=>s.status==='pending').sort(newestRecordFirst);const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review').sort(newestRecordFirst);const inProgressStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review').sort(newestRecordFirst);
+  const pending=submissions.filter(s=>s.status==='pending').sort(newestRecordFirst);const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review').sort(newestRecordFirst);const deferredAlcoholStock=stockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt').sort(newestRecordFirst);const inProgressStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review').sort(newestRecordFirst);
   const pl=document.getElementById('pendingList');if(!pl)return;
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
+  const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
-  pl.innerHTML=checklistHtml+inProgressHtml+stockHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
+  pl.innerHTML=checklistHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -3032,6 +3145,7 @@ async function searchHistory(){
       submissions=mergeReportRecords(submissions,bundle.submissions);
       stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
       missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
+      retrospectiveChecks=mergeReportRecords(retrospectiveChecks,bundle.retrospectiveChecks);
     }catch(error){showToast('⚠️ โหลดประวัติเก่าไม่สำเร็จ: '+friendlyErrorMessage(error),'warning');}
   }
   loadHistory();
@@ -3151,9 +3265,9 @@ function renderMissedEvalSummary(){
   const summary=document.getElementById('missedEvalSummary');const list=document.getElementById('missedEvalList');if(!summary||!list)return;
   const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;
   const records=[...missedEvaluations].filter(item=>isDateInRange(item.date,fStart,fEnd)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const staffCount=records.reduce((sum,item)=>sum+(item.assistantNames||[]).length,0);const ptCount=records.reduce((sum,item)=>sum+(item.ptNames||[]).length,0);const amount=records.reduce((sum,item)=>sum+(Number(item.amount)||((item.assistantNames||[]).length+(item.ptNames||[]).length)*10),0);
+  const staffCount=records.reduce((sum,item)=>sum+(item.assistantNames||[]).length,0);const ptCount=records.reduce((sum,item)=>sum+(item.ptNames||[]).length,0);const missedAmount=records.reduce((sum,item)=>sum+(Number(item.amount)||((item.assistantNames||[]).length+(item.ptNames||[]).length)*10),0);const retrospectiveAmount=retrospectiveChecks.filter(item=>isDateInRange(item.date,fStart,fEnd)).reduce((sum,item)=>sum+(Number(item.amount)||0),0);const amount=missedAmount+retrospectiveAmount;
   const box=(label,value,color)=>`<div style="background:${color.bg};border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:${color.text}">${value}</div><div style="font-size:11.5px;color:var(--g6)">${label}</div></div>`;
-  summary.innerHTML=box('ผู้ช่วยไม่บันทึก Checklist',staffCount,{bg:'#FFF3E0',text:'#E65100'})+box('PT ไม่ประเมิน',ptCount,{bg:'#E3F2FD',text:'#1565C0'})+box('ค่าเสียหายรวม',amount.toLocaleString('th-TH')+' บาท',{bg:'#F8D7DA',text:'#B02A37'});
+  summary.innerHTML=box('ผู้ช่วยไม่บันทึก Checklist',staffCount,{bg:'#FFF3E0',text:'#E65100'})+box('PT ไม่ประเมิน',ptCount,{bg:'#E3F2FD',text:'#1565C0'})+box('ค่าเสียหายรวมทุกประเภท',amount.toLocaleString('th-TH')+' บาท',{bg:'#F8D7DA',text:'#B02A37'});
   if(!records.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการไม่ได้ประเมินตามช่วงวันที่</div>';return;}
   list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วยไม่บันทึก Checklist</th><th>PT ไม่ประเมิน</th><th>ค่าเสียหาย</th>${isAdminLoggedIn?'<th>จัดการ</th>':''}</tr></thead><tbody>${records.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift||'morning')}</td><td>${(item.assistantNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td>${(item.ptNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td style="font-weight:800;color:#B02A37">${Number(item.amount)||0} บาท</td>${isAdminLoggedIn?`<td style="white-space:nowrap"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="loadMissedEvalForEdit(${item.id})">แก้ไข</button> <button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteMissedEvaluation(${item.id})">ลบ</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
 }
@@ -3162,7 +3276,7 @@ function loadHistory(){
   const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;const fStaff=document.getElementById('hisFilterStaff')?.value;const fStatus=document.getElementById('hisFilterStatus')?.value;
   let data=[...submissions].sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
-  updateMissedEvalAdminPanel();renderMissedEvalSummary();
+  updateMissedEvalAdminPanel();renderMissedEvalSummary();renderRetrospectiveHistory();
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
   if(data.length===0){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';if(loadMoreWrap)loadMoreWrap.style.display='none';return;}
@@ -3607,7 +3721,7 @@ function updateEvaluationDropdowns(){
 // ══ ADMIN ══
 let currentAdminTab = 'data';
 function currentAdminEmail(){return authUser?.email||document.getElementById('admEmail')?.value.trim()||'ptkth11199@gmail.com';}
-function auditCategoryLabel(category){return({missed_evaluation:'ค่าเสียหาย',assistant_report:'รายงานส่วนตัว',stock_request:'เบิกของ/สต็อก',system_data:'ข้อมูลระบบ',security:'ความปลอดภัย',settings:'ตั้งค่าระบบ'})[category]||category||'ทั่วไป';}
+function auditCategoryLabel(category){return({missed_evaluation:'ค่าเสียหาย',retrospective_check:'ตรวจสอบย้อนหลัง',assistant_report:'รายงานส่วนตัว',stock_request:'เบิกของ/สต็อก',system_data:'ข้อมูลระบบ',security:'ความปลอดภัย',settings:'ตั้งค่าระบบ'})[category]||category||'ทั่วไป';}
 function auditActionLabel(action){return({add:'เพิ่ม',update:'แก้ไข',delete:'ลบ',security:'เปลี่ยนรหัส',login:'เข้าสู่ระบบ',logout:'ออกจากระบบ'})[action]||action||'บันทึก';}
 async function writeAuditLog(action,category,description,options){
   const now=new Date();const extra=options||{};const record={id:Date.now()*1000+Math.floor(Math.random()*1000),action,category,description,actor:extra.actor||currentAdminEmail(),actorRole:extra.actorRole||'แอดมิน',date:localDateKey(now),createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)};
@@ -3622,6 +3736,163 @@ async function loadAuditLogs(forceRemote){
   renderAuditLogs();
 }
 function clearAuditFilters(){const category=document.getElementById('auditCategoryFilter');const date=document.getElementById('auditDateFilter');if(category)category.value='all';if(date)date.value='';renderAuditLogs();}
+
+function retrospectiveSubmissionById(id){return submissions.find(item=>String(item.id)===String(id))||null;}
+function retrospectiveItems(submission){
+  return Object.entries(submission?.snap||{}).map(([key,item])=>({key,text:String(item?.text||key)}));
+}
+function retrospectiveVerdict(evals){
+  const failCount=Object.values(evals||{}).filter(value=>value==='fail').length;
+  return failCount===0?'pass':failCount<4?'partial':'fail';
+}
+function retrospectiveBaseOf(submission){
+  return submission?.retrospectiveBase||{
+    ptEvals:Object.assign({},submission?.ptEvals||{}),
+    status:String(submission?.status||submission?.ptVerdict||'pending'),
+    ptVerdict:String(submission?.ptVerdict||submission?.status||'pending')
+  };
+}
+function rebuildRetrospectiveSubmission(submission,checks){
+  const base=retrospectiveBaseOf(submission);
+  const active=(checks||[]).filter(item=>String(item.submissionId)===String(submission.id));
+  if(!active.length){
+    const restored=Object.assign({},submission,{ptEvals:Object.assign({},base.ptEvals||{}),status:base.status||'pending',ptVerdict:base.ptVerdict||base.status||'pending'});
+    delete restored.retrospectiveBase;delete restored.retrospectiveAdjusted;delete restored.retrospectiveUpdatedAt;
+    return restored;
+  }
+  const evals=Object.assign({},base.ptEvals||{});
+  active.forEach(item=>{if(item.itemKey)evals[item.itemKey]='fail';});
+  const verdict=retrospectiveVerdict(evals);
+  return Object.assign({},submission,{
+    retrospectiveBase:base,retrospectiveAdjusted:true,retrospectiveUpdatedAt:new Date().toISOString(),
+    ptEvals:evals,status:verdict,ptVerdict:verdict
+  });
+}
+function retrospectiveResponsibilityLabel(value){
+  return {assistant:'ผู้ช่วย',pt:'PT',both:'ทั้งสองฝ่าย',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
+}
+function retrospectiveLineMessage(record){
+  return `🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน
+พบข้อบกพร่องใน Checklist วันที่ ${thaiDate(record.date)} ${shiftLabel(record.shift)}
+หัวข้อ: ${record.itemText}
+รายละเอียด: ${record.details}
+ผู้รับผิดชอบ: ${retrospectiveResponsibilityLabel(record.responsibility)}
+การดำเนินการ: ปรับคะแนนและบันทึกค่าเสียหายเรียบร้อย
+ผู้ส่งข้อมูลจากระบบ: แอดมิน`;
+}
+function retrospectiveDraft(){
+  const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
+  const itemKey=document.getElementById('retroItemSelect')?.value||'';
+  const item=retrospectiveItems(submission).find(entry=>entry.key===itemKey);
+  const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
+  const assistantAmount=['assistant','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAssistantAmount')?.value)||0):0;
+  const ptAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroPtAmount')?.value)||0):0;
+  return {submission,itemKey,item,responsibility,assistantAmount,ptAmount,details:String(document.getElementById('retroDetails')?.value||'').trim()};
+}
+function updateRetrospectiveAmountFields(){
+  const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
+  const assistant=document.getElementById('retroAssistantAmount');const pt=document.getElementById('retroPtAmount');
+  if(assistant){assistant.disabled=!['assistant','both'].includes(responsibility);if(!assistant.disabled&&Number(assistant.value)===0)assistant.value=10;}
+  if(pt){pt.disabled=!['pt','both'].includes(responsibility);if(!pt.disabled&&Number(pt.value)===0)pt.value=10;}
+}
+function updateRetrospectiveItemOptions(selectedKey){
+  const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
+  const select=document.getElementById('retroItemSelect');if(!select)return;
+  const items=retrospectiveItems(submission);
+  select.innerHTML='<option value="">— เลือกหัวข้อ —</option>'+items.map(item=>`<option value="${escapeHtml(item.key)}">${escapeHtml(item.text)}</option>`).join('');
+  if(selectedKey)select.value=selectedKey;
+}
+function resetRetrospectiveForm(){
+  editingRetrospectiveId=null;
+  const ids=['retroSubmissionSelect','retroItemSelect','retroDetails'];ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const responsibility=document.getElementById('retroResponsibility');if(responsibility)responsibility.value='assistant';
+  const assistant=document.getElementById('retroAssistantAmount');if(assistant)assistant.value=10;
+  const pt=document.getElementById('retroPtAmount');if(pt)pt.value=0;
+  const save=document.getElementById('saveRetrospectiveBtn');if(save)save.textContent='💾 บันทึกผลตรวจสอบ';
+  const cancel=document.getElementById('cancelRetrospectiveBtn');if(cancel)cancel.style.display='none';
+  updateRetrospectiveAmountFields();
+}
+function renderRetrospectiveAdmin(){
+  const select=document.getElementById('retroSubmissionSelect');
+  if(select){
+    const current=select.value;
+    const reviewed=[...submissions].filter(item=>item.ptVerdict||item.status!=='pending').sort(newestRecordFirst);
+    select.innerHTML='<option value="">— เลือกรายการ —</option>'+reviewed.map(item=>`<option value="${escapeHtml(String(item.id))}">${escapeHtml(thaiDate(item.date)+' • '+shiftLabel(item.shift||'morning')+' • '+(item.staffName||'—')+' • PT '+(item.ptReviewer||'—'))}</option>`).join('');
+    if(reviewed.some(item=>String(item.id)===String(current)))select.value=current;
+  }
+  const list=document.getElementById('retrospectiveAdminList');if(!list)return;
+  const rows=[...retrospectiveChecks].sort(newestRecordFirst);
+  if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div>';return;}
+  list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td>${escapeHtml(item.details)}</td><td>${retrospectiveResponsibilityLabel(item.responsibility)}</td><td>${Number(item.amount||0).toLocaleString('th-TH')} บาท</td><td style="white-space:nowrap"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="shareRetrospectiveRecord('${item.id}')">LINE</button> <button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button> <button class="btn" style="padding:5px 9px;font-size:11px;background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function renderRetrospectiveHistory(){
+  const total=document.getElementById('retrospectivePublicTotal');const list=document.getElementById('retrospectivePublicList');if(!list)return;
+  const start=document.getElementById('hisStartDate')?.value||'';const end=document.getElementById('hisEndDate')?.value||'';
+  const rows=[...retrospectiveChecks].filter(item=>isDateInRange(item.date,start,end)).sort(newestRecordFirst);
+  const amount=rows.reduce((sum,item)=>sum+(Number(item.amount)||0),0);if(total)total.textContent=amount.toLocaleString('th-TH')+' บาท';
+  if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการตามช่วงวันที่</div>';return;}
+  list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td>${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td>${retrospectiveResponsibilityLabel(item.responsibility)}</td><td>${Number(item.amount||0).toLocaleString('th-TH')} บาท</td></tr>`).join('')}</tbody></table></div>`;
+}
+async function shareRetrospectiveToLine(){
+  if(!editingRetrospectiveId)return showToast('⚠️ กรุณาบันทึกผลตรวจสอบก่อนส่ง LINE เพื่อให้ข้อความตรงกับข้อมูลจริง','warning');
+  return shareRetrospectiveRecord(editingRetrospectiveId);
+}
+async function shareRetrospectiveRecord(id){
+  const record=retrospectiveChecks.find(item=>String(item.id)===String(id));
+  if(!record)return showToast('⚠️ ไม่พบรายการที่บันทึกแล้ว','warning');
+  await shareTextPreferNative('แจ้งผลตรวจสอบย้อนหลัง',retrospectiveLineMessage(record));
+}
+async function saveRetrospectiveCheck(){
+  if(!isAdminLoggedIn)return showToast('🔒 เฉพาะแอดมินเท่านั้น','error');
+  const draft=retrospectiveDraft();
+  if(!draft.submission||!draft.item||!draft.details)return showToast('⚠️ กรุณาเลือก Checklist หัวข้อ และกรอกรายละเอียด','warning');
+  const now=new Date();const existing=retrospectiveChecks.find(item=>String(item.id)===String(editingRetrospectiveId));
+  const record={
+    id:existing?.id||Date.now(),submissionId:String(draft.submission.id),date:draft.submission.date,shift:draft.submission.shift||'morning',
+    staffName:draft.submission.staffName||'',ptReviewer:draft.submission.ptReviewer||'',itemKey:draft.itemKey,itemText:draft.item.text,
+    details:draft.details,responsibility:draft.responsibility,assistantAmount:draft.assistantAmount,ptAmount:draft.ptAmount,
+    amount:draft.assistantAmount+draft.ptAmount,originalVerdict:existing?.originalVerdict||draft.submission.retrospectiveBase?.ptVerdict||draft.submission.ptVerdict||draft.submission.status||'pending',
+    createdAt:existing?.createdAt||now.toISOString(),updatedAt:now.toISOString(),timeDisplay:getThaiTimestamp(now),createdByRole:'admin'
+  };
+  const nextChecks=retrospectiveChecks.filter(item=>String(item.id)!==String(record.id)).concat(record);
+  const updatedSubmission=rebuildRetrospectiveSubmission(draft.submission,nextChecks);
+  const button=document.getElementById('saveRetrospectiveBtn');if(button)button.disabled=true;
+  try{
+    await window.FB.fbSaveRetrospectiveCheck(record,updatedSubmission);
+    retrospectiveChecks=nextChecks;submissions=submissions.map(item=>String(item.id)===String(updatedSubmission.id)?updatedSubmission:item);
+    writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);writeLocalJSON('pt_submissions',submissions);
+    await writeAuditLog(existing?'update':'add','retrospective_check',`${existing?'แก้ไข':'บันทึก'}ผลตรวจสอบย้อนหลัง ${thaiDate(record.date)} ${record.itemText} ค่าเสียหาย ${record.amount} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    resetRetrospectiveForm();renderRetrospectiveAdmin();renderRetrospectiveHistory();renderMissedEvalSummary();loadHistory();loadDashboard();renderAdminTable();
+    showToast('✅ บันทึกผลตรวจสอบย้อนหลังเรียบร้อย','success');
+  }catch(error){console.error('Save retrospective check failed:',error);showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  finally{if(button)button.disabled=false;}
+}
+function editRetrospectiveCheck(id){
+  const record=retrospectiveChecks.find(item=>String(item.id)===String(id));if(!record)return;
+  editingRetrospectiveId=record.id;renderRetrospectiveAdmin();
+  document.getElementById('retroSubmissionSelect').value=String(record.submissionId);updateRetrospectiveItemOptions(record.itemKey);
+  document.getElementById('retroDetails').value=record.details||'';document.getElementById('retroResponsibility').value=record.responsibility||'assistant';
+  document.getElementById('retroAssistantAmount').value=Number(record.assistantAmount)||0;document.getElementById('retroPtAmount').value=Number(record.ptAmount)||0;
+  updateRetrospectiveAmountFields();document.getElementById('saveRetrospectiveBtn').textContent='💾 บันทึกการแก้ไข';document.getElementById('cancelRetrospectiveBtn').style.display='';
+  document.getElementById('adminPanel-retrospective')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function confirmDeleteRetrospectiveCheck(id){
+  showConfirm('ลบผลตรวจสอบย้อนหลังรายการนี้และคำนวณผล Checklist ใหม่ใช่หรือไม่?',()=>deleteRetrospectiveCheck(id));
+}
+async function deleteRetrospectiveCheck(id){
+  if(!isAdminLoggedIn)return showToast('🔒 เฉพาะแอดมินเท่านั้น','error');
+  const record=retrospectiveChecks.find(item=>String(item.id)===String(id));const submission=retrospectiveSubmissionById(record?.submissionId);if(!record||!submission)return;
+  const nextChecks=retrospectiveChecks.filter(item=>String(item.id)!==String(id));const updatedSubmission=rebuildRetrospectiveSubmission(submission,nextChecks);
+  try{
+    await window.FB.fbDeleteRetrospectiveCheck(id,updatedSubmission);
+    retrospectiveChecks=nextChecks;submissions=submissions.map(item=>String(item.id)===String(updatedSubmission.id)?updatedSubmission:item);
+    writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);writeLocalJSON('pt_submissions',submissions);
+    await writeAuditLog('delete','retrospective_check',`ลบผลตรวจสอบย้อนหลัง ${thaiDate(record.date)} ${record.itemText}`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    if(String(editingRetrospectiveId)===String(id))resetRetrospectiveForm();
+    renderRetrospectiveAdmin();renderRetrospectiveHistory();renderMissedEvalSummary();loadHistory();loadDashboard();renderAdminTable();showToast('🗑️ ลบรายการและคำนวณผลใหม่แล้ว','success');
+  }catch(error){console.error('Delete retrospective check failed:',error);showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+
 function renderAuditLogs(){
   if(!isAdminLoggedIn)return;const summary=document.getElementById('auditSummary');const list=document.getElementById('auditLogList');if(!summary||!list)return;
   const category=document.getElementById('auditCategoryFilter')?.value||'all';const date=document.getElementById('auditDateFilter')?.value||'';const sorted=[...auditLogs].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
@@ -3632,9 +3903,9 @@ function renderAuditLogs(){
   list.innerHTML=filtered.map(item=>{let description=item.description||'—';let actor=item.actor||'—';if(item.category==='assistant_report'){description=description.replace(/^PT\s+.+?\s+ส่งรายงานส่วนตัวของผู้ช่วย\s+/,'ส่งรายงานส่วนตัวของผู้ช่วย ').replace(/\s+ซึ่งรายงานโดย.*$/,'');if(item.actorRole==='PT')actor='PT ไม่ระบุชื่อ';}return`<div class="audit-item ${escapeHtml(item.action||'')}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div style="font-weight:800;color:var(--g8)">${escapeHtml(description)}</div><span class="tag" style="background:var(--g1);color:var(--bd)">${escapeHtml(auditActionLabel(item.action))}</span></div><div class="audit-meta"><span>🕒 ${escapeHtml(item.timeDisplay||item.createdAt||'—')}</span><span>👤 ${escapeHtml(actor)} (${escapeHtml(item.actorRole||'—')})</span><span>📁 ${escapeHtml(auditCategoryLabel(item.category))}</span></div></div>`;}).join('');
 }
 function setAdminTab(tab) {
-  currentAdminTab=['data','audit','settings','backup'].includes(tab)?tab:'data';
-  ['data','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();renderStockSchedulesAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
+  currentAdminTab=['data','retrospective','audit','settings','backup'].includes(tab)?tab:'data';
+  ['data','retrospective','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
+  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();renderStockSchedulesAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='retrospective')renderRetrospectiveAdmin();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
 }
 
 async function loadSupervisorRequests(){
@@ -3735,6 +4006,7 @@ async function prepareFirebaseRestore(event){
     ['submissions','assistantEvaluations','missedEvaluations','auditLogs'].forEach(key=>{if(!Array.isArray(payload.data[key]))throw new Error(`ข้อมูล ${key} ไม่สมบูรณ์`);});
     if(!Array.isArray(payload.data.supervisorNotes))payload.data.supervisorNotes=[];
     if(!Array.isArray(payload.data.stockRequests))payload.data.stockRequests=[];
+    if(!Array.isArray(payload.data.retrospectiveChecks))payload.data.retrospectiveChecks=[];
     if(!payload.data.config||!Array.isArray(payload.data.config.staffList)||!Array.isArray(payload.data.config.ptList))throw new Error('ข้อมูลรายชื่อไม่สมบูรณ์');
     pendingFirebaseRestore=payload;const counts=firebaseBackupCounts(payload.data);
     if(summary)summary.innerHTML=`<div style="padding:10px 12px;border:1px solid #FFD59A;border-radius:8px;background:#FFFBF4;line-height:1.7"><strong style="color:#8A4B00">${escapeHtml(file.name)}</strong><br>สำรองเมื่อ ${escapeHtml(payload.exportedAtDisplay||payload.exportedAt||'—')} • Checklist ${counts.submissions} • สต็อก ${counts.stock} • รายงานส่วนตัว ${counts.reports} • ผู้ไม่ประเมิน ${counts.missed} • ประวัติ ${counts.audit}</div>`;
@@ -3743,10 +4015,10 @@ async function prepareFirebaseRestore(event){
   event.target.value='';
 }
 async function reloadFirebaseStateAfterRestore(){
-  const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs(),window.FB.fbGetStockRequests()]);
-  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];
-  localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));
-  updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderAdminTable();renderMissedEvalSummary();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
+  const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs(),window.FB.fbGetStockRequests(),window.FB.fbGetRetrospectiveChecks()]);
+  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];retrospectiveChecks=Array.isArray(results[7])?results[7]:[];
+  localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));localStorage.setItem('pt_retrospective_checks',JSON.stringify(retrospectiveChecks));
+  updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderAdminTable();renderMissedEvalSummary();renderRetrospectiveHistory();renderRetrospectiveAdmin();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
 }
 function confirmFirebaseRestore(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
@@ -4128,7 +4400,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-performance-qc-v47';
+const APP_VERSION = 'v20260728-retrospective-v49';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -4763,6 +5035,7 @@ async function ensureReportRangeData(range) {
   missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
   evaluationRecords=mergeReportRecords(evaluationRecords,bundle.assistantEvaluations);
   if(typeof supervisorNotes!=='undefined')supervisorNotes=mergeReportRecords(supervisorNotes,bundle.supervisorNotes);
+  retrospectiveChecks=mergeReportRecords(retrospectiveChecks,bundle.retrospectiveChecks);
   reportRangeLoadKey=key;
 }
 function openMonthlyReportModal() {

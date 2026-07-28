@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260728-performance-qc-v47';
+const CACHE_NAME = 'pt-kth-v20260728-retrospective-v49';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
