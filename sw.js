@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260728-deduplicated-ui-v54';
+const CACHE_NAME = 'pt-kth-v20260728-clean-history-v55';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {

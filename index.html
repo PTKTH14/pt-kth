@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-deduplicated-ui-v54">
+<meta name="version" content="v20260728-clean-history-v55">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -3928,7 +3928,7 @@ function renderRetrospectiveAdmin(){
   const list=document.getElementById('retrospectiveAdminList');if(!list)return;
   const rows=[...retrospectiveChecks].sort(newestRecordFirst);
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div>';return;}
-  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="shareRetrospectiveRecord('${item.id}')">LINE</button><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
+  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
 }
 function renderRetrospectiveHistory(){
   const total=document.getElementById('retrospectivePublicTotal');const list=document.getElementById('retrospectivePublicList');if(!list)return;
@@ -4565,7 +4565,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-deduplicated-ui-v54';
+const APP_VERSION = 'v20260728-clean-history-v55';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
