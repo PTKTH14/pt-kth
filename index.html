@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-retrospective-v49">
+<link rel="manifest" href="manifest.json?v=20260728-line-share-v50">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260728-retrospective-v49">
+<meta name="version" content="v20260728-line-share-v50">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1420,7 +1420,7 @@ tr:hover td{background:var(--g1)}
         </div>
         <div style="padding:10px 12px;background:#FFF7E6;border-radius:8px;color:#8A5700;font-size:12.5px;line-height:1.7;margin-bottom:14px">ระบบจะเปลี่ยนหัวข้อนี้เป็น “ไม่ผ่าน” และคำนวณผลรวมใหม่ แต่เก็บผลประเมินเดิมของ PT ไว้เป็นหลักฐาน</div>
         <div class="act-row">
-          <button class="btn btn-out" type="button" onclick="shareRetrospectiveToLine()">💬 ส่งรายละเอียดเข้า LINE</button>
+          <button class="btn btn-out" id="retrospectiveLineBtn" type="button" onclick="shareRetrospectiveToLine()">💬 เปิด LINE เพื่อส่งรายละเอียด</button>
           <button class="btn btn-blue" type="button" id="saveRetrospectiveBtn" onclick="saveRetrospectiveCheck()">💾 บันทึกผลตรวจสอบ</button>
           <button class="btn btn-out" type="button" id="cancelRetrospectiveBtn" onclick="resetRetrospectiveForm()" style="display:none">ยกเลิกการแก้ไข</button>
         </div>
@@ -2703,18 +2703,36 @@ function openStockShare(record){
   const title=document.getElementById('stockShareTitle');if(title)title.textContent=ready?'✅ รับของแล้ว — พร้อมส่งให้ PT ประเมิน':'📦 แจ้งรายการที่จะดำเนินการเบิก';
   const description=document.getElementById('stockShareDescription');if(description)description.textContent=ready?'แชร์ลิงก์นี้ให้ PT เปิดรายการและบันทึกผลประเมินได้ทันที':'แชร์ข้อความนี้เพื่อแจ้ง PT ให้ทราบรายการที่ผู้ช่วยกำลังจะดำเนินการเบิก ยังไม่ใช่การขอให้ประเมิน';
   const summary=document.getElementById('stockShareSummary');if(summary)summary.textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible} • ${ready?'พร้อมให้ PT ประเมิน':'แจ้งรายการก่อนดำเนินการเบิก'}`;
-  const button=document.getElementById('stockShareLineBtn');if(button)button.textContent=ready?'💬 แชร์ LINE ให้ PT ประเมิน':'💬 แจ้งรายการเบิกผ่าน LINE';
+  const button=document.getElementById('stockShareLineBtn');if(button)button.textContent=isTouchShareDevice()?(ready?'💬 แชร์ LINE ให้ PT ประเมิน':'💬 แจ้งรายการเบิกผ่าน LINE'):(ready?'💬 เปิด LINE เพื่อส่งให้ PT ประเมิน':'💬 เปิด LINE เพื่อแจ้งรายการเบิก');
   document.getElementById('stockShareModal').classList.add('open');
 }
 async function copyStockShareLink(){const link=stockShareUrl(lastStockShareRecord);await navigator.clipboard.writeText(link);showToast('📋 คัดลอกลิงก์งานเบิกของแล้ว','success');}
+function isTouchShareDevice(){
+  const userAgent=navigator.userAgent||'';
+  const mobileUserAgent=/Android|iPhone|iPad|iPod|Mobile/i.test(userAgent);
+  const touchTablet=navigator.maxTouchPoints>1&&Math.min(screen.width||innerWidth,screen.height||innerHeight)<1100;
+  return mobileUserAgent||touchTablet;
+}
+function lineShareUrl(text){return'https://line.me/R/share?text='+encodeURIComponent(text);}
+function openLineShare(text){
+  const url=lineShareUrl(text);
+  const opened=window.open(url,'_blank','noopener,noreferrer');
+  if(!opened)window.location.href=url;
+  return true;
+}
+function applyDeviceAwareShareLabels(){
+  const touch=isTouchShareDevice();
+  const retrospectiveButton=document.getElementById('retrospectiveLineBtn');
+  if(retrospectiveButton)retrospectiveButton.textContent=touch?'💬 ส่งรายละเอียดเข้า LINE':'💬 เปิด LINE เพื่อส่งรายละเอียด';
+}
 async function shareTextPreferNative(title,text){
-  if(navigator.share){
+  if(isTouchShareDevice()&&navigator.share){
     try{await navigator.share({title,text});return true;}
     catch(error){if(error?.name==='AbortError')return false;}
   }
-  window.location.href='https://line.me/R/share?text='+encodeURIComponent(text);
-  return true;
+  return openLineShare(text);
 }
+applyDeviceAwareShareLabels();
 async function shareStockToLine(){
   const record=lastStockShareRecord;if(!record)return;const ready=stockStage(record)==='ready_for_review';
   const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>`• ${item.name} ${Number(item.requestQty||0)} ${item.unit||''}`).join('\n');
@@ -4400,7 +4418,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260728-retrospective-v49';
+const APP_VERSION = 'v20260728-line-share-v50';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
