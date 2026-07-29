@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260728-unified-line-v52">
+<link rel="manifest" href="manifest.json?v=20260729-mobile-input-line-v59">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260729-retrospective-delete-v58">
+<meta name="version" content="v20260729-mobile-input-line-v59">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -705,7 +705,11 @@ tr:hover td{background:var(--g1)}
 .mobile-more-item{min-height:116px;padding:14px 10px;border:1.5px solid var(--g2);border-radius:12px;background:#fff;color:var(--g8);font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .mobile-more-item:active{background:var(--bl);border-color:var(--bm);transform:scale(.98)}
 .mobile-more-item>span{font-size:28px;line-height:1}.mobile-more-item>strong{font-size:13px}.mobile-more-item>small{font-size:10.5px;color:var(--g6);line-height:1.35}
+.line-browser-banner{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#FFF8E1;border-bottom:1px solid #F0D58A;color:#6D5000;font-size:12.5px;line-height:1.5}
+.line-browser-banner.show{display:flex}.line-browser-actions{display:flex;gap:7px;flex-shrink:0}.line-browser-actions button{min-height:40px;padding:7px 11px;border-radius:7px;border:1px solid #D5B85D;background:#fff;color:#604800;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
 @media(max-width:768px){
+  input,select,textarea{font-size:16px!important}
+  .line-browser-banner{align-items:flex-start;flex-direction:column;padding:10px 13px}.line-browser-actions{width:100%}.line-browser-actions button{flex:1}
   .retro-disclosure>summary{align-items:center}
   .retro-disclosure>summary p{display:none}
   .retro-disclosure-toggle{min-height:42px}
@@ -865,6 +869,14 @@ tr:hover td{background:var(--g1)}
   <div style="display:flex;gap:8px;flex-shrink:0">
     <button onclick="installApp()" style="background:#fff;color:var(--bd);border:none;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit;font-size:12.5px;cursor:pointer">ติดตั้ง</button>
     <button onclick="dismissInstallBanner()" aria-label="ปิดคำแนะนำติดตั้งแอป" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-family:inherit;cursor:pointer">✕</button>
+  </div>
+</div>
+
+<div id="lineBrowserBanner" class="line-browser-banner" role="status">
+  <div><strong>เปิดผ่าน LINE อยู่</strong><br><span id="lineBrowserHint">หากติดตั้งแอปไว้ ให้เปิดลิงก์นี้ด้วยเบราว์เซอร์หลักก่อน ระบบจึงมีโอกาสส่งต่อเข้าแอป</span></div>
+  <div class="line-browser-actions">
+    <button type="button" id="lineOpenMainBrowserBtn" onclick="openFromLineInMainBrowser()">เปิดเบราว์เซอร์หลัก</button>
+    <button type="button" onclick="dismissLineBrowserBanner()" aria-label="ปิดคำแนะนำ">ปิด</button>
   </div>
 </div>
 
@@ -4608,7 +4620,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260729-retrospective-delete-v58';
+const APP_VERSION = 'v20260729-mobile-input-line-v59';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -4662,6 +4674,40 @@ const INSTALL_BANNER_DISMISS_KEY = 'pt_install_banner_dismissed_until';
 function isAppInstalledMode(){
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
+const LINE_BROWSER_DISMISS_KEY='pt_line_browser_banner_dismissed';
+function isLineInAppBrowser(){
+  return /Line\/|LIFF/i.test(navigator.userAgent||'');
+}
+function dismissLineBrowserBanner(){
+  sessionStorage.setItem(LINE_BROWSER_DISMISS_KEY,'1');
+  document.getElementById('lineBrowserBanner')?.classList.remove('show');
+}
+function setupLineBrowserBanner(){
+  const banner=document.getElementById('lineBrowserBanner');
+  if(!banner||isAppInstalledMode()||!isLineInAppBrowser()||sessionStorage.getItem(LINE_BROWSER_DISMISS_KEY)==='1')return;
+  const ua=navigator.userAgent||'';const ios=/iPhone|iPad|iPod/i.test(ua);const android=/Android/i.test(ua);
+  const hint=document.getElementById('lineBrowserHint');const button=document.getElementById('lineOpenMainBrowserBtn');
+  if(ios){
+    if(hint)hint.textContent='iPhone/iPad ไม่อนุญาตให้เว็บบังคับเปิดแอป กรุณาคัดลอกลิงก์ แล้วเปิดใน Safari หรือแตะไอคอนแอปจากหน้าจอโฮม';
+    if(button)button.textContent='คัดลอกลิงก์';
+  }else if(android){
+    if(hint)hint.textContent='แตะปุ่มเพื่อลองเปิดด้วย Chrome หากติดตั้ง PWA และเครื่องรองรับ ระบบอาจส่งต่อเข้าแอปให้';
+    if(button)button.textContent='ลองเปิดแอป / Chrome';
+  }
+  banner.classList.add('show');
+}
+async function openFromLineInMainBrowser(){
+  const ua=navigator.userAgent||'';const url=window.location.href;
+  if(/Android/i.test(ua)){
+    const target=`${location.host}${location.pathname}${location.search}${location.hash}`;
+    window.location.href=`intent://${target}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+    return;
+  }
+  await copyTextValue(url);
+  showToast('📋 คัดลอกลิงก์แล้ว กรุณาเปิด Safari แล้ววางลิงก์ หรือเปิดแอปจากหน้าจอโฮม','success');
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupLineBrowserBanner);
+else setupLineBrowserBanner();
 function canShowInstallBanner(){
   const dismissedUntil = Number(localStorage.getItem(INSTALL_BANNER_DISMISS_KEY) || 0);
   return !isAppInstalledMode() && Date.now() >= dismissedUntil;
