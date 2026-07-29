@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด</title>
-<link rel="manifest" href="manifest.json?v=20260729-mobile-input-line-v59">
+<link rel="manifest" href="manifest.json?v=20260729-locked-dates-v64">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Checklist PT KTH">
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260729-mobile-input-line-v59">
+<meta name="version" content="v20260729-locked-dates-v64">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -544,7 +544,7 @@ img,svg,canvas{max-width:100%}
 .supervisor-account-info{display:flex;align-items:center;gap:9px;min-width:0}.supervisor-account-avatar{width:34px;height:34px;border-radius:50%;background:#F3E5F5;color:#6A1B9A;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.supervisor-account-name{font-size:13px;font-weight:800;color:var(--bd);overflow:hidden;text-overflow:ellipsis}.supervisor-account-caption{font-size:10.5px;color:var(--g6)}
 .stock-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 18px;margin-bottom:14px;border-radius:14px;background:linear-gradient(135deg,#EAF7F0 0%,#EFF8FF 100%);border:1px solid #CFE7DA;border-left:5px solid var(--g)}
 .stock-hero-title{font-size:15px;font-weight:800;color:#176B38;margin-bottom:3px}.stock-hero-note{font-size:12px;color:var(--g6);line-height:1.6}.stock-week-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:#fff;color:#176B38;border:1px solid #B9DEC8;font-size:11.5px;font-weight:800;white-space:nowrap}
-.stock-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:12px;align-items:end}.stock-meta-grid .fg{margin:0}
+.stock-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:12px;align-items:stretch}.stock-meta-grid .fg{display:flex;min-width:0;flex-direction:column;margin:0}.stock-meta-grid .fg>label{min-height:20px}.stock-meta-grid .sb-input,.stock-meta-grid .sb-sel,.stock-week-display{width:100%;height:44px;min-height:44px;margin-top:auto}.stock-week-display{display:flex;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);font-size:12.5px;color:var(--bd);font-weight:700;line-height:1.35;overflow-wrap:anywhere}
 .stock-schedule-list{display:grid;gap:8px}.stock-schedule-row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,.8fr) auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--g2);border-radius:10px;background:#fff}.stock-schedule-row.is-off{background:#F4F5F6;opacity:.72}.stock-schedule-days{font-size:11.5px;color:var(--g6);line-height:1.6}.stock-schedule-category-grid{display:flex;gap:8px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--g2);border-radius:8px;background:#FBFCFD}.stock-schedule-category-grid label{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #DDE7E1;border-radius:999px;background:#fff;font-size:11.5px;font-weight:700;cursor:pointer}.stock-schedule-category-grid input{width:16px;height:16px}
 .stock-group{margin-top:14px;background:#fff;border:1px solid #DDE7E1;border-radius:14px;overflow:hidden;box-shadow:var(--sh1)}.stock-group-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 15px;background:#F5FAF7;border-bottom:1px solid #DDE7E1}.stock-group-head h3{font-size:14px;color:#176B38}.stock-group-count{font-size:11px;color:var(--g6)}
 .stock-columns,.stock-item-row{display:grid;grid-template-columns:minmax(180px,1.45fr) minmax(105px,.7fr) minmax(92px,.58fr) minmax(92px,.58fr) minmax(130px,.8fr) minmax(170px,1.1fr);gap:9px;align-items:center}.stock-columns{padding:8px 15px;background:#FBFCFC;color:var(--g6);font-size:10.5px;font-weight:700}.stock-item-row{padding:11px 15px;border-top:1px solid #EEF2EF}.stock-item-name{font-size:13px;font-weight:700;color:var(--g8)}.stock-target{font-size:12px;color:#176B38;font-weight:700}.stock-input,.stock-select{width:100%;min-width:0;border:1px solid #D6E1DA;border-radius:8px;padding:7px 8px;font-family:inherit;font-size:12.5px;background:#fff;outline:none}.stock-input:focus,.stock-select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(40,167,69,.09)}.stock-status{font-size:11.5px;font-weight:800}.stock-status.ok{color:var(--g)}.stock-status.order{color:#B36B00}.stock-status.issue{color:var(--r)}
@@ -554,6 +554,11 @@ img,svg,canvas{max-width:100%}
 .supervisor-request-meta{font-size:11.5px;color:var(--g6);margin-top:3px;overflow-wrap:anywhere}
 .supervisor-request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .shift-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.dashboard-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+.stock-performance-summary{margin-bottom:16px;border-left:4px solid #7C3AED}
+.stock-performance-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stock-summary-metric{padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD}
+.stock-summary-value{font-size:20px;font-weight:800}.stock-summary-label{font-size:10.5px;color:var(--g6)}
 .admin-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--g2);overflow-x:auto}
 .admin-tab{white-space:nowrap;flex-shrink:0}
 .audit-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
@@ -707,7 +712,7 @@ tr:hover td{background:var(--g1)}
 .mobile-more-item>span{font-size:28px;line-height:1}.mobile-more-item>strong{font-size:13px}.mobile-more-item>small{font-size:10.5px;color:var(--g6);line-height:1.35}
 .line-browser-banner{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#FFF8E1;border-bottom:1px solid #F0D58A;color:#6D5000;font-size:12.5px;line-height:1.5}
 .line-browser-banner.show{display:flex}.line-browser-actions{display:flex;gap:7px;flex-shrink:0}.line-browser-actions button{min-height:40px;padding:7px 11px;border-radius:7px;border:1px solid #D5B85D;background:#fff;color:#604800;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
-@media(max-width:768px){
+@media(max-width:900px), (orientation:portrait) and (max-width:1100px){
   input,select,textarea{font-size:16px!important}
   .line-browser-banner{align-items:flex-start;flex-direction:column;padding:10px 13px}.line-browser-actions{width:100%}.line-browser-actions button{flex:1}
   .retro-disclosure>summary{align-items:center}
@@ -744,6 +749,24 @@ tr:hover td{background:var(--g1)}
   .audit-summary{grid-template-columns:1fr}
   .trend-summary{grid-template-columns:1fr 1fr}.trend-stat:last-child{grid-column:1/-1}
   .trend-stage{min-width:720px}
+  .dashboard-reading-guide{display:none}
+  .stock-performance-summary{padding:13px 14px;margin-bottom:12px}
+  .stock-performance-summary h3{font-size:14px}
+  .stock-performance-summary h3+div{display:none}
+  .stock-performance-metrics{gap:6px}
+  .stock-summary-metric{padding:7px 4px;border-radius:8px}
+  .stock-summary-value{font-size:17px}
+  .stock-summary-label{font-size:9px;line-height:1.25}
+  .dashboard-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-bottom:12px!important}
+  .dashboard-kpi-grid .kc{min-height:86px;padding:10px 9px;border-left-width:3px;border-radius:10px}
+  .dashboard-kpi-grid .kn{font-size:21px}
+  .dashboard-kpi-grid .kl{font-size:10px;line-height:1.35}
+  .shift-summary-grid{gap:8px;margin-bottom:12px}
+  .shift-summary-grid .card{padding:11px 12px}
+  .trend-card{padding:13px 14px}
+  .trend-head{margin-bottom:8px}
+  .trend-head h3{font-size:13.5px}
+  .trend-legend{font-size:9.5px;gap:7px}
   .stock-meta-grid{grid-template-columns:1fr}.stock-schedule-row{grid-template-columns:1fr}.stock-columns{display:none}.stock-item-row{grid-template-columns:1fr 1fr;padding:13px}.stock-item-name{grid-column:1/-1;font-size:14px}.stock-item-row>*::before{display:block;font-size:9.5px;color:var(--g4);font-weight:700;margin-bottom:3px}.stock-target::before{content:'สต็อกเป้าหมาย'}.stock-current-wrap::before{content:'คงเหลือปัจจุบัน'}.stock-request-wrap::before{content:'จำนวนที่เบิก'}.stock-state-wrap::before{content:'สถานะพิเศษ'}.stock-note-wrap::before{content:'หมายเหตุ'}.stock-note-wrap{grid-column:1/-1}.stock-extra-row{grid-template-columns:1fr 1fr}.stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note{grid-column:1/-1}.stock-extra-row .btn{grid-column:1/-1;justify-content:center}.stock-review-item{grid-template-columns:1fr}.stock-eye-btn{width:38px;height:38px}
   .ph h1{font-size:17px}
   .mobile-controls{display:flex !important}
@@ -760,7 +783,7 @@ tr:hover td{background:var(--g1)}
   .mc-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 }
 @media(min-width:769px) and (max-width:1050px){.live{display:none}.tsubtitle{max-width:360px}}
-@media(min-width:769px) and (max-width:1180px){
+@media(min-width:901px) and (max-width:1180px) and (orientation:landscape), (min-width:1101px) and (max-width:1180px){
   .sidebar{width:200px}
   .main{padding:16px 16px 70px}
   .clock{display:none}
@@ -794,6 +817,10 @@ tr:hover td{background:var(--g1)}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
 }
 @media(max-width:560px){
+  .stock-performance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .dashboard-kpi-grid .kc{min-height:78px}
+  .dashboard-kpi-grid .kn{font-size:20px}
   .stock-item-row,.stock-extra-row{grid-template-columns:1fr}
   .stock-item-name,.stock-note-wrap,.stock-extra-row .stock-extra-name,.stock-extra-row .stock-extra-note,.stock-extra-row .btn{grid-column:1}
   .card{padding:14px}
@@ -807,7 +834,7 @@ tr:hover td{background:var(--g1)}
 .toast{position:fixed;bottom:calc(var(--mobile-nav-h) + 12px);right:22px;background:var(--g8);color:#fff;padding:11px 18px;border-radius:var(--r8);font-size:13.5px;box-shadow:var(--sh3);z-index:9999;display:flex;align-items:center;gap:9px;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:300px;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--g)}.toast.error{background:var(--r)}.toast.warning{background:var(--o)}
-@media(max-width:768px){
+@media(max-width:900px), (orientation:portrait) and (max-width:1100px){
   #adminPanel-settings .card>div[style*="grid-template-columns:2fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
   #adminPanel-settings .card>div[style*="minmax(200px,1.4fr)"]{grid-template-columns:1fr!important}
   #stockPerformanceDashboard .card>div[style*="repeat(4"],#supervisorStockPerformance .card>div[style*="repeat(4"],#adminStockPerformance .card>div[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
@@ -829,6 +856,7 @@ tr:hover td{background:var(--g1)}
 }
 @media(pointer:coarse){
   button,.btn,.btn-na,.link-copy,.shift-btn,.rb{min-width:44px;min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  button.help-tip{width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;padding:0!important;margin-left:3px!important;font-size:9px!important;border-width:1px!important}
   input:not([type="checkbox"]):not([type="radio"]),select{min-height:44px}
   input[type="checkbox"],input[type="radio"]{width:22px!important;height:22px!important;min-width:22px}
   .ci-acts{opacity:1}
@@ -888,7 +916,7 @@ tr:hover td{background:var(--g1)}
   </div>
   <div class="sb-sec">
     <label>วันที่บันทึก</label>
-    <input type="date" class="sb-input" id="dateInput">
+    <input type="date" class="sb-input" id="dateInput" disabled aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ">
     <div style="margin-top:8px">
       <label style="font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ประเภทเวร</label>
       <div class="shift-row">
@@ -933,7 +961,7 @@ tr:hover td{background:var(--g1)}
   <div class="mobile-controls" style="display:none;gap:8px;margin-bottom:14px;flex-direction:column">
     <select class="sb-sel" id="staffSelectMobile" style="width:100%"><option value="">— เลือกชื่อผู้ช่วย —</option></select>
     <div style="display:flex;gap:8px">
-      <input type="date" class="sb-input" id="dateInputMobile" style="flex:1">
+      <input type="date" class="sb-input" id="dateInputMobile" style="flex:1" disabled aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ">
       <div class="shift-row" style="flex:1;margin:0">
         <button class="shift-btn active-morning" id="shiftMorningM" onclick="setShift('morning')">🌅 เช้า</button>
         <button class="shift-btn" id="shiftAfternoonM" onclick="setShift('afternoon')">🌙 บ่าย</button>
@@ -972,10 +1000,10 @@ tr:hover td{background:var(--g1)}
     <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
   </div>
   <div class="card stock-meta-grid">
-    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" onchange="handleStockDateChange()"></div>
+    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" disabled aria-label="วันที่ตรวจสต็อก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ"></div>
     <div class="fg"><label>รอบตรวจ <span style="color:var(--r)">*</span></label><select id="stockSchedule" class="sb-sel" onchange="changeStockSchedule()"><option value="">— เลือกรอบตรวจ —</option></select></div>
     <div class="fg"><label>ผู้รับผิดชอบ <span style="color:var(--r)">*</span></label><select id="stockResponsible" class="sb-sel"><option value="">— เลือกชื่อผู้ช่วย —</option></select></div>
-    <div class="fg"><label>รอบสัปดาห์</label><div id="stockWeekDisplay" style="padding:9px 11px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);font-size:12.5px;color:var(--bd);font-weight:700">—</div></div>
+    <div class="fg"><label>รอบสัปดาห์</label><div id="stockWeekDisplay" class="stock-week-display">—</div></div>
   </div>
   <div id="stockGroups"></div>
   <div class="card" style="margin-top:14px;border-left:4px solid var(--bm)">
@@ -996,7 +1024,7 @@ tr:hover td{background:var(--g1)}
 <!-- REVIEW -->
 <div class="view" id="view-review">
   <div class="ph"><h1>🔍 ประเมินผลงาน (นักกายภาพบำบัด)</h1><p>ตรวจสอบ Checklist และงานเบิกของที่ผู้ช่วยส่งมา</p></div>
-  <div id="pendingList"></div>
+  <div id="pendingList"><div class="card" style="text-align:center;color:var(--g6)">⏳ กำลังเตรียมรายการประเมิน...</div></div>
   <div id="reviewFormWrap" style="display:none">
     <div class="ds">
       <div class="ds-l">
@@ -1078,7 +1106,7 @@ tr:hover td{background:var(--g1)}
   <div id="stockPerformanceDashboard"></div>
 
   <!-- KPI ROW 1: ภาพรวม -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
+  <div class="dashboard-kpi-grid">
     <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
     <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 ความสมบูรณ์เฉลี่ย <button type="button" class="help-tip" aria-label="คำอธิบาย ความสมบูรณ์เฉลี่ย" data-help="ค่าเฉลี่ยร้อยละของหัวข้อ Checklist ที่บันทึกว่า ทำแล้ว หรือ N/A เทียบกับหัวข้อทั้งหมด ตัวเลขนี้วัดความครบของการกรอก ไม่ใช่ผลประเมินจาก PT">i</button></div></div>
     <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอ PT ประเมิน</div></div>
@@ -2221,7 +2249,7 @@ async function init(){
   renderRetrospectiveHistory();
   const retrospectiveDetails=document.getElementById('retrospectivePublicDetails');
   if(retrospectiveDetails)retrospectiveDetails.addEventListener('toggle',syncRetrospectiveDisclosureLabel);
-  if(retrospectiveDetails&&window.matchMedia('(max-width: 768px)').matches)retrospectiveDetails.open=false;
+  if(retrospectiveDetails&&isCompactLayout())retrospectiveDetails.open=false;
   syncRetrospectiveDisclosureLabel();
   loadHistory();
   const linkedStockId=new URLSearchParams(window.location.search).get('stock');
@@ -2255,12 +2283,21 @@ init().catch(error=>{console.error('App startup failed:',error);showStartupError
 // ══ HELPERS ══
 function fmtDate(d){const dt=d||new Date();return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
 function localDateKey(d){const dt=d||new Date();return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
+function syncLockedOperationDates(){
+  const today=localDateKey(new Date());
+  const desktop=document.getElementById('dateInput');const mobile=document.getElementById('dateInputMobile');
+  if(desktop&&desktop.value!==today)desktop.value=today;
+  if(mobile&&mobile.value!==today)mobile.value=today;
+  const stock=document.getElementById('stockDate');if(stock&&!editingStockRecordId&&stock.value!==today){stock.value=today;handleStockDateChange();}
+  updateDateDisplay();
+  return today;
+}
 function thaiDate(s){if(!s)return'';const value=String(s).slice(0,10);const parts=value.split('-');if(parts.length!==3)return String(s);const year=Number(parts[0]);if(!year||!parts[1]||!parts[2])return String(s);return`${parts[2]}/${parts[1]}/${year+543}`;}
 function newestRecordFirst(a,b){const aTime=String(a?.ptReviewTime||a?.reviewedAt||a?.submitTime||a?.createdAt||a?.updatedAt||a?.date||'');const bTime=String(b?.ptReviewTime||b?.reviewedAt||b?.submitTime||b?.createdAt||b?.updatedAt||b?.date||'');return bTime.localeCompare(aTime)||(Number(b?.id||0)-Number(a?.id||0));}
 function shiftLabel(s){return s==='morning'?'🌅 เวรเช้า':'🌙 เวรบ่าย';}
 function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<start)return false;if(end&&ds>end)return false;return true;}
 function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
-function startClock(){const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const minuteKey=localDateKey(now)+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
+function startClock(){let activeDay='';const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const currentDay=localDateKey(now);if(currentDay!==activeDay){activeDay=currentDay;syncLockedOperationDates();}const minuteKey=currentDay+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
 function setMobileNav(v){document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));const btn=document.getElementById('mnav-'+v);if(btn)btn.classList.add('active');}
 function openMobileView(viewName){
   const nav=document.getElementById('nav-'+viewName);
@@ -2372,7 +2409,7 @@ function switchView(v,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   target.classList.add('active');
   if(el)el.classList.add('active');
-  if(v==='review')loadReviewView();
+  if(v==='review'){try{loadReviewView();}catch(error){showReviewLoadError(error);}}
   if(v==='stock')loadStockView();
   if(v==='alerts')refreshWebAlerts(false);
   if(v==='history')loadHistory();
@@ -2480,8 +2517,9 @@ function updateProgress(){
   if(bar){bar.style.width=pct+'%';bar.style.background=pct>=100?'var(--g)':pct>=80?'var(--y)':pct>=60?'var(--o)':'var(--r)';}
 }
 
-function getActiveStaff(){const isMobile=window.innerWidth<=768;const sel=isMobile?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
-function getActiveDate(){const isMobile=window.innerWidth<=768;return isMobile?document.getElementById('dateInputMobile').value:document.getElementById('dateInput').value;}
+function isCompactLayout(){return window.matchMedia('(max-width: 900px), (orientation: portrait) and (max-width: 1100px)').matches;}
+function getActiveStaff(){const sel=isCompactLayout()?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
+function getActiveDate(){return syncLockedOperationDates();}
 const DEFAULT_SHIFT_DEADLINES = {
   assistant: { morning: 8*60+30, afternoon: 20*60, saturday: 16*60 },
   pt: { morning: 9*60+30, afternoon: 20*60+30, saturday: 16*60+30 }
@@ -2695,18 +2733,18 @@ function renderStockExtraItems(){
   </div>`).join('');
 }
 function loadStockView(){
-  const date=document.getElementById('stockDate');if(date&&!date.value)date.value=localDateKey(new Date());
+  const date=document.getElementById('stockDate');if(date&&!editingStockRecordId)date.value=localDateKey(new Date());
   const schedule=renderStockScheduleOptions();if(!stockDraftItems.length)createStockDraft(schedule?.id);
   updateStaffDropdown();const active=getActiveStaff();const responsible=document.getElementById('stockResponsible');if(responsible&&active.value&&!responsible.value)responsible.value=active.text;
   updateStockWeekBadge();renderStockGroups();renderStockExtraItems();renderStockHistory();
 }
 function resetStockDraft(withConfirm){
-  const reset=()=>{editingStockRecordId=null;createStockDraft(document.getElementById('stockSchedule')?.value);const note=document.getElementById('stockOverallNote');if(note)note.value='';const button=document.getElementById('stockSaveBtn');if(button)button.textContent='✅ บันทึกการตรวจและเบิกของ';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
+  const reset=()=>{editingStockRecordId=null;const date=document.getElementById('stockDate');if(date)date.value=localDateKey(new Date());createStockDraft(document.getElementById('stockSchedule')?.value);const note=document.getElementById('stockOverallNote');if(note)note.value='';const button=document.getElementById('stockSaveBtn');if(button)button.textContent='✅ บันทึกการตรวจและเบิกของ';renderStockGroups();renderStockExtraItems();showToast('🔄 ล้างแบบฟอร์มเบิกของแล้ว','success');};
   if(withConfirm)showConfirm('ล้างจำนวนคงเหลือและรายการเบิกทั้งหมดใช่หรือไม่?',reset);else reset();
 }
 async function submitStockRequest(){
   if(isSavingStockRequest)return showToast('⏳ ระบบกำลังบันทึก กรุณารอสักครู่','warning');
-  const date=document.getElementById('stockDate')?.value||'';const responsible=document.getElementById('stockResponsible')?.value||'';const overallNote=(document.getElementById('stockOverallNote')?.value||'').trim();const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);
+  const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const date=old?.date||localDateKey(new Date());const dateInput=document.getElementById('stockDate');if(dateInput)dateInput.value=date;const responsible=document.getElementById('stockResponsible')?.value||'';const overallNote=(document.getElementById('stockOverallNote')?.value||'').trim();const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);
   if(!date)return showToast('⚠️ กรุณาเลือกวันที่ตรวจสต็อก','warning');if(!schedule)return showToast('⚠️ กรุณาเลือกรอบตรวจสต็อก','warning');if(!responsible)return showToast('⚠️ กรุณาเลือกผู้รับผิดชอบ','warning');if(!stockDraftItems.length)return showToast('⚠️ รอบนี้ยังไม่มีรายการวัสดุ กรุณาให้แอดมินตรวจหมวดของรอบ','warning');
   const missing=stockDraftItems.find(item=>item.currentQty==='');if(missing)return showToast(`⚠️ กรุณากรอกจำนวนคงเหลือ: ${missing.name}`,'warning');
   const problemWithoutNote=stockDraftItems.find(item=>item.issueStatus!=='normal'&&!String(item.note||'').trim());if(problemWithoutNote)return showToast(`⚠️ กรุณาอธิบายปัญหา: ${problemWithoutNote.name}`,'warning');
@@ -2714,7 +2752,7 @@ async function submitStockRequest(){
   const weekKey=mondayKeyFromDate(date);
   const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
   const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
-  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const hasRequestedItems=items.some(item=>Number(item.requestQty||0)>0);const now=new Date();const old=stockRecords.find(item=>Number(item.id)===Number(editingStockRecordId));const resetReview=Boolean(old?.ptVerdict);
+  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const hasRequestedItems=items.some(item=>Number(item.requestQty||0)>0);const now=new Date();const resetReview=Boolean(old?.ptVerdict);
   const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleReceiveWeekday:Number.isInteger(schedule.receiveWeekday)?schedule.receiveWeekday:-1,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',procurementStage:resetReview?(hasRequestedItems?'awaiting_dispatch':'ready_for_review'):(old?.procurementStage||(hasRequestedItems?'awaiting_dispatch':'ready_for_review')),stageUpdatedAt:resetReview?now.toISOString():(old?.stageUpdatedAt||now.toISOString()),evaluationStatus:resetReview?'pending':(old?.evaluationStatus||'pending'),ptVerdict:resetReview?'':(old?.ptVerdict||''),ptReviewer:resetReview?'':(old?.ptReviewer||''),ptComment:resetReview?'':(old?.ptComment||''),ptAccuracyScore:resetReview?0:Number(old?.ptAccuracyScore||0),ptCommunicationScore:resetReview?0:Number(old?.ptCommunicationScore||0),stockScore:resetReview?0:Number(old?.stockScore||0),reviewedAt:resetReview?'':(old?.reviewedAt||''),reviewTimeDisplay:resetReview?'':(old?.reviewTimeDisplay||''),procurementUpdatedAt:resetReview?'':(old?.procurementUpdatedAt||''),procurementUpdatedBy:resetReview?'':(old?.procurementUpdatedBy||'')};
   try{
     isSavingStockRequest=true;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=true;
@@ -2732,7 +2770,7 @@ function stockRecordChangeSummary(oldRecord,newRecord){
   const visible=changes.slice(0,12);if(changes.length>visible.length)visible.push(`และอีก ${changes.length-visible.length} จุด`);
   return(visible.join(' • ')||'ไม่พบค่าที่เปลี่ยน').slice(0,1800);
 }
-function stockSummaryMetric(label,value,color){return`<div style="padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD"><div style="font-size:20px;font-weight:800;color:${color}">${value}</div><div style="font-size:10.5px;color:var(--g6)">${label}</div></div>`;}
+function stockSummaryMetric(label,value,color){return`<div class="stock-summary-metric"><div class="stock-summary-value" style="color:${color}">${value}</div><div class="stock-summary-label">${label}</div></div>`;}
 function stockPerformanceStats(record){
   const items=Array.isArray(record?.items)?record.items:[];const completed=items.filter(item=>Number.isFinite(Number(item.currentQty))).length;const completionPct=items.length?Math.round(completed/items.length*100):0;
   const completionScore=Math.round(completionPct*.4);const legacyAccuracy=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?15:0;const legacyCommunication=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?15:0;
@@ -2776,7 +2814,7 @@ function isDeferredAlcoholItem(record,item){
   return Number(item?.requestQty||0)>0&&isAlcoholStockItem(item)&&Number(record?.scheduleReceiveWeekday)===4;
 }
 function pendingDeferredAlcoholItems(record){
-  return (record?.items||[]).filter(item=>isDeferredAlcoholItem(record,item)&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
+  return stockRecordItems(record).filter(item=>isDeferredAlcoholItem(record,item)&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
 }
 function stockExpectedReceiveDate(record){
   const source=new Date(String(record?.date||'')+'T00:00:00');if(Number.isNaN(source.getTime()))return'';
@@ -2925,7 +2963,7 @@ function stockPerformanceSummaryMarkup(records){
   const average=reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+stockPerformanceStats(record).totalScore,0)/reviewed.length):0;
   const passed=reviewed.filter(record=>record.ptVerdict==='pass').length;
   const passRate=reviewed.length?Math.round(passed/reviewed.length*100):0;
-  return`<div class="card" style="margin-bottom:16px;border-left:4px solid #7C3AED"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">📦 สรุปงานเบิกของและตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">รายละเอียดรายบุคคลและรายงานเต็มอยู่ในหน้าหัวหน้างาน</div></div></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div></div>`;
+  return`<div class="card stock-performance-summary"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">📦 สรุปงานเบิกของและตรวจสต็อก</h3><div style="font-size:11.5px;color:var(--g6)">รายละเอียดรายบุคคลและรายงานเต็มอยู่ในหน้าหัวหน้างาน</div></div></div><div class="stock-performance-metrics">${stockSummaryMetric('รอบทั้งหมด',records.length,'var(--bd)')}${stockSummaryMetric('PT ประเมินแล้ว',reviewed.length,'#7C3AED')}${stockSummaryMetric('คะแนนเฉลี่ย',average+'%','#0B7A75')}${stockSummaryMetric('อัตราผ่าน ≥80',passRate+'%','var(--g)')}</div></div>`;
 }
 function showStockPersonDetail(name){
   const records=stockRecords.filter(record=>record.responsible===name).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));document.getElementById('detailTitle').textContent=`📦 รายการเบิกของ — ${name}`;
@@ -2969,7 +3007,7 @@ function openSubmitModal(){
 }
 
 async function submitChecklist(){
-  const st=getActiveStaff();const date=getActiveDate();const note=document.getElementById('m_note').value.trim();
+  const st=getActiveStaff();const date=localDateKey(new Date());syncLockedOperationDates();const note=document.getElementById('m_note').value.trim();
   const snap={};
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
   const now=new Date();
@@ -2988,18 +3026,29 @@ async function submitChecklist(){
 }
 
 // ══ REVIEW ══
+function stockRecordItems(record){return Array.isArray(record?.items)?record.items.filter(Boolean):[];}
+function showReviewLoadError(error){
+  console.error('Review view render failed:',error);
+  const pl=document.getElementById('pendingList');
+  const reviewWrap=document.getElementById('reviewFormWrap');
+  if(reviewWrap)reviewWrap.style.display='none';
+  if(pl)pl.innerHTML=`<div class="card" style="text-align:center;border-left:4px solid var(--o)"><div style="font-size:28px;margin-bottom:7px">⚠️</div><h3 style="color:var(--bd);margin-bottom:5px">โหลดหน้าประเมินไม่สมบูรณ์</h3><p style="font-size:12.5px;color:var(--g6);margin-bottom:12px">ระบบพบข้อมูลบางรายการที่อ่านไม่ได้ กรุณาลองโหลดใหม่ หากยังพบปัญหาให้แอดมินตรวจข้อมูลรายการล่าสุด</p><button class="btn btn-pri" type="button" onclick="loadReviewView()">🔄 ลองโหลดรายการอีกครั้ง</button></div>`;
+  showToast('⚠️ โหลดรายการประเมินไม่ครบ กรุณาลองใหม่','warning');
+}
 function loadReviewView(){
-  const pending=submissions.filter(s=>s.status==='pending').sort(newestRecordFirst);const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review').sort(newestRecordFirst);const deferredAlcoholStock=stockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt').sort(newestRecordFirst);const inProgressStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review').sort(newestRecordFirst);
+  const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
+  const pending=safeSubmissions.filter(s=>s.status==='pending').sort(newestRecordFirst);const pendingStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review').sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt').sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review').sort(newestRecordFirst);
   const pl=document.getElementById('pendingList');if(!pl)return;
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
-  const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
+  const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
   const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
   pl.innerHTML=checklistHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
-  activeRevIdx=idx;reviewEvals={};const rec=submissions[idx];
+  activeRevIdx=idx;reviewEvals={};const rec=Array.isArray(submissions)?submissions[idx]:null;
+  if(!rec||typeof rec!=='object'){activeRevIdx=null;showReviewLoadError(new Error('ไม่พบข้อมูล Checklist ที่เลือก'));return;}
   const ptLock=getTimeLockInfo(rec.date,rec.shift||'morning','pt');
   if(ptLock.locked){activeRevIdx=null;return showToast(ptLock.message,'error');}
   document.getElementById('rvDateChip').textContent=rec.date;
@@ -3014,7 +3063,7 @@ function openReview(idx){
     gDiv.innerHTML=`<div class="gh ${info.cls}"><span class="gdot"></span>${info.emoji} ${info.label}</div><div class="ci-wrap" id="rv-grp-${g}"></div>`;
     container.appendChild(gDiv);const wrap=gDiv.querySelector(`#rv-grp-${g}`);
     checklistItemsForGroup(g,rec.date).forEach((text,i)=>{
-      const key=`${g}-${i}`;const saved=rec.snap[key]||{};const itemText=saved.text||text;const stSt=saved.status||'';
+      const key=`${g}-${i}`;const saved=(rec.snap&&typeof rec.snap==='object'?rec.snap:{})[key]||{};const itemText=saved.text||text;const stSt=saved.status||'';
       const div=document.createElement('div');div.className='ri';
       div.innerHTML=`<div class="rs"><div class="rb pass" title="ผ่าน" onclick="setEval('${key}','pass',this)">✓</div><div class="rb fail" title="ไม่ผ่าน" onclick="setEval('${key}','fail',this)">✗</div><div class="rb nab" title="N/A" onclick="setEval('${key}','na',this)">—</div></div><div style="flex:1"><div style="font-size:13.5px">${escapeHtml(itemText)}</div><div style="font-size:11.5px;color:var(--g4);margin-top:2px">ผู้ช่วยบันทึก: ${stSt==='done'?'✅ ทำแล้ว':stSt==='na'?'— N/A':'❌ ยังไม่ได้ทำ'}</div></div>`;
       setEvalDefault(key,stSt==='done'?'pass':stSt==='na'?'na':'fail',div);
@@ -4620,7 +4669,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260729-mobile-input-line-v59';
+const APP_VERSION = 'v20260729-locked-dates-v64';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
