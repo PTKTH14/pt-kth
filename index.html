@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-  <meta name="version" content="v20260730-fast-safe-update-v66">
+  <meta name="version" content="v20260730-update-toast-fix-v67">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -2169,7 +2169,7 @@ function hydrateCachedStartup(){
   setSyncBadge('syncing','⏳ กำลังอัปเดต');
 }
 function hasUnsavedAppWork(){
-  if(Object.keys(checkState||{}).length)return true;
+  if(Object.values(checkState||{}).some(state=>state==='done'||state==='na'))return true;
   if(editingStockRecordId)return true;
   if(Array.isArray(stockDraftItems)&&stockDraftItems.some(item=>item.currentQty!==''||item.requestQty!==''||item.issueStatus!=='normal'||String(item.note||'').trim()))return true;
   if(Array.isArray(stockExtraItems)&&stockExtraItems.length)return true;
@@ -4753,8 +4753,9 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260730-fast-safe-update-v66';
+const APP_VERSION = 'v20260730-update-toast-fix-v67';
   let updateReloading = false;
+  let updateDeferredNoticeShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     sessionStorage.setItem('pt-kth-update-pending','1');
@@ -4774,7 +4775,10 @@ const APP_VERSION = 'v20260730-fast-safe-update-v66';
   function reloadWhenSafe(){
     if(updateReloading||!sessionStorage.getItem('pt-kth-update-pending'))return;
     if(hasUnsavedAppWork()){
-      showToast('🔄 ระบบใหม่พร้อมแล้ว จะอัปเดตอัตโนมัติหลังบันทึกงาน','warning');
+      if(!updateDeferredNoticeShown){
+        updateDeferredNoticeShown=true;
+        showToast('🔄 ระบบใหม่พร้อมแล้ว จะอัปเดตอัตโนมัติหลังบันทึกงาน','warning');
+      }
       return;
     }
     updateReloading=true;
