@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260730-responsive-admin-v65">
+  <meta name="version" content="v20260730-fast-safe-update-v66">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1003,7 +1003,7 @@ tr:hover td{background:var(--g1)}
     <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
   </div>
   <div class="card stock-meta-grid">
-    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="date" id="stockDate" class="sb-input" disabled aria-label="วันที่ตรวจสต็อก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ"></div>
+    <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="hidden" id="stockDate"><div id="stockDateDisplay" class="stock-week-display stock-date-display" role="status" aria-label="วันที่ตรวจสต็อก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div></div>
     <div class="fg"><label>รอบตรวจ <span style="color:var(--r)">*</span></label><select id="stockSchedule" class="sb-sel" onchange="changeStockSchedule()"><option value="">— เลือกรอบตรวจ —</option></select></div>
     <div class="fg"><label>ผู้รับผิดชอบ <span style="color:var(--r)">*</span></label><select id="stockResponsible" class="sb-sel"><option value="">— เลือกชื่อผู้ช่วย —</option></select></div>
     <div class="fg"><label>รอบสัปดาห์</label><div id="stockWeekDisplay" class="stock-week-display">—</div></div>
@@ -2140,7 +2140,46 @@ async function initializeFirebaseAuth(){
 }
 
 // ══ INIT ══
+function hydrateCachedStartup(){
+  staffList=readLocalJSON('pt_staff',[]);
+  ptList=readLocalJSON('pt_ptlist',[]);
+  submissions=readLocalJSON('pt_submissions',[]);
+  missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
+  retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
+  stockRecords=readLocalJSON('pt_stock_requests',[]);
+  applySystemSettings(readLocalJSON('pt_system_settings',null));
+  stockCatalog=(readLocalJSON('pt_stock_catalog',null)||DEFAULT_STOCK_CATALOG).map(normalizeStockCatalogItem);
+  _applyCLCustom();
+  const today=fmtDate(new Date());
+  document.getElementById('dateInput').value=today;
+  document.getElementById('dateInputMobile').value=today;
+  document.getElementById('stockDate').value=today;
+  updateDateDisplay();
+  updateStaffDropdown();
+  updatePTDropdown();
+  updateEvaluationDropdowns();
+  createStockDraft();
+  buildChecklist();
+  updateHistoryFilters();
+  updateDashFilter();
+  renderMissedEvalOptions();
+  renderRetrospectiveHistory();
+  loadHistory();
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  setSyncBadge('syncing','⏳ กำลังอัปเดต');
+}
+function hasUnsavedAppWork(){
+  if(Object.keys(checkState||{}).length)return true;
+  if(editingStockRecordId)return true;
+  if(Array.isArray(stockDraftItems)&&stockDraftItems.some(item=>item.currentQty!==''||item.requestQty!==''||item.issueStatus!=='normal'||String(item.note||'').trim()))return true;
+  if(Array.isArray(stockExtraItems)&&stockExtraItems.length)return true;
+  if(Array.isArray(reviewPhotos)&&reviewPhotos.length)return true;
+  if(Array.isArray(retrospectivePhotos)&&retrospectivePhotos.length)return true;
+  return false;
+}
 async function init(){
+  await Promise.resolve();
+  hydrateCachedStartup();
   await waitForFirebase();
   await initializeFirebaseAuth();
   setSyncBadge('syncing','⏳ Loading...');
@@ -2242,8 +2281,7 @@ async function init(){
   updatePTDropdown();
   updateEvaluationDropdowns();
   const stockDate=document.getElementById('stockDate');if(stockDate&&!stockDate.value)stockDate.value=fmtDate(new Date());
-  createStockDraft();
-  buildChecklist();
+  if(!hasUnsavedAppWork()){createStockDraft();buildChecklist();}
   startClock();
   // loadDashboard จะถูกเรียกเมื่อเปิดหน้า dashboard
   updateHistoryFilters();
@@ -2704,6 +2742,7 @@ function handleStockDateChange(){const schedule=renderStockScheduleOptions();cre
 function changeStockSchedule(){createStockDraft(document.getElementById('stockSchedule')?.value);updateStockWeekBadge();renderStockGroups();renderStockExtraItems();}
 function updateStockWeekBadge(){
   const input=document.getElementById('stockDate');const dateValue=input?.value||localDateKey(new Date());const monday=mondayKeyFromDate(dateValue);const selected=new Date(dateValue+'T00:00:00');const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);const badge=document.getElementById('stockDueBadge');const display=document.getElementById('stockWeekDisplay');
+  const dateDisplay=document.getElementById('stockDateDisplay');if(dateDisplay)dateDisplay.textContent=thaiDate(dateValue)||'—';
   if(display)display.textContent=`สัปดาห์วันจันทร์ที่ ${thaiDate(monday)}`;
   if(badge){const isDueDay=schedule&&selected.getDay()===schedule.weekday;badge.textContent=schedule?(isDueDay?`✅ ${schedule.name} • ส่งก่อน ${schedule.dueTime} น.`:`📅 ${schedule.name} • วันประจำคือ${STOCK_WEEKDAY_LABELS[schedule.weekday]}`):'⚠️ ยังไม่มีรอบตรวจที่เปิดใช้งาน';badge.style.color=isDueDay?'#176B38':'#8A5A00';badge.style.borderColor=isDueDay?'#B9DEC8':'#E8D29B';}
 }
@@ -4714,28 +4753,34 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260730-responsive-admin-v65';
-  let updatePromptShown = false;
+const APP_VERSION = 'v20260730-fast-safe-update-v66';
+  let updateReloading = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if(!sessionStorage.getItem('pt-kth-allow-reload')) return;
-    sessionStorage.setItem('pt-kth-updated-version', APP_VERSION);
-    window.location.reload();
+    sessionStorage.setItem('pt-kth-update-pending','1');
+    reloadWhenSafe();
   });
 
   function activateWaitingWorker(registration) {
     if(registration && registration.waiting) {
-      promptForAppUpdate(registration.waiting);
+      activateAppUpdate(registration.waiting);
       return true;
     }
     return false;
   }
-  function promptForAppUpdate(worker){
-    if(updatePromptShown)return;updatePromptShown=true;
-    showConfirm('มีเวอร์ชันใหม่ของระบบ พร้อมอัปเดตตอนนี้หรือไม่? (หากกำลังติ๊ก Checklist อยู่ ให้กดยกเลิกแล้วบันทึกงานก่อน)',()=>{
-      sessionStorage.setItem('pt-kth-allow-reload','1');
-      worker.postMessage('SKIP_WAITING');
-    });
+  function activateAppUpdate(worker){
+    worker.postMessage('SKIP_WAITING');
+  }
+  function reloadWhenSafe(){
+    if(updateReloading||!sessionStorage.getItem('pt-kth-update-pending'))return;
+    if(hasUnsavedAppWork()){
+      showToast('🔄 ระบบใหม่พร้อมแล้ว จะอัปเดตอัตโนมัติหลังบันทึกงาน','warning');
+      return;
+    }
+    updateReloading=true;
+    sessionStorage.removeItem('pt-kth-update-pending');
+    sessionStorage.setItem('pt-kth-updated-version',APP_VERSION);
+    window.location.reload();
   }
 
   function watchServiceWorker(registration) {
@@ -4745,7 +4790,7 @@ const APP_VERSION = 'v20260730-responsive-admin-v65';
       if(!worker) return;
       worker.addEventListener('statechange', () => {
         if(worker.state === 'installed' && navigator.serviceWorker.controller) {
-          promptForAppUpdate(worker);
+          activateAppUpdate(worker);
         }
       });
     });
@@ -4757,6 +4802,7 @@ const APP_VERSION = 'v20260730-responsive-admin-v65';
         watchServiceWorker(registration);
         registration.update();
         setInterval(() => registration.update(), 10 * 60 * 1000);
+        setInterval(reloadWhenSafe, 2000);
       })
       .catch(e => console.log('SW error:', e));
   });
