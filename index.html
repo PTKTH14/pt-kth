@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260729-locked-dates-v64">
+<meta name="version" content="v20260730-responsive-admin-v65">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -544,7 +544,7 @@ img,svg,canvas{max-width:100%}
 .supervisor-account-info{display:flex;align-items:center;gap:9px;min-width:0}.supervisor-account-avatar{width:34px;height:34px;border-radius:50%;background:#F3E5F5;color:#6A1B9A;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.supervisor-account-name{font-size:13px;font-weight:800;color:var(--bd);overflow:hidden;text-overflow:ellipsis}.supervisor-account-caption{font-size:10.5px;color:var(--g6)}
 .stock-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 18px;margin-bottom:14px;border-radius:14px;background:linear-gradient(135deg,#EAF7F0 0%,#EFF8FF 100%);border:1px solid #CFE7DA;border-left:5px solid var(--g)}
 .stock-hero-title{font-size:15px;font-weight:800;color:#176B38;margin-bottom:3px}.stock-hero-note{font-size:12px;color:var(--g6);line-height:1.6}.stock-week-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:#fff;color:#176B38;border:1px solid #B9DEC8;font-size:11.5px;font-weight:800;white-space:nowrap}
-.stock-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:12px;align-items:stretch}.stock-meta-grid .fg{display:flex;min-width:0;flex-direction:column;margin:0}.stock-meta-grid .fg>label{min-height:20px}.stock-meta-grid .sb-input,.stock-meta-grid .sb-sel,.stock-week-display{width:100%;height:44px;min-height:44px;margin-top:auto}.stock-week-display{display:flex;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);font-size:12.5px;color:var(--bd);font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.stock-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:stretch}.stock-meta-grid>*{min-width:0;max-width:100%}.stock-meta-grid .fg{display:flex;min-width:0;max-width:100%;flex-direction:column;margin:0}.stock-meta-grid .fg>label{min-height:20px}.stock-meta-grid .sb-input,.stock-meta-grid .sb-sel,.stock-week-display{display:block;width:100%;min-width:0!important;max-width:100%;height:44px;min-height:44px;margin-top:auto;box-sizing:border-box}.stock-week-display{display:flex;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);font-size:12.5px;color:var(--bd);font-weight:700;line-height:1.35;overflow-wrap:anywhere}
 .stock-schedule-list{display:grid;gap:8px}.stock-schedule-row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,.8fr) auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--g2);border-radius:10px;background:#fff}.stock-schedule-row.is-off{background:#F4F5F6;opacity:.72}.stock-schedule-days{font-size:11.5px;color:var(--g6);line-height:1.6}.stock-schedule-category-grid{display:flex;gap:8px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--g2);border-radius:8px;background:#FBFCFD}.stock-schedule-category-grid label{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #DDE7E1;border-radius:999px;background:#fff;font-size:11.5px;font-weight:700;cursor:pointer}.stock-schedule-category-grid input{width:16px;height:16px}
 .stock-group{margin-top:14px;background:#fff;border:1px solid #DDE7E1;border-radius:14px;overflow:hidden;box-shadow:var(--sh1)}.stock-group-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 15px;background:#F5FAF7;border-bottom:1px solid #DDE7E1}.stock-group-head h3{font-size:14px;color:#176B38}.stock-group-count{font-size:11px;color:var(--g6)}
 .stock-columns,.stock-item-row{display:grid;grid-template-columns:minmax(180px,1.45fr) minmax(105px,.7fr) minmax(92px,.58fr) minmax(92px,.58fr) minmax(130px,.8fr) minmax(170px,1.1fr);gap:9px;align-items:center}.stock-columns{padding:8px 15px;background:#FBFCFC;color:var(--g6);font-size:10.5px;font-weight:700}.stock-item-row{padding:11px 15px;border-top:1px solid #EEF2EF}.stock-item-name{font-size:13px;font-weight:700;color:var(--g8)}.stock-target{font-size:12px;color:#176B38;font-weight:700}.stock-input,.stock-select{width:100%;min-width:0;border:1px solid #D6E1DA;border-radius:8px;padding:7px 8px;font-family:inherit;font-size:12.5px;background:#fff;outline:none}.stock-input:focus,.stock-select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(40,167,69,.09)}.stock-status{font-size:11.5px;font-weight:800}.stock-status.ok{color:var(--g)}.stock-status.order{color:#B36B00}.stock-status.issue{color:var(--r)}
@@ -783,6 +783,9 @@ tr:hover td{background:var(--g1)}
   .mc-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 }
 @media(min-width:769px) and (max-width:1050px){.live{display:none}.tsubtitle{max-width:360px}}
+@media(min-width:901px) and (max-width:1400px){
+  .stock-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(min-width:901px) and (max-width:1180px) and (orientation:landscape), (min-width:1101px) and (max-width:1180px){
   .sidebar{width:200px}
   .main{padding:16px 16px 70px}
@@ -2403,29 +2406,53 @@ function refreshWebAlerts(showPopup){
 }
 function openWebAlerts(){closeModal('webAlertModal');switchView('alerts',null);setMobileNav('alerts');refreshWebAlerts(false);}
 
+function runViewTask(viewName,task){
+  try{
+    const result=task();
+    if(result&&typeof result.catch==='function')result.catch(error=>showViewLoadError(viewName,error));
+    return result;
+  }catch(error){
+    showViewLoadError(viewName,error);
+    return null;
+  }
+}
+function showViewLoadError(viewName,error){
+  console.error(`Load ${viewName} view failed:`,error);
+  const target=document.getElementById('view-'+viewName);if(!target)return;
+  let notice=target.querySelector(':scope > .view-load-error');
+  if(!notice){
+    notice=document.createElement('div');notice.className='view-load-error card';
+    notice.style.cssText='border-left:4px solid var(--r);background:#FFF7F8;color:var(--g8);margin-bottom:14px';
+    target.prepend(notice);
+  }
+  notice.innerHTML=`<strong style="color:var(--r)">⚠️ โหลดข้อมูลบางส่วนไม่สำเร็จ</strong><div style="font-size:12px;color:var(--g6);margin-top:4px">หน้าใช้งานยังเปิดได้ กรุณากดรีเฟรช หากยังพบปัญหาให้แจ้งแอดมิน</div>`;
+}
 function switchView(v,el){
   const target=document.getElementById('view-'+v);if(!target){showToast('⚠️ ไม่พบหน้าที่เลือก กรุณารีเฟรชเว็บ','warning');return false;}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   target.classList.add('active');
   if(el)el.classList.add('active');
-  if(v==='review'){try{loadReviewView();}catch(error){showReviewLoadError(error);}}
-  if(v==='stock')loadStockView();
-  if(v==='alerts')refreshWebAlerts(false);
-  if(v==='history')loadHistory();
-  if(v==='dashboard')loadDashboard();
+  target.querySelector(':scope > .view-load-error')?.remove();
+  if(v==='review')runViewTask(v,loadReviewView);
+  if(v==='stock')runViewTask(v,loadStockView);
+  if(v==='alerts')runViewTask(v,()=>refreshWebAlerts(false));
+  if(v==='history')runViewTask(v,loadHistory);
+  if(v==='dashboard')runViewTask(v,loadDashboard);
   if(v==='supervisor'){
-    if(!isSupLoggedIn){
-      document.getElementById('supLoginSec').style.display='block';
-      document.getElementById('supMainSec').style.display='none';
-      setTimeout(()=>document.getElementById('supPin')?.focus(),100);
-    } else {
-      updateSupFilter();loadSupervisor();
-    }
+    runViewTask(v,()=>{
+      if(!isSupLoggedIn){
+        document.getElementById('supLoginSec').style.display='block';
+        document.getElementById('supMainSec').style.display='none';
+        setTimeout(()=>document.getElementById('supPin')?.focus(),100);
+      } else {
+        updateSupFilter();loadSupervisor();
+      }
+    });
   }
-  if(v==='admin')checkAdminAuth();
+  if(v==='admin')runViewTask(v,checkAdminAuth);
   if(v==='evaluation'){
-    updateEvaluationDropdowns();
+    runViewTask(v,updateEvaluationDropdowns);
   }
   return true;
 }
@@ -4174,7 +4201,25 @@ function renderAuditLogs(){
 function setAdminTab(tab) {
   currentAdminTab=['data','retrospective','audit','settings','backup'].includes(tab)?tab:'data';
   ['data','retrospective','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
-  if(currentAdminTab==='settings'){renderSettings();renderStockCatalogAdmin();renderStockSchedulesAdmin();loadSupervisorRequests();}if(currentAdminTab==='data')renderStockPerformancePanels();if(currentAdminTab==='retrospective')renderRetrospectiveAdmin();if(currentAdminTab==='audit')loadAuditLogs(false);if(currentAdminTab==='backup'){renderBackupPanelSummary();refreshDataRetentionSummary(false);}
+  const panel=document.getElementById('adminPanel-'+currentAdminTab);panel?.querySelector(':scope > .admin-panel-error')?.remove();
+  const run=(task)=>{
+    try{
+      const result=task();
+      if(result&&typeof result.catch==='function')result.catch(showAdminPanelError);
+    }catch(error){showAdminPanelError(error);}
+  };
+  const showAdminPanelError=(error)=>{
+    console.error(`Load admin ${currentAdminTab} panel failed:`,error);
+    if(!panel)return;
+    let notice=panel.querySelector(':scope > .admin-panel-error');
+    if(!notice){notice=document.createElement('div');notice.className='admin-panel-error card';notice.style.cssText='border-left:4px solid var(--r);background:#FFF7F8;margin-bottom:14px';panel.prepend(notice);}
+    notice.innerHTML='<strong style="color:var(--r)">⚠️ โหลดข้อมูลบางส่วนไม่สำเร็จ</strong><div style="font-size:12px;color:var(--g6);margin-top:4px">ส่วนอื่นของแอดมินยังใช้งานได้ กรุณากดรีเฟรชแล้วลองเปิดแท็บนี้ใหม่</div>';
+  };
+  if(currentAdminTab==='settings'){run(renderSettings);run(renderStockCatalogAdmin);run(renderStockSchedulesAdmin);run(loadSupervisorRequests);}
+  if(currentAdminTab==='data')run(renderStockPerformancePanels);
+  if(currentAdminTab==='retrospective')run(renderRetrospectiveAdmin);
+  if(currentAdminTab==='audit')run(()=>loadAuditLogs(false));
+  if(currentAdminTab==='backup'){run(renderBackupPanelSummary);run(()=>refreshDataRetentionSummary(false));}
 }
 
 async function loadSupervisorRequests(){
@@ -4669,7 +4714,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260729-locked-dates-v64';
+const APP_VERSION = 'v20260730-responsive-admin-v65';
   let updatePromptShown = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
