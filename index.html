@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260802-dashboard-period-v81">
+<meta name="version" content="v20260802-dismissible-help-v82">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -654,16 +654,16 @@ img,svg,canvas{max-width:100%}
 .help-tip:hover,.help-tip:focus{background:#EDF4F8;border-color:#6F879A;color:#34566F;opacity:1;z-index:80}
 .help-tip::after{content:attr(data-help);position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%) translateY(4px);width:250px;max-width:calc(100vw - 32px);padding:10px 12px;border:1px solid #D7E0E7;border-radius:8px;background:#fff;color:#314657;box-shadow:0 10px 28px rgba(31,52,70,.18);font-family:'Sarabun',sans-serif;font-size:11.5px;font-weight:500;line-height:1.55;text-align:left;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:999}
 .help-tip::before{content:'';position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%) translateY(4px);border:6px solid transparent;border-top-color:#D7E0E7;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:1000}
-.help-tip:hover::after,.help-tip:focus::after,.help-tip:hover::before,.help-tip:focus::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.help-tip:hover::after,.help-tip:focus::after,.help-tip.is-open::after,.help-tip:hover::before,.help-tip:focus::before,.help-tip.is-open::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
 .help-tip.tip-down::after{top:calc(100% + 10px);bottom:auto;transform:translateX(-50%) translateY(-4px)}
 .help-tip.tip-down::before{top:calc(100% + 3px);bottom:auto;border-top-color:transparent;border-bottom-color:#D7E0E7;transform:translateX(-50%) translateY(-4px)}
-.help-tip.tip-down:hover::after,.help-tip.tip-down:focus::after,.help-tip.tip-down:hover::before,.help-tip.tip-down:focus::before{transform:translateX(-50%) translateY(0)}
+.help-tip.tip-down:hover::after,.help-tip.tip-down:focus::after,.help-tip.tip-down.is-open::after,.help-tip.tip-down:hover::before,.help-tip.tip-down:focus::before,.help-tip.tip-down.is-open::before{transform:translateX(-50%) translateY(0)}
 .help-tip.tip-left::after{left:auto;right:-8px;transform:translateY(4px)}
 .help-tip.tip-left::before{left:auto;right:3px;transform:translateY(4px)}
 .help-tip.tip-right::after{left:-8px;right:auto;transform:translateY(4px)}
 .help-tip.tip-right::before{left:3px;right:auto;transform:translateY(4px)}
 .help-tip.tip-down.tip-left::after,.help-tip.tip-down.tip-left::before,.help-tip.tip-down.tip-right::after,.help-tip.tip-down.tip-right::before{transform:translateY(-4px)}
-.help-tip.tip-left:hover::after,.help-tip.tip-left:focus::after,.help-tip.tip-left:hover::before,.help-tip.tip-left:focus::before,.help-tip.tip-right:hover::after,.help-tip.tip-right:focus::after,.help-tip.tip-right:hover::before,.help-tip.tip-right:focus::before{transform:translateY(0)}
+.help-tip.tip-left:hover::after,.help-tip.tip-left:focus::after,.help-tip.tip-left.is-open::after,.help-tip.tip-left:hover::before,.help-tip.tip-left:focus::before,.help-tip.tip-left.is-open::before,.help-tip.tip-right:hover::after,.help-tip.tip-right:focus::after,.help-tip.tip-right.is-open::after,.help-tip.tip-right:hover::before,.help-tip.tip-right:focus::before,.help-tip.tip-right.is-open::before{transform:translateY(0)}
 .card{background:#fff;border-radius:var(--r12);padding:18px;box-shadow:var(--sh1);margin-bottom:16px}
 .card canvas{max-width:100%;display:block}
 .card h3{font-size:14.5px;font-weight:800;margin-bottom:14px;color:var(--g8)}
@@ -2142,6 +2142,13 @@ const DEFAULT_CL_ITEMS = {
 
 // ══ STATE ══
 let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[], reviewMonthKey='';
+document.addEventListener('click',event=>{
+  const tip=event.target.closest?.('.help-tip');
+  const wasOpen=tip?.classList.contains('is-open');
+  document.querySelectorAll('.help-tip.is-open').forEach(element=>element.classList.remove('is-open'));
+  if(tip&&!wasOpen){event.preventDefault();tip.classList.add('is-open');}
+  if(tip)tip.blur();
+});
 function readLocalJSON(key,fallback){
   try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value);}
   catch(error){console.warn(`อ่านข้อมูลสำรอง ${key} ไม่สำเร็จ:`,error);return fallback;}
@@ -5091,7 +5098,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260802-dashboard-period-v81';
+const APP_VERSION = 'v20260802-dismissible-help-v82';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
