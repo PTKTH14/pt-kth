@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-  <meta name="version" content="v20260802-guided-loading-v74">
+  <meta name="version" content="v20260802-thai-calendar-admin-tabs-v75">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -527,7 +527,10 @@ img,svg,canvas{max-width:100%}
 .filter-toolbar{margin-bottom:14px!important}
 .date-display-control{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;max-width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);color:var(--g6);font-size:13px;font-weight:600;line-height:1.35;box-sizing:border-box;overflow-wrap:anywhere}
 .date-filter-input{display:block;width:150px!important;min-width:0!important;max-width:100%;height:44px;box-sizing:border-box}
-.filter-toolbar .date-filter-input{flex:0 1 150px}
+.thai-date-input{padding-right:38px!important;background-color:#fff!important;background-image:linear-gradient(45deg,transparent 50%,var(--g5) 50%),linear-gradient(135deg,var(--g5) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;color:var(--g8)!important;cursor:pointer;text-align:center;font-variant-numeric:tabular-nums}
+.thai-date-input.is-empty{color:var(--g4)!important}.thai-date-input:focus{border-color:var(--bm);box-shadow:0 0 0 3px rgba(15,76,129,.09)}
+.filter-toolbar-grid{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;min-width:0}.filter-toolbar-grid>*{min-width:0}.filter-title{font-size:13px;font-weight:700;color:var(--g8);white-space:nowrap}.date-range-group{display:grid;grid-template-columns:minmax(132px,150px) auto minmax(132px,150px);align-items:center;gap:8px;min-width:0}.date-range-separator{font-size:13px;color:var(--g6);text-align:center}.filter-select{width:auto!important;min-width:150px!important}.filter-export{margin-left:auto}
+.thai-calendar-overlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(13,31,45,.48);backdrop-filter:blur(2px)}.thai-calendar{width:min(360px,100%);padding:16px;border-radius:16px;background:#fff;box-shadow:0 20px 55px rgba(0,0,0,.25)}.thai-calendar-head{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:12px}.thai-calendar-head button{width:44px;height:44px;border:1px solid var(--g2);border-radius:10px;background:#fff;color:var(--bd);font:inherit;font-size:20px;cursor:pointer}.thai-calendar-title{text-align:center;color:var(--bd);font-size:16px;font-weight:800}.thai-calendar-week,.thai-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.thai-calendar-week span{text-align:center;color:var(--g5);font-size:11px;font-weight:700;padding:5px 0}.thai-calendar-day{min-width:0;height:40px;border:0;border-radius:9px;background:transparent;color:var(--g8);font:inherit;font-size:13px;cursor:pointer}.thai-calendar-day:hover{background:var(--bl)}.thai-calendar-day.today{box-shadow:inset 0 0 0 1.5px var(--bm)}.thai-calendar-day.selected{background:var(--bd);color:#fff;font-weight:800}.thai-calendar-day.empty{pointer-events:none}.thai-calendar-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.thai-calendar-actions button{min-height:44px;border:1px solid var(--g2);border-radius:9px;background:#fff;color:var(--g8);font:inherit;font-weight:700;cursor:pointer}.thai-calendar-actions .today-button{background:var(--bl);border-color:#BFD9EC;color:var(--bd)}
 .dashboard-reading-guide{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-2px 0 12px;padding:9px 12px;border:1px solid #D7E7F4;border-radius:9px;background:#F7FBFF;color:var(--g6);font-size:11.5px}
 .dashboard-reading-guide strong{color:var(--bd)}
 .dashboard-reading-guide .guide-arrow{color:#8EABC2;font-weight:800}
@@ -779,19 +782,21 @@ tr:hover td{background:var(--g1)}
   .monthly-report-preview{padding:12px}
   .filter-toolbar{padding:12px!important}
   .filter-toolbar input,.filter-toolbar select{max-width:100%}
-  .filter-toolbar .date-filter-input{flex:1 1 180px;width:100%!important}
-  .filter-toolbar>span{flex:0 0 auto}
+  .filter-toolbar-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .filter-title,.date-range-group,.filter-export{grid-column:1/-1}
+  .date-range-group{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);width:100%}
+  .date-range-group .date-filter-input,.filter-select,.filter-toolbar-grid .btn{width:100%!important;min-width:0!important;max-width:100%;justify-content:center;margin:0!important}
   .mf .btn{flex:1;justify-content:center;min-width:120px}
   .audit-summary{grid-template-columns:1fr}
   .admin-shell{overflow:hidden}
-  .admin-tabs{grid-template-columns:repeat(2,minmax(0,1fr));border-radius:10px}
-  .admin-tab{font-size:12px!important;min-height:50px;border-right:1px solid var(--g2)!important;border-bottom:1px solid var(--g2)!important}
-  .admin-tab:last-child{grid-column:1/-1}
+  .admin-tabs{position:relative;display:flex;align-items:stretch;gap:0;width:100%;max-width:100%;margin:0 0 16px;padding:0;border:0;border-bottom:1px solid var(--g2);border-radius:0;background:transparent;box-shadow:none;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x}
+  .admin-tabs::-webkit-scrollbar{display:none}
+  .admin-tab{flex:0 0 auto;min-width:max-content;min-height:52px;padding:10px 18px!important;font-size:12.5px!important;white-space:nowrap;overflow-wrap:normal;border-right:0!important;border-bottom-width:3px!important;scroll-snap-align:start}
   .view-switcher{gap:8px;max-width:none}
   .view-switch-button{min-height:62px;padding:9px 10px;gap:8px}
   .view-switch-icon{width:34px;height:34px;flex-basis:34px;font-size:17px}
   .view-switch-title{font-size:13px}.view-switch-note{font-size:9.5px}
-  .responsive-form-grid,.cutoff-grid{grid-template-columns:1fr}
+  .responsive-form-grid{grid-template-columns:1fr}.cutoff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .form-grid{grid-template-columns:1fr}
   .system-field>label{min-height:0}
   .filter-toolbar{width:100%;max-width:100%;overflow:hidden}
@@ -1149,12 +1154,10 @@ tr:hover td{background:var(--g1)}
 
   <!-- FILTER -->
   <div class="card filter-toolbar dashboard-filter" style="padding:12px 16px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="font-size:13px;font-weight:700;color:var(--g8)">🗓 ช่วงเวลา:</span>
-      <input type="date" id="dashStartDate" class="sb-input date-filter-input">
-      <span style="font-size:13px;color:var(--g6)">ถึง</span>
-      <input type="date" id="dashEndDate" class="sb-input date-filter-input">
-      <select id="dashFilter" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
+    <div class="filter-toolbar-grid">
+      <span class="filter-title">🗓 ช่วงเวลา:</span>
+      <div class="date-range-group"><input type="date" id="dashStartDate" class="sb-input date-filter-input" aria-label="วันที่เริ่มต้น"><span class="date-range-separator">ถึง</span><input type="date" id="dashEndDate" class="sb-input date-filter-input" aria-label="วันที่สิ้นสุด"></div>
+      <select id="dashFilter" class="sb-input filter-select" style="padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
       <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ดู</button>
       <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetDashFilter()">ล้าง</button>
     </div>
@@ -1246,13 +1249,12 @@ tr:hover td{background:var(--g1)}
 <!-- HISTORY -->
 <div class="view" id="view-history">
   <div class="ph"><h1>📋 ประวัติการบันทึก</h1></div>
-  <div class="card filter-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center">
-    <span style="font-size:13px;font-weight:700">กรองวันที่:</span>
-    <input type="date" id="hisStartDate" class="sb-input date-filter-input">
-    <span style="font-size:13px;color:var(--g6)">ถึง</span>
-    <input type="date" id="hisEndDate" class="sb-input date-filter-input">
-    <select id="hisFilterStaff" class="sb-input" style="width:auto;padding:6px 9px"><option value="">ผู้ช่วยทั้งหมด</option></select>
-    <select id="hisFilterStatus" class="sb-input" style="width:auto;padding:6px 9px">
+  <div class="card filter-toolbar" style="padding:12px 18px">
+   <div class="filter-toolbar-grid">
+    <span class="filter-title">กรองวันที่:</span>
+    <div class="date-range-group"><input type="date" id="hisStartDate" class="sb-input date-filter-input" aria-label="วันที่เริ่มต้น"><span class="date-range-separator">ถึง</span><input type="date" id="hisEndDate" class="sb-input date-filter-input" aria-label="วันที่สิ้นสุด"></div>
+    <select id="hisFilterStaff" class="sb-input filter-select" style="padding:6px 9px"><option value="">ผู้ช่วยทั้งหมด</option></select>
+    <select id="hisFilterStatus" class="sb-input filter-select" style="padding:6px 9px">
       <option value="">สถานะทั้งหมด</option>
       <option value="pending">รอ PT ประเมิน</option>
       <option value="pass">ผ่าน</option>
@@ -1261,7 +1263,8 @@ tr:hover td{background:var(--g1)}
     </select>
     <button class="btn btn-pri" style="padding:6px 14px;font-size:13px" onclick="searchHistory()">🔍 ค้นหา</button>
     <button class="btn btn-out" style="padding:6px 14px;font-size:13px" onclick="resetHisFilter()">ล้าง</button>
-    <button class="btn btn-out" style="padding:6px 14px;font-size:13px;margin-left:auto" onclick="exportCSV()">📥 Export CSV</button>
+    <button class="btn btn-out filter-export" style="padding:6px 14px;font-size:13px" onclick="exportCSV()">📥 Export CSV</button>
+   </div>
   </div>
   <div class="card" style="margin-bottom:16px;border-left:4px solid #DC3545">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
@@ -1418,14 +1421,14 @@ tr:hover td{background:var(--g1)}
   <div id="supervisorStockPerformance"></div>
 
   <!-- ตัวกรอง -->
-  <div class="card filter-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center">
-    <span style="font-size:13px;font-weight:700">กรองข้อมูล:</span>
-    <input type="date" id="supStartDate" class="sb-input date-filter-input">
-    <span style="font-size:13px;color:var(--g6)">ถึง</span>
-    <input type="date" id="supEndDate" class="sb-input date-filter-input">
-    <select id="supFilterStaff" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
+  <div class="card filter-toolbar" style="padding:12px 18px">
+   <div class="filter-toolbar-grid">
+    <span class="filter-title">กรองข้อมูล:</span>
+    <div class="date-range-group"><input type="date" id="supStartDate" class="sb-input date-filter-input" aria-label="วันที่เริ่มต้น"><span class="date-range-separator">ถึง</span><input type="date" id="supEndDate" class="sb-input date-filter-input" aria-label="วันที่สิ้นสุด"></div>
+    <select id="supFilterStaff" class="sb-input filter-select" style="padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
     <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadSupervisor()">🔍 ดู</button>
     <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetSupFilter()">ล้าง</button>
+   </div>
   </div>
 
   <!-- แท็บย่อย -->
@@ -2196,6 +2199,61 @@ async function initializeFirebaseAuth(){
 }
 
 // ══ INIT ══
+const THAI_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const THAI_WEEKDAYS=['อา','จ','อ','พ','พฤ','ศ','ส'];
+let thaiCalendarState=null;
+function formatThaiInputDate(value){
+  const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!match)return'';
+  return`${match[3]}/${match[2]}/${Number(match[1])+543}`;
+}
+function parseIsoDate(value){
+  const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!match)return null;
+  const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
+  return Number.isNaN(date.getTime())?null:date;
+}
+function initThaiDateControls(){
+  document.querySelectorAll('input[type="date"]').forEach(input=>{
+    if(input.dataset.thaiDateReady==='true')return;
+    const initialIso=input.value||input.getAttribute('value')||'';const display=document.createElement('button');
+    display.type='button';display.id=input.id+'Display';display.className=(input.className+' thai-date-input').trim();display.dataset.dateFor=input.id;display.setAttribute('aria-label',input.getAttribute('aria-label')||'เลือกวันที่');
+    input.type='hidden';input.className='thai-date-storage';input.dataset.thaiDateReady='true';input.insertAdjacentElement('afterend',display);setThaiDateValue(input.id,initialIso,false);
+    display.addEventListener('click',()=>openThaiCalendar(input.id));
+  });
+}
+function setThaiDateValue(inputId,value,emitChange=false){
+  const input=document.getElementById(inputId);if(!input)return'';const iso=/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))?String(value):'';input.value=iso;
+  const display=document.getElementById(inputId+'Display');if(display){display.textContent=formatThaiInputDate(iso)||'วว/ดด/ปปปป';display.classList.toggle('is-empty',!iso);}
+  if(emitChange)input.dispatchEvent(new Event('change',{bubbles:true}));return iso;
+}
+function openThaiCalendar(inputId){
+  const input=document.getElementById(inputId);if(!input)return;
+  const selected=parseIsoDate(input.value);const base=selected||new Date();
+  thaiCalendarState={inputId,year:base.getFullYear(),month:base.getMonth()};renderThaiCalendar();
+}
+function closeThaiCalendar(){document.querySelector('#thaiCalendarOverlay')?.remove();thaiCalendarState=null;}
+function shiftThaiCalendarMonth(delta){
+  if(!thaiCalendarState)return;const next=new Date(thaiCalendarState.year,thaiCalendarState.month+delta,1);thaiCalendarState.year=next.getFullYear();thaiCalendarState.month=next.getMonth();renderThaiCalendar();
+}
+function chooseThaiCalendarDate(day){
+  if(!thaiCalendarState)return;const inputId=thaiCalendarState.inputId;const input=document.getElementById(inputId);if(!input)return closeThaiCalendar();
+  setThaiDateValue(inputId,`${thaiCalendarState.year}-${String(thaiCalendarState.month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,true);closeThaiCalendar();document.getElementById(inputId+'Display')?.focus();
+}
+function chooseThaiCalendarToday(){
+  const today=new Date();if(!thaiCalendarState)return;thaiCalendarState.year=today.getFullYear();thaiCalendarState.month=today.getMonth();chooseThaiCalendarDate(today.getDate());
+}
+function renderThaiCalendar(){
+  if(!thaiCalendarState)return;document.querySelector('#thaiCalendarOverlay')?.remove();
+  const input=document.getElementById(thaiCalendarState.inputId);const selected=parseIsoDate(input?.value);const today=new Date();const firstDay=new Date(thaiCalendarState.year,thaiCalendarState.month,1).getDay();const totalDays=new Date(thaiCalendarState.year,thaiCalendarState.month+1,0).getDate();
+  const cells=Array.from({length:firstDay},()=>'<span class="thai-calendar-day empty"></span>');
+  for(let day=1;day<=totalDays;day++){
+    const isToday=today.getFullYear()===thaiCalendarState.year&&today.getMonth()===thaiCalendarState.month&&today.getDate()===day;const isSelected=selected&&selected.getFullYear()===thaiCalendarState.year&&selected.getMonth()===thaiCalendarState.month&&selected.getDate()===day;
+    cells.push(`<button type="button" class="thai-calendar-day${isToday?' today':''}${isSelected?' selected':''}" onclick="chooseThaiCalendarDate(${day})">${day}</button>`);
+  }
+  const overlay=document.createElement('div');overlay.id='thaiCalendarOverlay';overlay.className='thai-calendar-overlay';overlay.setAttribute('role','presentation');overlay.innerHTML=`<div class="thai-calendar" role="dialog" aria-modal="true" aria-label="ปฏิทินภาษาไทย"><div class="thai-calendar-head"><button type="button" aria-label="เดือนก่อนหน้า" onclick="shiftThaiCalendarMonth(-1)">‹</button><div class="thai-calendar-title">${THAI_MONTHS[thaiCalendarState.month]} ${thaiCalendarState.year+543}</div><button type="button" aria-label="เดือนถัดไป" onclick="shiftThaiCalendarMonth(1)">›</button></div><div class="thai-calendar-week">${THAI_WEEKDAYS.map(day=>`<span>${day}</span>`).join('')}</div><div class="thai-calendar-days">${cells.join('')}</div><div class="thai-calendar-actions"><button type="button" class="today-button" onclick="chooseThaiCalendarToday()">วันนี้</button><button type="button" onclick="closeThaiCalendar()">ยกเลิก</button></div></div>`;
+  overlay.addEventListener('click',event=>{if(event.target===overlay)closeThaiCalendar();});document.body.appendChild(overlay);
+  overlay.querySelector('.thai-calendar-day:not(.empty),.thai-calendar-head button')?.focus();
+}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&thaiCalendarState)closeThaiCalendar();});
 function hydrateCachedStartup(){
   const hasCachedStartupData=['pt_staff','pt_ptlist','pt_submissions','pt_system_settings','pt_stock_catalog','pt_stock_requests'].some(key=>localStorage.getItem(key)!==null);
   staffList=readLocalJSON('pt_staff',[]);
@@ -2378,6 +2436,7 @@ async function init(){
   setLoadingDetail(window.FB?'ข้อมูลพร้อม ใช้งานได้แล้ว':'เปิดด้วยข้อมูลในเครื่อง');
   requestAnimationFrame(()=>setTimeout(()=>document.getElementById('loadingOverlay')?.classList.add('hidden'),120));
 }
+initThaiDateControls();
 init().catch(error=>{console.error('App startup failed:',error);showStartupError(error);});
 
 // ══ HELPERS ══
@@ -2509,16 +2568,17 @@ function runViewTask(viewName,task){
   if(target&&!busy){busy=document.createElement('div');busy.className='view-busy';busy.setAttribute('role','status');busy.setAttribute('aria-live','polite');busy.innerHTML='<div class="view-busy-head"><span class="mini-spin"></span><span>กำลังเตรียมข้อมูลหน้านี้...</span></div><div class="view-busy-lines" aria-hidden="true"><span class="view-busy-line"></span><span class="view-busy-line"></span><span class="view-busy-line"></span></div>';target.prepend(busy);}
   if(target)target.setAttribute('aria-busy','true');
   const finish=()=>{busy?.remove();target?.removeAttribute('aria-busy');};
-  try{
-    const result=task();
-    if(result&&typeof result.then==='function')return result.catch(error=>showViewLoadError(viewName,error)).finally(finish);
-    finish();
-    return result;
-  }catch(error){
-    finish();
-    showViewLoadError(viewName,error);
-    return null;
-  }
+  return new Promise(resolve=>{
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      try{
+        Promise.resolve(task()).catch(error=>showViewLoadError(viewName,error)).finally(()=>{finish();resolve();});
+      }catch(error){
+        finish();
+        showViewLoadError(viewName,error);
+        resolve();
+      }
+    }));
+  });
 }
 function showViewLoadError(viewName,error){
   console.error(`Load ${viewName} view failed:`,error);
@@ -3430,7 +3490,7 @@ function resumePendingMissedAlertAction(){
   setTimeout(()=>document.getElementById('missedEvalAdminForm')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
   return true;
 }
-function resetHisFilter(){document.getElementById('hisStartDate').value='';document.getElementById('hisEndDate').value='';document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
+function resetHisFilter(){setThaiDateValue('hisStartDate','');setThaiDateValue('hisEndDate','');document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
 async function searchHistory(){
   historyVisibleCount=HISTORY_PAGE_SIZE;
   const start=document.getElementById('hisStartDate')?.value;
@@ -3681,8 +3741,8 @@ function exportCSV(){
 
 // ══ DASHBOARD ══
 function resetDashFilter() {
-  document.getElementById('dashStartDate').value = '';
-  document.getElementById('dashEndDate').value = '';
+  setThaiDateValue('dashStartDate','');
+  setThaiDateValue('dashEndDate','');
   document.getElementById('dashFilter').value = 'all';
   loadDashboard();
 }
@@ -4034,7 +4094,7 @@ async function loadAuditLogs(forceRemote){
   if(forceRemote&&window.FB?.fbGetAuditLogs){try{const remote=await window.FB.fbGetAuditLogs();if(Array.isArray(remote)){auditLogs=remote;writeLocalJSON('pt_audit_logs',auditLogs);}}catch(error){showToast('⚠️ ใช้ประวัติที่สำรองในเครื่อง','warning');}}
   renderAuditLogs();
 }
-function clearAuditFilters(){const category=document.getElementById('auditCategoryFilter');const date=document.getElementById('auditDateFilter');if(category)category.value='all';if(date)date.value='';renderAuditLogs();}
+function clearAuditFilters(){const category=document.getElementById('auditCategoryFilter');if(category)category.value='all';setThaiDateValue('auditDateFilter','');renderAuditLogs();}
 
 function retrospectiveSubmissionById(id){return submissions.find(item=>String(item.id)===String(id))||null;}
 function retrospectiveItems(submission){
@@ -4597,8 +4657,8 @@ function setSupTab(tab) {
 }
 
 function resetSupFilter() {
-  document.getElementById('supStartDate').value = '';
-  document.getElementById('supEndDate').value = '';
+  setThaiDateValue('supStartDate','');
+  setThaiDateValue('supEndDate','');
   document.getElementById('supFilterStaff').value = 'all';
   loadSupervisor();
 }
@@ -4819,7 +4879,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260802-guided-loading-v74';
+const APP_VERSION = 'v20260802-thai-calendar-admin-tabs-v75';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
