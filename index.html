@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-  <meta name="version" content="v20260802-thai-calendar-admin-tabs-v75">
+  <meta name="version" content="v20260802-admin-center-monthly-history-v77">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -527,10 +527,10 @@ img,svg,canvas{max-width:100%}
 .filter-toolbar{margin-bottom:14px!important}
 .date-display-control{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;max-width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);color:var(--g6);font-size:13px;font-weight:600;line-height:1.35;box-sizing:border-box;overflow-wrap:anywhere}
 .date-filter-input{display:block;width:150px!important;min-width:0!important;max-width:100%;height:44px;box-sizing:border-box}
-.thai-date-input{padding-right:38px!important;background-color:#fff!important;background-image:linear-gradient(45deg,transparent 50%,var(--g5) 50%),linear-gradient(135deg,var(--g5) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;color:var(--g8)!important;cursor:pointer;text-align:center;font-variant-numeric:tabular-nums}
+.thai-date-input{display:block;width:100%;min-width:0;max-width:100%;height:44px;box-sizing:border-box;padding:9px 38px 9px 12px!important;border:1px solid var(--g2);border-radius:8px;background-color:#fff!important;background-image:linear-gradient(45deg,transparent 50%,var(--g5) 50%),linear-gradient(135deg,var(--g5) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;color:var(--g8)!important;cursor:pointer;text-align:center;font-family:inherit;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
 .thai-date-input.is-empty{color:var(--g4)!important}.thai-date-input:focus{border-color:var(--bm);box-shadow:0 0 0 3px rgba(15,76,129,.09)}
 .filter-toolbar-grid{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;min-width:0}.filter-toolbar-grid>*{min-width:0}.filter-title{font-size:13px;font-weight:700;color:var(--g8);white-space:nowrap}.date-range-group{display:grid;grid-template-columns:minmax(132px,150px) auto minmax(132px,150px);align-items:center;gap:8px;min-width:0}.date-range-separator{font-size:13px;color:var(--g6);text-align:center}.filter-select{width:auto!important;min-width:150px!important}.filter-export{margin-left:auto}
-.thai-calendar-overlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(13,31,45,.48);backdrop-filter:blur(2px)}.thai-calendar{width:min(360px,100%);padding:16px;border-radius:16px;background:#fff;box-shadow:0 20px 55px rgba(0,0,0,.25)}.thai-calendar-head{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:12px}.thai-calendar-head button{width:44px;height:44px;border:1px solid var(--g2);border-radius:10px;background:#fff;color:var(--bd);font:inherit;font-size:20px;cursor:pointer}.thai-calendar-title{text-align:center;color:var(--bd);font-size:16px;font-weight:800}.thai-calendar-week,.thai-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.thai-calendar-week span{text-align:center;color:var(--g5);font-size:11px;font-weight:700;padding:5px 0}.thai-calendar-day{min-width:0;height:40px;border:0;border-radius:9px;background:transparent;color:var(--g8);font:inherit;font-size:13px;cursor:pointer}.thai-calendar-day:hover{background:var(--bl)}.thai-calendar-day.today{box-shadow:inset 0 0 0 1.5px var(--bm)}.thai-calendar-day.selected{background:var(--bd);color:#fff;font-weight:800}.thai-calendar-day.empty{pointer-events:none}.thai-calendar-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.thai-calendar-actions button{min-height:44px;border:1px solid var(--g2);border-radius:9px;background:#fff;color:var(--g8);font:inherit;font-weight:700;cursor:pointer}.thai-calendar-actions .today-button{background:var(--bl);border-color:#BFD9EC;color:var(--bd)}
+.thai-calendar-overlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(13,31,45,.48);backdrop-filter:blur(2px)}.thai-calendar{width:min(390px,100%);padding:16px;border-radius:16px;background:#fff;box-shadow:0 20px 55px rgba(0,0,0,.25)}.thai-calendar-head{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:9px}.thai-calendar-head button{width:44px;height:44px;border:1px solid var(--g2);border-radius:10px;background:#fff;color:var(--bd);font:inherit;font-size:20px;cursor:pointer;-webkit-appearance:none;appearance:none}.thai-calendar-jump{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(96px,.65fr);gap:8px;margin-bottom:12px}.thai-calendar-jump select{display:block;width:100%;min-width:0;height:42px;padding:7px 28px 7px 9px;border:1px solid var(--g2);border-radius:9px;background-color:#fff;color:var(--bd);font:inherit;font-size:13px;font-weight:800;box-sizing:border-box}.thai-calendar-week,.thai-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.thai-calendar-week span{text-align:center;color:var(--g5);font-size:11px;font-weight:700;padding:5px 0}.thai-calendar-day{min-width:0;height:40px;border:0;border-radius:9px;background:transparent;color:var(--g8);font:inherit;font-size:13px;cursor:pointer;-webkit-appearance:none;appearance:none}.thai-calendar-day:hover{background:var(--bl)}.thai-calendar-day.today{box-shadow:inset 0 0 0 1.5px var(--bm)}.thai-calendar-day.selected{background:var(--bd);color:#fff;font-weight:800}.thai-calendar-day.empty{pointer-events:none}.thai-calendar-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.thai-calendar-actions button{min-height:44px;border:1px solid var(--g2);border-radius:9px;background:#fff;color:var(--g8);font:inherit;font-weight:700;cursor:pointer;-webkit-appearance:none;appearance:none}.thai-calendar-actions .today-button{background:var(--bl);border-color:#BFD9EC;color:var(--bd)}
 .dashboard-reading-guide{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-2px 0 12px;padding:9px 12px;border:1px solid #D7E7F4;border-radius:9px;background:#F7FBFF;color:var(--g6);font-size:11.5px}
 .dashboard-reading-guide strong{color:var(--bd)}
 .dashboard-reading-guide .guide-arrow{color:#8EABC2;font-weight:800}
@@ -749,7 +749,9 @@ tr:hover td{background:var(--g1)}
 .mobile-more-item>span{font-size:28px;line-height:1}.mobile-more-item>strong{font-size:13px}.mobile-more-item>small{font-size:10.5px;color:var(--g6);line-height:1.35}
 .line-browser-banner{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#FFF8E1;border-bottom:1px solid #F0D58A;color:#6D5000;font-size:12.5px;line-height:1.5}
 .line-browser-banner.show{display:flex}.line-browser-actions{display:flex;gap:7px;flex-shrink:0}.line-browser-actions button{min-height:40px;padding:7px 11px;border-radius:7px;border:1px solid #D5B85D;background:#fff;color:#604800;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.admin-home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.admin-home-card{min-height:132px;padding:18px;border:1px solid var(--g2);border-radius:16px;background:#fff;text-align:left;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(15,65,105,.06);transition:.18s ease}.admin-home-card:hover{transform:translateY(-2px);border-color:var(--bm);box-shadow:0 8px 20px rgba(15,65,105,.12)}.admin-home-card span{display:block;font-size:28px;margin-bottom:10px}.admin-home-card strong{display:block;color:var(--bd);font-size:16px;margin-bottom:5px}.admin-home-card small{display:block;color:var(--g6);line-height:1.5}.admin-workspace-bar{display:flex;align-items:center;gap:12px;margin:0 0 14px}.admin-workspace-bar h3{margin:0;color:var(--bd);font-size:18px}.history-period-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;margin-bottom:10px}.history-period-bar strong{min-width:170px;text-align:center;color:var(--bd);font-size:16px}.history-period-bar .btn{min-width:42px;justify-content:center}.history-mode-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.history-mode-button{padding:11px 12px;border:1px solid var(--g2);border-radius:12px;background:#fff;color:var(--g6);font:700 13px inherit;cursor:pointer}.history-mode-button.active{background:var(--bd);border-color:var(--bd);color:#fff}.history-advanced{margin-bottom:12px}.history-advanced>summary{cursor:pointer;color:var(--bd);font-weight:700;padding:9px 4px}.history-advanced[open]>summary{margin-bottom:5px}
 @media(max-width:900px), (orientation:portrait) and (max-width:1100px){
+  .admin-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-home-card{min-height:118px;padding:14px}.admin-home-card span{font-size:24px}.admin-home-card strong{font-size:14px}.admin-workspace-bar{position:sticky;top:76px;z-index:20;background:var(--g0);padding:8px 0}.history-period-bar{display:grid;grid-template-columns:44px 1fr 44px}.history-current-month{grid-column:1/-1}.history-mode-tabs{grid-template-columns:1fr}.history-mode-button{min-height:44px}
   input,select,textarea{font-size:16px!important}
   .line-browser-banner{align-items:flex-start;flex-direction:column;padding:10px 13px}.line-browser-actions{width:100%}.line-browser-actions button{flex:1}
   .retro-disclosure>summary{align-items:center}
@@ -788,15 +790,16 @@ tr:hover td{background:var(--g1)}
   .date-range-group .date-filter-input,.filter-select,.filter-toolbar-grid .btn{width:100%!important;min-width:0!important;max-width:100%;justify-content:center;margin:0!important}
   .mf .btn{flex:1;justify-content:center;min-width:120px}
   .audit-summary{grid-template-columns:1fr}
-  .admin-shell{overflow:hidden}
-  .admin-tabs{position:relative;display:flex;align-items:stretch;gap:0;width:100%;max-width:100%;margin:0 0 16px;padding:0;border:0;border-bottom:1px solid var(--g2);border-radius:0;background:transparent;box-shadow:none;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x}
-  .admin-tabs::-webkit-scrollbar{display:none}
-  .admin-tab{flex:0 0 auto;min-width:max-content;min-height:52px;padding:10px 18px!important;font-size:12.5px!important;white-space:nowrap;overflow-wrap:normal;border-right:0!important;border-bottom-width:3px!important;scroll-snap-align:start}
+  .admin-shell{overflow:visible}
+  .admin-tabs{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:0;width:100%;max-width:100%;margin:0 0 16px;padding:0;border:1px solid var(--g2);border-radius:12px;background:#fff;box-shadow:var(--sh1);overflow:hidden;touch-action:manipulation}
+  .admin-tab{min-width:0;min-height:54px;padding:9px 7px!important;font-size:12px!important;white-space:normal;overflow-wrap:anywhere;border-right:1px solid var(--g2)!important;border-bottom:1px solid var(--g2)!important}
+  .admin-tab:nth-child(2n){border-right:0!important}.admin-tab:last-child{grid-column:1/-1;border-right:0!important;border-bottom:0!important}
   .view-switcher{gap:8px;max-width:none}
   .view-switch-button{min-height:62px;padding:9px 10px;gap:8px}
   .view-switch-icon{width:34px;height:34px;flex-basis:34px;font-size:17px}
   .view-switch-title{font-size:13px}.view-switch-note{font-size:9.5px}
   .responsive-form-grid{grid-template-columns:1fr}.cutoff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),select,textarea,.thai-date-input,.date-display-control,.stock-week-display{max-width:100%!important;box-sizing:border-box!important;font-size:16px}
   .form-grid{grid-template-columns:1fr}
   .system-field>label{min-height:0}
   .filter-toolbar{width:100%;max-width:100%;overflow:hidden}
@@ -1216,7 +1219,7 @@ tr:hover td{background:var(--g1)}
 
   <!-- RANKING -->
   <div class="card" style="margin-bottom:16px">
-    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="จัดอันดับเฉพาะ Checklist ที่ PT ประเมินแล้ว เรียงจากอัตราผ่าน/ปรับปรุงสูงสุด หากเท่ากันจะดูความสมบูรณ์เฉลี่ย">i</button></h3>
+    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="คะแนนจัดอันดับคิดจากผลประเมินของ PT 80% (ผ่าน 100, ต้องปรับปรุง 70, ไม่ผ่าน 0) และความสมบูรณ์ของ Checklist 20% ต้องมีอย่างน้อย 3 รอบจึงเป็นอันดับทางการ หากคะแนนเท่ากันจะเรียงจากคะแนน PT ความสมบูรณ์ และจำนวนรอบตามลำดับ">i</button></h3>
     <div id="rankTable" class="tw dashboard-table-scroll"></div>
   </div>
 
@@ -1248,7 +1251,20 @@ tr:hover td{background:var(--g1)}
 
 <!-- HISTORY -->
 <div class="view" id="view-history">
-  <div class="ph"><h1>📋 ประวัติการบันทึก</h1></div>
+  <div class="ph"><h1>📋 ประวัติการบันทึก</h1><p>ดูข้อมูลเป็นรายเดือน และเลือกดูเฉพาะประเภทที่ต้องการ</p></div>
+  <div class="history-period-bar card">
+    <button class="btn btn-out" type="button" onclick="changeHistoryMonth(-1)" aria-label="เดือนก่อน">‹</button>
+    <strong id="historyMonthLabel">เดือนปัจจุบัน</strong>
+    <button class="btn btn-out" type="button" onclick="changeHistoryMonth(1)" aria-label="เดือนถัดไป">›</button>
+    <button class="btn btn-out history-current-month" type="button" onclick="setHistoryCurrentMonth()">เดือนนี้</button>
+  </div>
+  <div class="history-mode-tabs" role="tablist" aria-label="ประเภทประวัติ">
+    <button id="historyMode-checklist" class="history-mode-button active" type="button" onclick="setHistoryPanel('checklist')">📋 Checklist</button>
+    <button id="historyMode-damage" class="history-mode-button" type="button" onclick="setHistoryPanel('damage')">💰 ค่าเสียหาย</button>
+    <button id="historyMode-retrospective" class="history-mode-button" type="button" onclick="setHistoryPanel('retrospective')">🔎 ตรวจย้อนหลัง</button>
+  </div>
+  <details class="history-advanced" data-history-panel="checklist">
+   <summary>ตัวกรองเพิ่มเติม</summary>
   <div class="card filter-toolbar" style="padding:12px 18px">
    <div class="filter-toolbar-grid">
     <span class="filter-title">กรองวันที่:</span>
@@ -1266,7 +1282,8 @@ tr:hover td{background:var(--g1)}
     <button class="btn btn-out filter-export" style="padding:6px 14px;font-size:13px" onclick="exportCSV()">📥 Export CSV</button>
    </div>
   </div>
-  <div class="card" style="margin-bottom:16px;border-left:4px solid #DC3545">
+  </details>
+  <div class="card" data-history-panel="damage" style="display:none;margin-bottom:16px;border-left:4px solid #DC3545">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div>
         <h3 style="margin-bottom:3px;color:#B02A37">⚠️ บันทึกผู้ไม่ปฏิบัติงานตามกำหนด</h3>
@@ -1331,7 +1348,8 @@ tr:hover td{background:var(--g1)}
       <div id="missedEvalSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
       <div id="missedEvalList"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
     </div>
-    <details class="card retro-disclosure" id="retrospectivePublicDetails" style="margin-top:14px;border-left:4px solid #7B1FA2" open>
+  </div>
+    <details class="card retro-disclosure" data-history-panel="retrospective" id="retrospectivePublicDetails" style="display:none;margin-top:14px;border-left:4px solid #7B1FA2" open>
       <summary>
         <div><h3 style="margin-bottom:4px">🔎 ผลตรวจสอบย้อนหลัง</h3><p style="font-size:12px;color:var(--g6)">แสดงรายการปรับคะแนนและค่าเสียหายที่แอดมินยืนยันแล้ว</p></div>
         <div class="retro-disclosure-meta">
@@ -1342,14 +1360,13 @@ tr:hover td{background:var(--g1)}
       </summary>
       <div id="retrospectivePublicList" class="retro-disclosure-content"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
     </details>
-  </div>
-  <div class="tw" style="overflow-x:auto">
+  <div class="tw" data-history-panel="checklist" style="overflow-x:auto">
     <table>
       <thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th></th></tr></thead>
       <tbody id="historyBody"><tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการ</td></tr></tbody>
     </table>
   </div>
-  <div id="historyLoadMoreWrap" style="display:none;text-align:center;padding:14px 0 4px">
+  <div id="historyLoadMoreWrap" data-history-panel="checklist" style="display:none;text-align:center;padding:14px 0 4px">
     <button class="btn btn-out" id="historyLoadMoreBtn" onclick="loadMoreHistory()">แสดงประวัติเพิ่ม</button>
     <div id="historyCountText" style="margin-top:7px;font-size:12px;color:var(--g5)"></div>
   </div>
@@ -1506,7 +1523,22 @@ tr:hover td{background:var(--g1)}
       <h3 style="font-size:16px;font-weight:800;color:var(--bd)">ศูนย์จัดการระบบ</h3>
       <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="adminLogout()">🚪 ออก</button>
     </div>
-    <div class="admin-tabs">
+    <div id="adminHome" class="admin-home-grid">
+      <button class="admin-home-card" onclick="setAdminTab('data')"><span>📊</span><strong>ภาพรวมข้อมูล</strong><small>รายการล่าสุด รายงาน และข้อมูลภาพรวม</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('people')"><span>👥</span><strong>บุคลากร</strong><small>ผู้ช่วย PT และบัญชีหัวหน้างาน</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('schedule')"><span>⏰</span><strong>เวลาและรอบงาน</strong><small>Cutoff และรอบตรวจสต็อก</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('inventory')"><span>📦</span><strong>รายการวัสดุ</strong><small>เพิ่ม แก้ไข และปิดรายการสต็อก</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('checklist')"><span>📋</span><strong>งานและ Checklist</strong><small>จัดการหัวข้องานทุกเวร</small></button>
+      <button class="admin-home-card" onclick="setAdminTab('retrospective')"><span>🔎</span><strong>ตรวจสอบย้อนหลัง</strong><small>ปรับผลและบันทึกหลักฐาน</small></button>
+      <button class="admin-home-card" onclick="setAdminTab('audit')"><span>🕘</span><strong>ประวัติระบบ</strong><small>ตรวจว่าใครเพิ่ม แก้ไข หรือลบ</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('security')"><span>🔐</span><strong>ความปลอดภัย</strong><small>รหัสผ่านและสิทธิ์การเข้าใช้</small></button>
+      <button class="admin-home-card" onclick="setAdminTab('backup')"><span>💾</span><strong>สำรองข้อมูล</strong><small>ดาวน์โหลดและกู้คืนข้อมูล</small></button>
+    </div>
+    <div id="adminWorkspaceBar" class="admin-workspace-bar" style="display:none">
+      <button class="btn btn-out" onclick="setAdminTab('home')">← ศูนย์จัดการ</button>
+      <h3 id="adminWorkspaceTitle">จัดการระบบ</h3>
+    </div>
+    <div class="admin-tabs" style="display:none">
       <button class="admin-tab active" id="adminTab-data" onclick="setAdminTab('data')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--bd);border-bottom:3px solid var(--bd);margin-bottom:-2px">📊 ข้อมูลระบบ</button>
       <button class="admin-tab" id="adminTab-retrospective" onclick="setAdminTab('retrospective')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">🔎 ตรวจสอบย้อนหลัง</button>
       <button class="admin-tab" id="adminTab-audit" onclick="setAdminTab('audit')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">🕘 ประวัติการใช้งาน</button>
@@ -1514,7 +1546,7 @@ tr:hover td{background:var(--g1)}
       <button class="admin-tab" id="adminTab-backup" onclick="setAdminTab('backup')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">💾 สำรองข้อมูล</button>
     </div>
 
-    <div id="adminPanel-data" class="admin-panel">
+    <div id="adminPanel-data" class="admin-panel" style="display:none">
       <div class="tw" style="overflow-x:auto;margin-bottom:20px">
         <table>
           <thead><tr><th>วันที่</th><th>ผู้ช่วย</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th>จัดการ</th></tr></thead>
@@ -1602,7 +1634,7 @@ tr:hover td{background:var(--g1)}
     </div>
 
     <div id="adminPanel-settings" class="admin-panel" style="display:none">
-      <div class="card" style="max-width:760px;border-left:4px solid var(--bd)">
+      <div class="card" data-admin-category="schedule" style="max-width:760px;border-left:4px solid var(--bd)">
         <h3 style="margin-bottom:6px">⏰ ตั้งเวลา Cutoff การบันทึก</h3>
         <p style="font-size:12px;color:var(--g6);margin-bottom:12px">แอดมินแก้เวลาแล้วบันทึกครั้งเดียว เครื่องอื่นจะใช้เวลาชุดนี้หลังโหลดข้อมูลจาก Firebase</p>
         <div class="responsive-form-grid cutoff-grid">
@@ -1619,7 +1651,7 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-out" onclick="resetSystemSettingsForm()">↩ ค่าเริ่มต้น</button>
         </div>
       </div>
-      <div class="card" style="max-width:560px">
+      <div class="card" data-admin-category="people" style="max-width:560px">
         <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
         <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
         <div id="staffListUI" style="margin-bottom:12px"></div>
@@ -1628,7 +1660,7 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-pri" onclick="addStaff()">+ เพิ่ม</button>
         </div>
       </div>
-      <div class="card" style="max-width:560px">
+      <div class="card" data-admin-category="people" style="max-width:560px">
         <h3>🩺 จัดการรายชื่อนักกายภาพบำบัด (ผู้ประเมิน)</h3>
         <p style="font-size:12px;color:var(--g6);margin-bottom:10px">⚡ เพิ่ม/ลบแล้ว sync ทุกเครื่องทันที</p>
         <div id="ptListUI" style="margin-bottom:12px"></div>
@@ -1637,7 +1669,7 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-pri" onclick="addPT()">+ เพิ่ม</button>
         </div>
       </div>
-      <div class="card" style="margin-top:20px;border-left:4px solid #0B7A75">
+      <div class="card" data-admin-category="schedule" style="margin-top:20px;border-left:4px solid #0B7A75">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
           <div><h3 style="margin-bottom:4px">🗓️ ตั้งค่ารอบตรวจสต็อก</h3><p style="font-size:12px;color:var(--g6)">กำหนดวัน เวลา และหมวดวัสดุแยกเป็นหลายรอบได้ เช่น การแพทย์วันจันทร์ และวัสดุทั่วไปวันพุธ</p></div>
           <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="resetStockScheduleEditor()">ล้างแบบฟอร์ม</button>
@@ -1653,7 +1685,7 @@ tr:hover td{background:var(--g1)}
         <div style="margin:8px 0 10px;padding:8px 10px;border-radius:8px;background:#EEF7FF;color:var(--bd);font-size:11.5px;line-height:1.6">หนึ่งหมวดอยู่ได้หลายรอบ ระบบจะเลือกตามวันที่ให้อัตโนมัติ แต่ผู้ช่วยยังเปลี่ยนรอบเองได้เมื่อบันทึกย้อนหลังหรือทำงานเพิ่มเติม</div>
         <div id="stockScheduleAdminList" class="stock-schedule-list"></div>
       </div>
-      <div class="card" style="margin-top:20px;border-left:4px solid #7C3AED">
+      <div class="card" data-admin-category="inventory" style="margin-top:20px;border-left:4px solid #7C3AED">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
           <div><h3 style="margin-bottom:4px">📦 จัดการรายการสต็อก</h3><p style="font-size:12px;color:var(--g6)">เพิ่ม แก้ไข ปิดใช้งาน หรือลบรายการที่ยังไม่มีประวัติได้ และมีผลทุกอุปกรณ์</p></div>
           <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="resetStockCatalogEditor()">ล้างแบบฟอร์ม</button>
@@ -1667,7 +1699,7 @@ tr:hover td{background:var(--g1)}
         <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockCatalogItem()">💾 บันทึกรายการ</button></div>
         <div id="stockCatalogAdminList" style="margin-top:12px"></div>
       </div>
-      <div class="card" style="margin-top:20px">
+      <div class="card" data-admin-category="checklist" style="margin-top:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h3 style="margin-bottom:0">📋 จัดการรายการ Checklist</h3>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1688,7 +1720,7 @@ tr:hover td{background:var(--g1)}
           <button class="btn btn-out" onclick="resetClItems()">↩ คืนค่าเดิม</button>
         </div>
       </div>
-      <div class="card" style="max-width:720px;margin-top:20px;border-left:4px solid var(--bm)">
+      <div class="card" data-admin-category="people" style="max-width:720px;margin-top:20px;border-left:4px solid var(--bm)">
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
           <div><h3 style="margin-bottom:4px">คำขอสมัครบัญชีหัวหน้างาน</h3><p style="font-size:12px;color:var(--g6);line-height:1.6">ตรวจสอบชื่อและอีเมลก่อนอนุมัติ ผู้สมัครจะเข้าใช้งานได้หลังได้รับอนุมัติเท่านั้น</p></div>
           <button class="btn btn-out" style="padding:6px 11px;font-size:12px" onclick="loadSupervisorRequests()">🔄 โหลดข้อมูลใหม่</button>
@@ -1696,7 +1728,7 @@ tr:hover td{background:var(--g1)}
         <div id="supervisorRequestSummary" style="font-size:12px;color:var(--g6);margin-bottom:9px">กำลังโหลดคำขอ...</div>
         <div id="supervisorRequestList"><div style="text-align:center;color:var(--g4);padding:18px">กำลังโหลด...</div></div>
       </div>
-      <div class="card" style="max-width:440px;margin-top:20px;border-left:4px solid #6A1B9A">
+      <div class="card" data-admin-category="security" style="max-width:440px;margin-top:20px;border-left:4px solid #6A1B9A">
         <h3 style="margin-bottom:6px">🔐 เปลี่ยนรหัสผ่านแอดมิน</h3>
         <p style="font-size:12.5px;color:var(--g6);margin-bottom:14px">บัญชี: <strong id="currentAdminEmailDisplay">—</strong></p>
         <p style="font-size:11.5px;color:#7B1FA2;background:#F3E5F5;border-radius:8px;padding:8px 10px;margin-bottom:12px">รหัสผ่านใหม่มีผลกับทุกอุปกรณ์ผ่าน Firebase Authentication</p>
@@ -2220,6 +2252,13 @@ function initThaiDateControls(){
     display.addEventListener('click',()=>openThaiCalendar(input.id));
   });
 }
+function initStandardTimeControls(){
+  document.querySelectorAll('input[type="time"]').forEach(input=>{
+    const select=document.createElement('select');select.id=input.id;select.className=input.className;select.setAttribute('aria-label',input.getAttribute('aria-label')||input.closest('.fg')?.querySelector('label')?.textContent||'เลือกเวลา');
+    for(let minutes=0;minutes<1440;minutes+=15){const value=`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;select.add(new Option(`${value} น.`,value));}
+    const initial=input.value||input.getAttribute('value')||'00:00';if(!Array.from(select.options).some(option=>option.value===initial))select.add(new Option(`${initial} น.`,initial));select.value=initial;input.replaceWith(select);
+  });
+}
 function setThaiDateValue(inputId,value,emitChange=false){
   const input=document.getElementById(inputId);if(!input)return'';const iso=/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))?String(value):'';input.value=iso;
   const display=document.getElementById(inputId+'Display');if(display){display.textContent=formatThaiInputDate(iso)||'วว/ดด/ปปปป';display.classList.toggle('is-empty',!iso);}
@@ -2233,6 +2272,9 @@ function openThaiCalendar(inputId){
 function closeThaiCalendar(){document.querySelector('#thaiCalendarOverlay')?.remove();thaiCalendarState=null;}
 function shiftThaiCalendarMonth(delta){
   if(!thaiCalendarState)return;const next=new Date(thaiCalendarState.year,thaiCalendarState.month+delta,1);thaiCalendarState.year=next.getFullYear();thaiCalendarState.month=next.getMonth();renderThaiCalendar();
+}
+function jumpThaiCalendar(month,year){
+  if(!thaiCalendarState)return;const nextMonth=Number(month);const nextYear=Number(year);if(!Number.isInteger(nextMonth)||nextMonth<0||nextMonth>11||!Number.isInteger(nextYear))return;thaiCalendarState.month=nextMonth;thaiCalendarState.year=nextYear;renderThaiCalendar();
 }
 function chooseThaiCalendarDate(day){
   if(!thaiCalendarState)return;const inputId=thaiCalendarState.inputId;const input=document.getElementById(inputId);if(!input)return closeThaiCalendar();
@@ -2249,7 +2291,8 @@ function renderThaiCalendar(){
     const isToday=today.getFullYear()===thaiCalendarState.year&&today.getMonth()===thaiCalendarState.month&&today.getDate()===day;const isSelected=selected&&selected.getFullYear()===thaiCalendarState.year&&selected.getMonth()===thaiCalendarState.month&&selected.getDate()===day;
     cells.push(`<button type="button" class="thai-calendar-day${isToday?' today':''}${isSelected?' selected':''}" onclick="chooseThaiCalendarDate(${day})">${day}</button>`);
   }
-  const overlay=document.createElement('div');overlay.id='thaiCalendarOverlay';overlay.className='thai-calendar-overlay';overlay.setAttribute('role','presentation');overlay.innerHTML=`<div class="thai-calendar" role="dialog" aria-modal="true" aria-label="ปฏิทินภาษาไทย"><div class="thai-calendar-head"><button type="button" aria-label="เดือนก่อนหน้า" onclick="shiftThaiCalendarMonth(-1)">‹</button><div class="thai-calendar-title">${THAI_MONTHS[thaiCalendarState.month]} ${thaiCalendarState.year+543}</div><button type="button" aria-label="เดือนถัดไป" onclick="shiftThaiCalendarMonth(1)">›</button></div><div class="thai-calendar-week">${THAI_WEEKDAYS.map(day=>`<span>${day}</span>`).join('')}</div><div class="thai-calendar-days">${cells.join('')}</div><div class="thai-calendar-actions"><button type="button" class="today-button" onclick="chooseThaiCalendarToday()">วันนี้</button><button type="button" onclick="closeThaiCalendar()">ยกเลิก</button></div></div>`;
+  const yearStart=Math.min(today.getFullYear()-15,thaiCalendarState.year-5);const yearEnd=Math.max(today.getFullYear()+15,thaiCalendarState.year+5);const yearOptions=Array.from({length:yearEnd-yearStart+1},(_,index)=>yearStart+index).map(year=>`<option value="${year}"${year===thaiCalendarState.year?' selected':''}>พ.ศ. ${year+543}</option>`).join('');
+  const overlay=document.createElement('div');overlay.id='thaiCalendarOverlay';overlay.className='thai-calendar-overlay';overlay.setAttribute('role','presentation');overlay.innerHTML=`<div class="thai-calendar" role="dialog" aria-modal="true" aria-label="ปฏิทินภาษาไทย"><div class="thai-calendar-head"><button type="button" aria-label="เดือนก่อนหน้า" onclick="shiftThaiCalendarMonth(-1)">‹</button><div class="thai-calendar-title">เลือกวัน เดือน และปี</div><button type="button" aria-label="เดือนถัดไป" onclick="shiftThaiCalendarMonth(1)">›</button></div><div class="thai-calendar-jump"><select aria-label="เลือกเดือน" onchange="jumpThaiCalendar(this.value,${thaiCalendarState.year})">${THAI_MONTHS.map((month,index)=>`<option value="${index}"${index===thaiCalendarState.month?' selected':''}>${month}</option>`).join('')}</select><select aria-label="เลือกปีพุทธศักราช" onchange="jumpThaiCalendar(${thaiCalendarState.month},this.value)">${yearOptions}</select></div><div class="thai-calendar-week">${THAI_WEEKDAYS.map(day=>`<span>${day}</span>`).join('')}</div><div class="thai-calendar-days">${cells.join('')}</div><div class="thai-calendar-actions"><button type="button" class="today-button" onclick="chooseThaiCalendarToday()">วันนี้</button><button type="button" onclick="closeThaiCalendar()">ยกเลิก</button></div></div>`;
   overlay.addEventListener('click',event=>{if(event.target===overlay)closeThaiCalendar();});document.body.appendChild(overlay);
   overlay.querySelector('.thai-calendar-day:not(.empty),.thai-calendar-head button')?.focus();
 }
@@ -2437,6 +2480,7 @@ async function init(){
   requestAnimationFrame(()=>setTimeout(()=>document.getElementById('loadingOverlay')?.classList.add('hidden'),120));
 }
 initThaiDateControls();
+initStandardTimeControls();
 init().catch(error=>{console.error('App startup failed:',error);showStartupError(error);});
 
 // ══ HELPERS ══
@@ -2601,7 +2645,7 @@ function switchView(v,el){
   if(v==='review')runViewTask(v,loadReviewView);
   if(v==='stock')runViewTask(v,loadStockView);
   if(v==='alerts')runViewTask(v,()=>refreshWebAlerts(false));
-  if(v==='history')runViewTask(v,loadHistory);
+  if(v==='history')runViewTask(v,()=>{ensureHistoryMonth();loadHistory();});
   if(v==='dashboard')runViewTask(v,loadDashboard);
   if(v==='supervisor'){
     runViewTask(v,()=>{
@@ -2864,12 +2908,13 @@ function createStockDraft(scheduleId){
 function mondayKeyFromDate(dateValue){
   const value=dateValue||localDateKey(new Date());const date=new Date(value+'T00:00:00');const offset=(date.getDay()+6)%7;date.setDate(date.getDate()-offset);return localDateKey(date);
 }
+function sundayKeyFromMonday(mondayValue){const sunday=new Date(mondayValue+'T00:00:00');sunday.setDate(sunday.getDate()+6);return localDateKey(sunday);}
 function handleStockDateChange(){const schedule=renderStockScheduleOptions();createStockDraft(schedule?.id);updateStockWeekBadge();renderStockGroups();renderStockExtraItems();}
 function changeStockSchedule(){createStockDraft(document.getElementById('stockSchedule')?.value);updateStockWeekBadge();renderStockGroups();renderStockExtraItems();}
 function updateStockWeekBadge(){
   const input=document.getElementById('stockDate');const dateValue=input?.value||localDateKey(new Date());const monday=mondayKeyFromDate(dateValue);const selected=new Date(dateValue+'T00:00:00');const schedule=stockScheduleById(document.getElementById('stockSchedule')?.value);const badge=document.getElementById('stockDueBadge');const display=document.getElementById('stockWeekDisplay');
   const dateDisplay=document.getElementById('stockDateDisplay');if(dateDisplay)dateDisplay.textContent=thaiDate(dateValue)||'—';
-  if(display)display.textContent=`สัปดาห์วันจันทร์ที่ ${thaiDate(monday)}`;
+  if(display)display.textContent=`รอบสัปดาห์ ${thaiDate(monday)} – ${thaiDate(sundayKeyFromMonday(monday))}`;
   if(badge){const isDueDay=schedule&&selected.getDay()===schedule.weekday;badge.textContent=schedule?(isDueDay?`✅ ${schedule.name} • ส่งก่อน ${schedule.dueTime} น.`:`📅 ${schedule.name} • วันประจำคือ${STOCK_WEEKDAY_LABELS[schedule.weekday]}`):'⚠️ ยังไม่มีรอบตรวจที่เปิดใช้งาน';badge.style.color=isDueDay?'#176B38':'#8A5A00';badge.style.borderColor=isDueDay?'#B9DEC8':'#E8D29B';}
 }
 function stockStatusInfo(item){
@@ -3490,7 +3535,16 @@ function resumePendingMissedAlertAction(){
   setTimeout(()=>document.getElementById('missedEvalAdminForm')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
   return true;
 }
-function resetHisFilter(){setThaiDateValue('hisStartDate','');setThaiDateValue('hisEndDate','');document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
+let historyMonthCursor=null;
+let currentHistoryPanel='checklist';
+function historyMonthRange(date){const year=date.getFullYear(),month=date.getMonth();return{start:`${year}-${String(month+1).padStart(2,'0')}-01`,end:localDateKey(new Date(year,month+1,0))};}
+function updateHistoryMonthLabel(){const label=document.getElementById('historyMonthLabel');if(label&&historyMonthCursor)label.textContent=historyMonthCursor.toLocaleDateString('th-TH',{month:'long',year:'numeric'});}
+function applyHistoryMonth(){if(!historyMonthCursor)return;const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
+function ensureHistoryMonth(){if(historyMonthCursor)return;const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();setHistoryPanel(currentHistoryPanel);}
+function changeHistoryMonth(offset){ensureHistoryMonth();historyMonthCursor=new Date(historyMonthCursor.getFullYear(),historyMonthCursor.getMonth()+offset,1);applyHistoryMonth();}
+function setHistoryCurrentMonth(){const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);applyHistoryMonth();}
+function setHistoryPanel(name){currentHistoryPanel=['checklist','damage','retrospective'].includes(name)?name:'checklist';document.querySelectorAll('[data-history-panel]').forEach(node=>{const active=node.dataset.historyPanel===currentHistoryPanel;if(node.id==='historyLoadMoreWrap'){if(!active)node.style.display='none';return;}node.style.display=active?(node.tagName==='DETAILS'?'block':''): 'none';});document.querySelectorAll('.history-mode-button').forEach(button=>button.classList.toggle('active',button.id===`historyMode-${currentHistoryPanel}`));if(currentHistoryPanel==='damage')renderMissedEvalSummary();if(currentHistoryPanel==='retrospective')renderRetrospectiveHistory();}
+function resetHisFilter(){ensureHistoryMonth();const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
 async function searchHistory(){
   historyVisibleCount=HISTORY_PAGE_SIZE;
   const start=document.getElementById('hisStartDate')?.value;
@@ -3779,6 +3833,28 @@ function completionStats(s){
   return{total:values.length,done,na:Object.values(s?.snap||{}).filter(v=>v?.status==='na').length};
 }
 
+function ptVerdictScore(record){
+  return record?.status==='pass'?100:record?.status==='partial'?70:record?.status==='fail'?0:null;
+}
+function buildAssistantRanking(records){
+  const byStaff={};
+  (records||[]).filter(record=>ptVerdictScore(record)!==null).forEach(record=>{
+    const name=record.staffName||'ไม่ระบุชื่อ';
+    if(!byStaff[name])byStaff[name]={name,total:0,pass:0,partial:0,fail:0,ptSum:0,compSum:0};
+    const item=byStaff[name];
+    item.total++;
+    item[record.status]=(item[record.status]||0)+1;
+    item.ptSum+=ptVerdictScore(record);
+    item.compSum+=calcCompletion(record);
+  });
+  return Object.values(byStaff).map(item=>{
+    const ptAvg=Math.round(item.ptSum/item.total*10)/10;
+    const avgComp=Math.round(item.compSum/item.total*10)/10;
+    const rankScore=Math.round((ptAvg*.8+avgComp*.2)*10)/10;
+    return{...item,ptAvg,avgComp,rankScore,official:item.total>=3};
+  }).sort((a,b)=>Number(b.official)-Number(a.official)||b.rankScore-a.rankScore||b.ptAvg-a.ptAvg||b.avgComp-a.avgComp||b.total-a.total||a.name.localeCompare(b.name,'th'));
+}
+
 function executiveMetric(title,value,detail,color){
   return `<div style="border:1px solid var(--g2);border-left:4px solid ${color};border-radius:10px;padding:12px 13px;background:#fff"><div style="font-size:11.5px;color:var(--g6);font-weight:700;margin-bottom:4px">${escapeHtml(title)}</div><div style="font-size:20px;font-weight:800;color:${color};line-height:1.25;overflow-wrap:anywhere">${escapeHtml(String(value||'—'))}</div><div style="font-size:11.5px;color:var(--g6);margin-top:4px;line-height:1.45">${escapeHtml(detail||'')}</div></div>`;
 }
@@ -3947,29 +4023,20 @@ function loadDashboard() {
   }
 
   // ══ RANKING ══
-  const byStaff = {};
-  data.filter(s => s.status !== 'pending').forEach(s => {
-    if(!byStaff[s.staffName]) byStaff[s.staffName] = { total:0, pass:0, compSum:0 };
-    byStaff[s.staffName].total++;
-    if(s.status==='pass'||s.status==='partial') byStaff[s.staffName].pass++;
-    byStaff[s.staffName].compSum += calcCompletion(s);
-  });
-  const ranked = Object.entries(byStaff)
-    .map(([n,d]) => ({ name:n, ...d, rate: Math.round(d.pass/d.total*100), avg: Math.round(d.compSum/d.total) }))
-    .sort((a,b) => b.rate - a.rate || b.avg - a.avg);
+  const ranked = buildAssistantRanking(data);
   const rt = document.getElementById('rankTable');
   if(rt) {
     if(ranked.length === 0) {
       rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
     } else {
-      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ความสมบูรณ์เฉลี่ย</th><th>ผ่าน/ต้องปรับปรุง</th><th>อัตราผ่าน/ปรับปรุง</th></tr></thead><tbody>
+      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>คะแนน PT เฉลี่ย</th><th>ความสมบูรณ์เฉลี่ย</th><th>คะแนนจัดอันดับ</th></tr></thead><tbody>
       ${ranked.map((d,i) => `<tr>
-        <td><strong style="font-size:18px">${['🥇','🥈','🥉'][i]||'#'+(i+1)}</strong></td>
+        <td><strong style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</strong></td>
         <td style="font-weight:600">${d.name}</td>
-        <td>${d.total}</td>
-        <td><span style="font-size:13px;font-weight:700;color:${d.avg>=80?'var(--g)':d.avg>=60?'var(--o)':'var(--r)'}">${d.avg}%</span></td>
-        <td>${d.pass}</td>
-        <td><span class="tag ${d.rate>=80?'tp':d.rate>=60?'tw2':'tf'}">${d.rate}%</span></td>
+        <td>${d.total}${d.official?'':' <small style="color:var(--o)">(ข้อมูลยังน้อย)</small>'}</td>
+        <td><strong style="color:${d.ptAvg>=80?'var(--g)':d.ptAvg>=60?'var(--o)':'var(--r)'}">${d.ptAvg}%</strong><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน</div></td>
+        <td><span style="font-size:13px;font-weight:700;color:${d.avgComp>=80?'var(--g)':d.avgComp>=60?'var(--o)':'var(--r)'}">${d.avgComp}%</span></td>
+        <td><span class="tag ${d.rankScore>=80?'tp':d.rankScore>=60?'tw2':'tf'}">${d.rankScore}%</span></td>
       </tr>`).join('')}</tbody></table>`;
     }
   }
@@ -4078,7 +4145,9 @@ function updateEvaluationDropdowns(){
 }
 
 // ══ ADMIN ══
-let currentAdminTab = 'data';
+let currentAdminTab = 'home';
+let currentAdminCategory = '';
+const adminWorkspaceTitles={data:'ภาพรวมข้อมูล',retrospective:'ตรวจสอบย้อนหลัง',audit:'ประวัติระบบ',settings:'ตั้งค่าและจัดการ',backup:'สำรองข้อมูล',people:'บุคลากร',schedule:'เวลาและรอบงาน',inventory:'รายการวัสดุ',checklist:'งานและ Checklist',security:'ความปลอดภัย'};
 function currentAdminEmail(){return authUser?.email||document.getElementById('admEmail')?.value.trim()||'ptkth11199@gmail.com';}
 function auditCategoryLabel(category){return({missed_evaluation:'ค่าเสียหาย',retrospective_check:'ตรวจสอบย้อนหลัง',assistant_report:'รายงานส่วนตัว',stock_request:'เบิกของ/สต็อก',system_data:'ข้อมูลระบบ',security:'ความปลอดภัย',settings:'ตั้งค่าระบบ'})[category]||category||'ทั่วไป';}
 function auditActionLabel(action){return({add:'เพิ่ม',update:'แก้ไข',delete:'ลบ',security:'เปลี่ยนรหัส',login:'เข้าสู่ระบบ',logout:'ออกจากระบบ'})[action]||action||'บันทึก';}
@@ -4364,9 +4433,22 @@ function renderAuditLogs(){
   if(!filtered.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:28px">ยังไม่มีประวัติตามตัวกรองนี้</div>';return;}
   list.innerHTML=filtered.map(item=>{let description=item.description||'—';let actor=item.actor||'—';if(item.category==='assistant_report'){description=description.replace(/^PT\s+.+?\s+ส่งรายงานส่วนตัวของผู้ช่วย\s+/,'ส่งรายงานส่วนตัวของผู้ช่วย ').replace(/\s+ซึ่งรายงานโดย.*$/,'');if(item.actorRole==='PT')actor='PT ไม่ระบุชื่อ';}return`<div class="audit-item ${escapeHtml(item.action||'')}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div style="font-weight:800;color:var(--g8)">${escapeHtml(description)}</div><span class="tag" style="background:var(--g1);color:var(--bd)">${escapeHtml(auditActionLabel(item.action))}</span></div><div class="audit-meta"><span>🕒 ${escapeHtml(item.timeDisplay||item.createdAt||'—')}</span><span>👤 ${escapeHtml(actor)} (${escapeHtml(item.actorRole||'—')})</span><span>📁 ${escapeHtml(auditCategoryLabel(item.category))}</span></div></div>`;}).join('');
 }
+function openAdminCategory(category){
+  currentAdminCategory=category;
+  setAdminTab('settings');
+  const title=document.getElementById('adminWorkspaceTitle');if(title)title.textContent=adminWorkspaceTitles[category]||'ตั้งค่าและจัดการ';
+  document.querySelectorAll('#adminPanel-settings > [data-admin-category]').forEach(card=>card.style.display=card.dataset.adminCategory===category?'block':'none');
+}
 function setAdminTab(tab) {
-  currentAdminTab=['data','retrospective','audit','settings','backup'].includes(tab)?tab:'data';
+  currentAdminTab=['home','data','retrospective','audit','settings','backup'].includes(tab)?tab:'home';
+  const isHome=currentAdminTab==='home';
+  const home=document.getElementById('adminHome');if(home)home.style.display=isHome?'grid':'none';
+  const workspace=document.getElementById('adminWorkspaceBar');if(workspace)workspace.style.display=isHome?'none':'flex';
+  if(isHome)currentAdminCategory='';
   ['data','retrospective','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
+  if(isHome)return;
+  const title=document.getElementById('adminWorkspaceTitle');if(title)title.textContent=adminWorkspaceTitles[currentAdminCategory||currentAdminTab]||'จัดการระบบ';
+  if(currentAdminTab==='settings'&&!currentAdminCategory)document.querySelectorAll('#adminPanel-settings > [data-admin-category]').forEach(card=>card.style.display='block');
   const panel=document.getElementById('adminPanel-'+currentAdminTab);panel?.querySelector(':scope > .admin-panel-error')?.remove();
   const run=(task)=>{
     try{
@@ -4879,7 +4961,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260802-thai-calendar-admin-tabs-v75';
+const APP_VERSION = 'v20260802-admin-center-monthly-history-v77';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -5817,18 +5899,12 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
     <!-- Ranking -->
     <div style="background:#F8F9FA;border-radius:8px;padding:14px;margin-top:16px">
       <div style="font-size:13px;font-weight:800;margin-bottom:10px">🏆 Ranking ช่วงรายงาน</div>
-      ${Object.entries(byStaff)
-        .map(([n,recs])=>{
-          const rev=recs.filter(r=>r.status!=='pending');
-          const successful=recs.filter(r=>r.status==='pass'||r.status==='partial');
-          return {n, rate: rev.length>0?Math.round(successful.length/rev.length*100):0, total:rev.length, pass:successful.length};
-        })
-        .sort((a,b)=>b.rate-a.rate)
+      ${buildAssistantRanking(data)
         .map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #E9ECEF;font-size:13px">
-          <span style="font-size:18px">${['🥇','🥈','🥉'][i]||'#'+(i+1)}</span>
-          <span style="flex:1;font-weight:600">${d.n}</span>
-          <span style="color:${d.rate>=80?'#28A745':d.rate>=60?'#FD7E14':'#DC3545'};font-weight:700">${d.rate}%</span>
-          <span style="color:#9CA3AF;font-size:12px">(${d.pass}/${d.total})</span>
+          <span style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</span>
+          <span style="flex:1;font-weight:600">${d.name}${d.official?'':' <small style="color:#A36500">ข้อมูลยังน้อย</small>'}</span>
+          <span style="color:${d.rankScore>=80?'#28A745':d.rankScore>=60?'#FD7E14':'#DC3545'};font-weight:700">${d.rankScore}%</span>
+          <span style="color:#9CA3AF;font-size:12px">PT ${d.ptAvg}% • ${d.total} รอบ</span>
         </div>`).join('')}
     </div>
 
