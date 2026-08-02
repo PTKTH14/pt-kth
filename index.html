@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-  <meta name="version" content="v20260802-admin-center-monthly-history-v77">
+<meta name="version" content="v20260802-dashboard-period-v81">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -507,6 +507,9 @@ img,svg,canvas{max-width:100%}
 .report-filter-grid .fg{margin:0}
 .report-filter-note{grid-column:1/-1;font-size:11.5px;color:var(--g6)}
 .monthly-report-preview{background:#fff;border:1px solid var(--g2);border-radius:10px;padding:22px;min-height:240px;overflow-x:auto}
+.review-month-toolbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;margin-bottom:14px}
+.review-month-toolbar strong{min-width:170px;text-align:center;color:var(--bd)}
+@media(max-width:520px){.review-month-toolbar{display:grid;grid-template-columns:44px 1fr 44px}.review-month-toolbar .btn:last-child{grid-column:1/-1}.review-month-toolbar strong{min-width:0}}
 .missed-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .missed-people-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:2px}
 .missed-person-panel{min-width:0;border:1px solid #DDE5EC;border-radius:12px;background:#FBFCFD;padding:14px}
@@ -751,7 +754,7 @@ tr:hover td{background:var(--g1)}
 .line-browser-banner.show{display:flex}.line-browser-actions{display:flex;gap:7px;flex-shrink:0}.line-browser-actions button{min-height:40px;padding:7px 11px;border-radius:7px;border:1px solid #D5B85D;background:#fff;color:#604800;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .admin-home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.admin-home-card{min-height:132px;padding:18px;border:1px solid var(--g2);border-radius:16px;background:#fff;text-align:left;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(15,65,105,.06);transition:.18s ease}.admin-home-card:hover{transform:translateY(-2px);border-color:var(--bm);box-shadow:0 8px 20px rgba(15,65,105,.12)}.admin-home-card span{display:block;font-size:28px;margin-bottom:10px}.admin-home-card strong{display:block;color:var(--bd);font-size:16px;margin-bottom:5px}.admin-home-card small{display:block;color:var(--g6);line-height:1.5}.admin-workspace-bar{display:flex;align-items:center;gap:12px;margin:0 0 14px}.admin-workspace-bar h3{margin:0;color:var(--bd);font-size:18px}.history-period-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;margin-bottom:10px}.history-period-bar strong{min-width:170px;text-align:center;color:var(--bd);font-size:16px}.history-period-bar .btn{min-width:42px;justify-content:center}.history-mode-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.history-mode-button{padding:11px 12px;border:1px solid var(--g2);border-radius:12px;background:#fff;color:var(--g6);font:700 13px inherit;cursor:pointer}.history-mode-button.active{background:var(--bd);border-color:var(--bd);color:#fff}.history-advanced{margin-bottom:12px}.history-advanced>summary{cursor:pointer;color:var(--bd);font-weight:700;padding:9px 4px}.history-advanced[open]>summary{margin-bottom:5px}
 @media(max-width:900px), (orientation:portrait) and (max-width:1100px){
-  .admin-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-home-card{min-height:118px;padding:14px}.admin-home-card span{font-size:24px}.admin-home-card strong{font-size:14px}.admin-workspace-bar{position:sticky;top:76px;z-index:20;background:var(--g0);padding:8px 0}.history-period-bar{display:grid;grid-template-columns:44px 1fr 44px}.history-current-month{grid-column:1/-1}.history-mode-tabs{grid-template-columns:1fr}.history-mode-button{min-height:44px}
+  .admin-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-home-card{min-height:118px;padding:14px}.admin-home-card span{font-size:24px}.admin-home-card strong{font-size:14px}.admin-workspace-bar{position:static;top:auto;z-index:auto;background:#fff;padding:10px}.history-period-bar{display:grid;grid-template-columns:44px 1fr 44px}.history-current-month{grid-column:1/-1}.history-mode-tabs{grid-template-columns:1fr}.history-mode-button{min-height:44px}
   input,select,textarea{font-size:16px!important}
   .line-browser-banner{align-items:flex-start;flex-direction:column;padding:10px 13px}.line-browser-actions{width:100%}.line-browser-actions button{flex:1}
   .retro-disclosure>summary{align-items:center}
@@ -833,7 +836,7 @@ tr:hover td{background:var(--g1)}
   .ttitle{font-size:17px;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tsubtitle{display:block;font-size:10.5px;max-width:210px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.84)}
   .tl{gap:10px}.tlogo{width:45px;height:45px;padding:3px;border-radius:13px}.tlogo img{border-radius:10px}
-  .topbar{padding:0 13px}.alert-bell{width:38px;height:38px}
+  .topbar{padding:0 13px}.alert-bell{width:44px;height:44px}
   .review-submit-bar{position:static;z-index:auto;background:transparent;padding:12px 0 0;margin-top:4px;backdrop-filter:none}
   .review-submit-bar .btn{flex:1;min-height:48px;justify-content:center}
   .mf .btn{min-height:46px}
@@ -926,6 +929,39 @@ tr:hover td{background:var(--g1)}
 #stockPerformanceDashboard table th:last-child,
 #stockPerformanceDashboard table td:last-child{display:none}
 @media print{.topbar,.sidebar,.act-row,.ci-acts,.mobile-nav{display:none!important}.main{padding:0}}
+/* Professional responsive layout: keep navigation and content in separate rows. */
+.admin-shell,.admin-panel,.admin-panel>*{min-width:0;max-width:100%}
+.admin-workspace-bar{position:static!important;top:auto!important;z-index:auto!important;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;margin:0 0 16px;padding:12px;background:#fff;border:1px solid var(--g2);border-radius:14px;box-shadow:var(--sh1)}
+.admin-workspace-bar h3{margin:0;color:var(--bd);font-size:18px;line-height:1.35;overflow-wrap:anywhere}
+.admin-panel>.card{width:100%;max-width:100%!important;margin:0 0 16px!important}
+.admin-data-table table{min-width:760px}
+@media(max-width:900px), (orientation:portrait) and (max-width:1100px){
+  .admin-workspace-bar{position:static!important;grid-template-columns:auto minmax(0,1fr);padding:10px;margin-bottom:14px;background:#fff}
+  .admin-workspace-bar .btn{min-height:44px;white-space:nowrap}
+  .admin-panel{display:block;width:100%}
+  .admin-panel>.card{padding:16px!important;border-radius:14px}
+  .admin-data-table{overflow:visible!important;background:transparent;box-shadow:none}
+  .admin-data-table table,.admin-data-table tbody,.admin-data-table tr,.admin-data-table td{display:block;width:100%;min-width:0}
+  .admin-data-table thead{display:none}
+  .admin-data-table tr{margin-bottom:12px;padding:14px;background:#fff;border:1px solid var(--g2);border-radius:14px;box-shadow:var(--sh1)}
+  .admin-data-table td{display:grid!important;grid-template-columns:110px minmax(0,1fr);align-items:center;gap:10px;padding:7px 0!important;border:0!important;white-space:normal!important;overflow-wrap:anywhere}
+  .admin-data-table td::before{content:attr(data-label);color:var(--g5);font-size:11.5px;font-weight:700}
+  .admin-data-table td.admin-row-actions{display:flex!important;justify-content:flex-end;gap:8px;margin-top:7px;padding-top:10px!important;border-top:1px solid var(--g2)!important}
+  .admin-data-table td.admin-row-actions::before{content:none}
+  .admin-data-table td.admin-row-actions .btn{flex:1;justify-content:center;min-height:44px;max-width:110px}
+}
+@media(max-width:520px){
+  .admin-home-grid{grid-template-columns:1fr!important;gap:10px}
+  .admin-home-card{min-height:0!important;padding:15px!important;display:grid;grid-template-columns:42px minmax(0,1fr);column-gap:10px;align-items:center}
+  .admin-home-card span{grid-row:1/3;margin:0!important;font-size:25px!important;text-align:center}
+  .admin-home-card strong,.admin-home-card small{margin:0!important}
+  .admin-workspace-bar{grid-template-columns:1fr;padding:10px}
+  .admin-workspace-bar .btn{width:100%;justify-content:center}
+  .admin-workspace-bar h3{text-align:center;font-size:16px}
+  .admin-data-table td{grid-template-columns:92px minmax(0,1fr)}
+  .ph{margin-bottom:16px}.ph h1{font-size:22px;line-height:1.3}.ph p{font-size:12.5px;line-height:1.55}
+  .card{padding:15px}
+}
 </style>
 </head>
 <body>
@@ -1090,6 +1126,12 @@ tr:hover td{background:var(--g1)}
 <!-- REVIEW -->
 <div class="view" id="view-review">
   <div class="ph"><h1>🔍 ประเมินผลงาน (นักกายภาพบำบัด)</h1><p>ตรวจสอบ Checklist และงานเบิกของที่ผู้ช่วยส่งมา</p></div>
+  <div class="card review-month-toolbar">
+    <button class="btn btn-out" type="button" onclick="changeReviewMonth(-1)" aria-label="เดือนก่อน">‹</button>
+    <strong id="reviewMonthLabel">เดือนปัจจุบัน</strong>
+    <button class="btn btn-out" type="button" onclick="changeReviewMonth(1)" aria-label="เดือนถัดไป">›</button>
+    <button class="btn btn-out" type="button" onclick="setReviewCurrentMonth()">เดือนนี้</button>
+  </div>
   <div id="pendingList"><div class="card" style="text-align:center;color:var(--g6)">⏳ กำลังเตรียมรายการประเมิน...</div></div>
   <div id="reviewFormWrap" style="display:none">
     <div class="ds">
@@ -1159,6 +1201,17 @@ tr:hover td{background:var(--g1)}
   <div class="card filter-toolbar dashboard-filter" style="padding:12px 16px">
     <div class="filter-toolbar-grid">
       <span class="filter-title">🗓 ช่วงเวลา:</span>
+      <select id="dashPeriodMode" class="sb-input filter-select" onchange="applyDashboardPeriod(true)">
+        <option value="month">รายเดือน</option>
+        <option value="quarter">รายไตรมาส</option>
+        <option value="year">รายปี</option>
+        <option value="custom">กำหนดเอง</option>
+      </select>
+      <div style="display:flex;gap:5px;align-items:center">
+        <button class="btn btn-out" type="button" aria-label="ช่วงก่อนหน้า" onclick="moveDashboardPeriod(-1)">‹</button>
+        <button class="btn btn-out" type="button" id="dashPeriodLabel" onclick="resetDashboardPeriod()">เดือนนี้</button>
+        <button class="btn btn-out" type="button" aria-label="ช่วงถัดไป" onclick="moveDashboardPeriod(1)">›</button>
+      </div>
       <div class="date-range-group"><input type="date" id="dashStartDate" class="sb-input date-filter-input" aria-label="วันที่เริ่มต้น"><span class="date-range-separator">ถึง</span><input type="date" id="dashEndDate" class="sb-input date-filter-input" aria-label="วันที่สิ้นสุด"></div>
       <select id="dashFilter" class="sb-input filter-select" style="padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
       <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ดู</button>
@@ -1166,13 +1219,13 @@ tr:hover td{background:var(--g1)}
     </div>
   </div>
 
-  <div class="dashboard-reading-guide"><strong>ลำดับการอ่าน:</strong><span>จำนวนงาน</span><span class="guide-arrow">→</span><span>ความสมบูรณ์ของ Checklist</span><span class="guide-arrow">→</span><span>สถานะและผลประเมินจาก PT</span></div>
+  <div class="dashboard-reading-guide"><strong>ลำดับการอ่าน:</strong><span>จำนวนงาน</span><span class="guide-arrow">→</span><span>คะแนนหลัง PT ตรวจ</span><span class="guide-arrow">→</span><span>สถานะผลประเมิน</span></div>
   <div id="stockPerformanceDashboard"></div>
 
   <!-- KPI ROW 1: ภาพรวม -->
   <div class="dashboard-kpi-grid">
     <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
-    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 ความสมบูรณ์เฉลี่ย <button type="button" class="help-tip" aria-label="คำอธิบาย ความสมบูรณ์เฉลี่ย" data-help="ค่าเฉลี่ยร้อยละของหัวข้อ Checklist ที่บันทึกว่า ทำแล้ว หรือ N/A เทียบกับหัวข้อทั้งหมด ตัวเลขนี้วัดความครบของการกรอก ไม่ใช่ผลประเมินจาก PT">i</button></div></div>
+    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 คะแนนหลัง PT ตรวจ <button type="button" class="help-tip" aria-label="คำอธิบายคะแนนหลัง PT ตรวจ" data-help="จำนวนหัวข้อที่ PT ให้ผ่าน เทียบกับหัวข้อที่ PT ตรวจทั้งหมด โดยไม่นับ N/A และยังไม่รวมรายการที่รอประเมิน">i</button></div></div>
     <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอ PT ประเมิน</div></div>
     <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">✅ ผ่าน/ต้องปรับปรุง</div></div>
     <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">❌ ไม่ผ่าน</div></div>
@@ -1201,7 +1254,7 @@ tr:hover td{background:var(--g1)}
 
   <div class="card trend-card" style="margin-bottom:16px">
     <div class="trend-head">
-      <h3>แนวโน้มความสมบูรณ์ 14 บันทึกล่าสุด <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย กราฟความสมบูรณ์" data-help="แต่ละจุดแทน Checklist หนึ่งบันทึก เรียงจากเก่าไปใหม่ แตะจุดเพื่อดูวันที่ ผู้ช่วย เวร และความสมบูรณ์ สีเขียวตั้งแต่ 80% สีเหลือง 60–79% และสีแดงต่ำกว่า 60%">i</button></h3>
+    <h3>แนวโน้มคะแนนหลัง PT ตรวจ 14 บันทึกล่าสุด <button type="button" class="help-tip tip-down" aria-label="คำอธิบายกราฟคะแนนหลัง PT ตรวจ" data-help="แต่ละจุดแทน Checklist ที่ PT ประเมินแล้ว โดยไม่แสดงชื่อ PT สีเขียวตั้งแต่ 80% สีเหลือง 60–79% และสีแดงต่ำกว่า 60%">i</button></h3>
       <div class="trend-legend"><span><i style="background:var(--g)"></i>ดี 80–100%</span><span><i style="background:var(--y)"></i>เฝ้าระวัง 60–79%</span><span><i style="background:var(--r)"></i>ต้องติดตาม ต่ำกว่า 60%</span></div>
     </div>
     <div id="trendSummary" class="trend-summary"></div>
@@ -1219,7 +1272,7 @@ tr:hover td{background:var(--g1)}
 
   <!-- RANKING -->
   <div class="card" style="margin-bottom:16px">
-    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="คะแนนจัดอันดับคิดจากผลประเมินของ PT 80% (ผ่าน 100, ต้องปรับปรุง 70, ไม่ผ่าน 0) และความสมบูรณ์ของ Checklist 20% ต้องมีอย่างน้อย 3 รอบจึงเป็นอันดับทางการ หากคะแนนเท่ากันจะเรียงจากคะแนน PT ความสมบูรณ์ และจำนวนรอบตามลำดับ">i</button></h3>
+    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="เรียงจากค่าเฉลี่ยจำนวนหัวข้อที่ PT ให้ผ่าน เทียบกับหัวข้อที่ PT ตรวจทั้งหมด ไม่รวม N/A และไม่แสดงชื่อ PT ต้องมีอย่างน้อย 3 รอบจึงเป็นอันดับทางการ">i</button></h3>
     <div id="rankTable" class="tw dashboard-table-scroll"></div>
   </div>
 
@@ -1547,7 +1600,7 @@ tr:hover td{background:var(--g1)}
     </div>
 
     <div id="adminPanel-data" class="admin-panel" style="display:none">
-      <div class="tw" style="overflow-x:auto;margin-bottom:20px">
+      <div class="tw admin-data-table" style="overflow-x:auto;margin-bottom:20px">
         <table>
           <thead><tr><th>วันที่</th><th>ผู้ช่วย</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th>จัดการ</th></tr></thead>
           <tbody id="adminTableBody"><tr><td colspan="6" style="text-align:center;color:var(--g4);padding:24px">กำลังโหลด...</td></tr></tbody>
@@ -2088,7 +2141,7 @@ const DEFAULT_CL_ITEMS = {
 };
 
 // ══ STATE ══
-let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[];
+let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[], reviewMonthKey='';
 function readLocalJSON(key,fallback){
   try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value);}
   catch(error){console.warn(`อ่านข้อมูลสำรอง ${key} ไม่สำเร็จ:`,error);return fallback;}
@@ -2556,7 +2609,7 @@ function getActiveWebAlerts(status){
 }
 function webAlertActionButton(personType,alertKey,shift,isDemo){
   const disabled=isDemo?' disabled':'';const action=isDemo?'':` onclick="startMissedEvaluationFromAlert('${personType}','${alertKey}','${shift}')"`;
-  return`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px"${disabled}${action}>💰 บันทึกผู้ไม่ประเมิน</button>`;
+  return`<button class="btn btn-out" style="margin-top:10px;min-height:44px;padding:9px 12px;font-size:12px"${disabled}${action}>💰 บันทึกผู้ไม่ประเมิน</button>`;
 }
 function webAlertCard(type,title,detail,names,actionHtml){
   const icon=type==='danger'?'🚨':type==='warning'?'⏳':type==='success'?'✅':'ℹ️';
@@ -3272,15 +3325,41 @@ function showReviewLoadError(error){
   if(pl)pl.innerHTML=`<div class="card" style="text-align:center;border-left:4px solid var(--o)"><div style="font-size:28px;margin-bottom:7px">⚠️</div><h3 style="color:var(--bd);margin-bottom:5px">โหลดหน้าประเมินไม่สมบูรณ์</h3><p style="font-size:12.5px;color:var(--g6);margin-bottom:12px">ระบบพบข้อมูลบางรายการที่อ่านไม่ได้ กรุณาลองโหลดใหม่ หากยังพบปัญหาให้แอดมินตรวจข้อมูลรายการล่าสุด</p><button class="btn btn-pri" type="button" onclick="loadReviewView()">🔄 ลองโหลดรายการอีกครั้ง</button></div>`;
   showToast('⚠️ โหลดรายการประเมินไม่ครบ กรุณาลองใหม่','warning');
 }
+function currentReviewMonthKey(){
+  if(reviewMonthKey)return reviewMonthKey;
+  const now=new Date();
+  reviewMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  return reviewMonthKey;
+}
+function updateReviewMonthLabel(){
+  const label=document.getElementById('reviewMonthLabel');if(!label)return;
+  const [year,month]=currentReviewMonthKey().split('-').map(Number);
+  label.textContent=`${THAI_MONTHS[month-1]} ${year+543}`;
+}
+function changeReviewMonth(offset){
+  const [year,month]=currentReviewMonthKey().split('-').map(Number);
+  const next=new Date(year,month-1+Number(offset||0),1);
+  reviewMonthKey=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+  loadReviewView();
+}
+function setReviewCurrentMonth(){reviewMonthKey='';loadReviewView();}
+function missedPtRecordForSubmission(submission){
+  return (Array.isArray(missedEvaluations)?missedEvaluations:[]).find(record=>record&&record.date===submission.date&&(record.shift||'morning')===(submission.shift||'morning')&&Array.isArray(record.ptNames)&&record.ptNames.length);
+}
 function loadReviewView(){
   const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
-  const pending=safeSubmissions.filter(s=>s.status==='pending').sort(newestRecordFirst);const pendingStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review').sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt').sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review').sort(newestRecordFirst);
+  const selectedMonth=currentReviewMonthKey();updateReviewMonthLabel();
+  const pendingInMonth=safeSubmissions.filter(s=>s.status==='pending'&&String(s.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
+  const expired=pendingInMonth.filter(s=>getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
+  const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
+  const pendingStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const pl=document.getElementById('pendingList');if(!pl)return;
+  const expiredHtml=expired.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:var(--r)">⛔ Checklist เลยเวลาประจำเดือน ${expired.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${expired.map(s=>{const pct=calcCompletion(s);const damage=missedPtRecordForSubmission(s);const ptNames=damage?.ptNames||[];return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${ptNames.length?`<span class="tag tf">${escapeHtml(ptNames.join(', '))}</span>`:'<span class="tag tw2">รอแอดมินบันทึก</span>'}</td><td><span class="tag" style="background:#F3F4F6;color:var(--g6)">${damage?'บันทึกค่าเสียหายแล้ว':'เลยเวลา'}</span></td></tr>`;}).join('')}</tbody></table></div>`:'';
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
   const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
-  pl.innerHTML=checklistHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
+  pl.innerHTML=checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -3292,8 +3371,8 @@ function openReview(idx){
   document.getElementById('rvStaffLabel').textContent=rec.staffName;
   document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
   document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':'sc-afternoon');
-  const stats=completionStats(rec);
-  document.getElementById('rvProg').textContent=`ความสมบูรณ์: ${calcCompletion(rec)}% (${stats.done}/${stats.total})`;
+  const stats=submissionCompletionStats(rec);
+  document.getElementById('rvProg').textContent=`ความครบถ้วนตอนส่ง: ${calcSubmissionCompletion(rec)}% (${stats.done}/${stats.total})`;
   const container=document.getElementById('reviewGroups');container.innerHTML='';
   Object.keys(CL).filter(g=>CL[g].shifts.includes(rec.shift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
@@ -3327,16 +3406,19 @@ function setEval(key,val,el){
 }
 
 function autoCalcVerdict(){
-  const failCount = Object.values(reviewEvals).filter(v => v==='fail').length;
+  const evaluated = Object.values(reviewEvals).filter(v => v==='pass'||v==='fail');
+  const passCount = evaluated.filter(v => v==='pass').length;
+  const failCount = evaluated.length-passCount;
+  const score = evaluated.length ? Math.round(passCount/evaluated.length*100) : 0;
   const sel = document.getElementById('ptVerdict');
   if(!sel) return;
-  if(failCount === 0)       sel.value = 'pass';
-  else if(failCount < 4)   sel.value = 'partial';
-  else                     sel.value = 'fail';
+  if(score >= 80)       sel.value = 'pass';
+  else if(score >= 60)  sel.value = 'partial';
+  else                  sel.value = 'fail';
   // แสดง badge
   const badge = document.getElementById('autoVerdictBadge');
   if(badge){
-    const labels = {pass:'✅ ผ่าน (อัตโนมัติ)', partial:'⚠️ ผ่านบางส่วน (ไม่ทำ '+failCount+' รายการ)', fail:'❌ ไม่ผ่าน (ไม่ทำ '+failCount+' รายการ)'};
+    const labels = {pass:`✅ ผ่าน ${score}% (PT ให้ผ่าน ${passCount}/${evaluated.length} ข้อ)`, partial:`⚠️ ต้องปรับปรุง ${score}% (PT ให้ผ่าน ${passCount}/${evaluated.length} ข้อ)`, fail:`❌ ไม่ผ่าน ${score}% (PT ให้ผ่าน ${passCount}/${evaluated.length} ข้อ)`};
     const colors = {pass:'var(--g)', partial:'#856404', fail:'var(--r)'};
     const bgs    = {pass:'var(--gb)', partial:'var(--yb)', fail:'var(--rb)'};
     const v = sel.value;
@@ -3794,11 +3876,41 @@ function exportCSV(){
 }
 
 // ══ DASHBOARD ══
+let dashboardPeriodCursor = new Date();
+function dashboardPeriodRange(){
+  const mode=document.getElementById('dashPeriodMode')?.value||'month';
+  const year=dashboardPeriodCursor.getFullYear();
+  const month=dashboardPeriodCursor.getMonth()+1;
+  if(mode==='year')return{start:isoDateFromParts(year,1,1),end:isoDateFromParts(year,12,31),label:`ปี ${year+543}`};
+  if(mode==='quarter'){
+    const quarter=Math.floor((month-1)/3)+1;const first=(quarter-1)*3+1;
+    return{start:isoDateFromParts(year,first,1),end:isoDateFromParts(year,first+2,new Date(year,first+2,0).getDate()),label:`ไตรมาส ${quarter} / ${year+543}`};
+  }
+  return{start:isoDateFromParts(year,month,1),end:isoDateFromParts(year,month,new Date(year,month,0).getDate()),label:`${thaiMonthName(month)} ${year+543}`};
+}
+function applyDashboardPeriod(reload=false){
+  const mode=document.getElementById('dashPeriodMode')?.value||'month';
+  const start=document.getElementById('dashStartDate');const end=document.getElementById('dashEndDate');const label=document.getElementById('dashPeriodLabel');
+  const custom=mode==='custom';
+  if(start)start.disabled=!custom;if(end)end.disabled=!custom;
+  if(!custom){const range=dashboardPeriodRange();setThaiDateValue('dashStartDate',range.start);setThaiDateValue('dashEndDate',range.end);if(label)label.textContent=range.label;}
+  else if(label)label.textContent='ช่วงที่เลือก';
+  if(reload)loadDashboard();
+}
+function moveDashboardPeriod(direction){
+  const mode=document.getElementById('dashPeriodMode')?.value||'month';
+  if(mode==='custom')return;
+  if(mode==='year')dashboardPeriodCursor.setFullYear(dashboardPeriodCursor.getFullYear()+direction);
+  else if(mode==='quarter')dashboardPeriodCursor.setMonth(dashboardPeriodCursor.getMonth()+direction*3);
+  else dashboardPeriodCursor.setMonth(dashboardPeriodCursor.getMonth()+direction);
+  applyDashboardPeriod(true);
+}
+function resetDashboardPeriod(){dashboardPeriodCursor=new Date();const mode=document.getElementById('dashPeriodMode');if(mode)mode.value='month';applyDashboardPeriod(true);}
 function resetDashFilter() {
-  setThaiDateValue('dashStartDate','');
-  setThaiDateValue('dashEndDate','');
+  dashboardPeriodCursor=new Date();
+  const mode=document.getElementById('dashPeriodMode');if(mode)mode.value='month';
   document.getElementById('dashFilter').value = 'all';
-  loadDashboard();
+  applyDashboardPeriod(true);
 }
 
 function updateDashFilter() {
@@ -3823,14 +3935,29 @@ function refreshDashboard() {
   });
 }
 
-function calcCompletion(s) {
-  const stats=completionStats(s);
+function calcSubmissionCompletion(s) {
+  const stats=submissionCompletionStats(s);
   return stats.total > 0 ? Math.round(stats.done/stats.total*100) : 100;
 }
-function completionStats(s){
+function submissionCompletionStats(s){
   const values=Object.values(s?.snap||{}).filter(v=>(v?.status||'')!=='na');
   const done=values.filter(v=>v.status==='done').length;
   return{total:values.length,done,na:Object.values(s?.snap||{}).filter(v=>v?.status==='na').length};
+}
+function ptEvaluationStats(s){
+  const evals=Object.values(s?.ptEvals||{}).filter(value=>value==='pass'||value==='fail');
+  const passed=evals.filter(value=>value==='pass').length;
+  return{total:evals.length,passed,failed:evals.length-passed};
+}
+function calcCompletion(s){
+  const stats=ptEvaluationStats(s);
+  if(stats.total>0)return Math.round(stats.passed/stats.total*100);
+  const legacyScore=ptVerdictScore(s);
+  return legacyScore===null?calcSubmissionCompletion(s):legacyScore;
+}
+function averagePtScore(records){
+  const reviewed=(records||[]).filter(record=>ptVerdictScore(record)!==null);
+  return reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+calcCompletion(record),0)/reviewed.length):0;
 }
 
 function ptVerdictScore(record){
@@ -3850,9 +3977,9 @@ function buildAssistantRanking(records){
   return Object.values(byStaff).map(item=>{
     const ptAvg=Math.round(item.ptSum/item.total*10)/10;
     const avgComp=Math.round(item.compSum/item.total*10)/10;
-    const rankScore=Math.round((ptAvg*.8+avgComp*.2)*10)/10;
+    const rankScore=avgComp;
     return{...item,ptAvg,avgComp,rankScore,official:item.total>=3};
-  }).sort((a,b)=>Number(b.official)-Number(a.official)||b.rankScore-a.rankScore||b.ptAvg-a.ptAvg||b.avgComp-a.avgComp||b.total-a.total||a.name.localeCompare(b.name,'th'));
+  }).sort((a,b)=>Number(b.official)-Number(a.official)||b.rankScore-a.rankScore||b.total-a.total||a.name.localeCompare(b.name,'th'));
 }
 
 function executiveMetric(title,value,detail,color){
@@ -3891,8 +4018,8 @@ function renderExecutiveDashboard(data,targetId){
   const eReviewed=evening.filter(s=>s.status!=='pending');
   const mPass=mReviewed.length?Math.round(morning.filter(s=>s.status==='pass'||s.status==='partial').length/mReviewed.length*100):0;
   const ePass=eReviewed.length?Math.round(evening.filter(s=>s.status==='pass'||s.status==='partial').length/eReviewed.length*100):0;
-  const mAvg=morning.length?Math.round(morning.reduce((sum,s)=>sum+calcCompletion(s),0)/morning.length):0;
-  const eAvg=evening.length?Math.round(evening.reduce((sum,s)=>sum+calcCompletion(s),0)/evening.length):0;
+  const mAvg=averagePtScore(morning);
+  const eAvg=averagePtScore(evening);
   const watchShift=mPass===ePass?(mAvg<=eAvg?'เวรเช้า':'เวรบ่าย'):(mPass<ePass?'เวรเช้า':'เวรบ่าย');
   execEl.innerHTML=[
     executiveMetric('วันนี้',`${todayData.length} รายการ`,`รอประเมิน ${todayData.filter(s=>s.status==='pending').length} รายการ`,'#0F4C81'),
@@ -3915,11 +4042,12 @@ function showTrendPoint(index){
   const verdict=point.record.ptVerdict||point.record.status||'pending';
   const verdictInfo=verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
   const comment=point.record.ptComment?`<div style="font-size:11px;color:var(--g6);margin-top:4px;max-width:360px">“${escapeHtml(point.record.ptComment)}”</div>`:'';
-  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">ผลประเมินจาก PT • ${escapeHtml(point.record.ptReviewer||'—')}</div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label}</span></div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>ความสมบูรณ์ของ Checklist</div></div>`;
+  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">ผลตรวจจาก PT <button type="button" class="help-tip tip-down" aria-label="คำอธิบายเกณฑ์ผลตรวจจาก PT" data-help="คะแนน = จำนวนหัวข้อที่ PT ให้ผ่าน ÷ จำนวนหัวข้อที่ PT ตรวจทั้งหมด × 100 โดยไม่นับ N/A • 80–100% ผ่าน • 60–79% ต้องปรับปรุง • ต่ำกว่า 60% ไม่ผ่าน">i</button></div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label} · ${point.pct}%</span></div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>คะแนนหลัง PT ตรวจ</div></div>`;
 }
 
 function loadDashboard() {
-  renderStockPerformancePanels();
+  const startInput=document.getElementById('dashStartDate');
+  if(startInput&&!startInput.value)applyDashboardPeriod(false);
   updateDashFilter();
   const fStart = document.getElementById('dashStartDate')?.value;
   const fEnd   = document.getElementById('dashEndDate')?.value;
@@ -3927,13 +4055,16 @@ function loadDashboard() {
 
   let data = submissions.filter(s => isDateInRange(s.date, fStart, fEnd));
   if(f !== 'all') data = data.filter(s => s.staffName === f);
+  const dashboardStock=stockRecords.filter(record=>isDateInRange(record.date,fStart,fEnd)&&(f==='all'||record.responsible===f));
+  const stockDashboard=document.getElementById('stockPerformanceDashboard');
+  if(stockDashboard)stockDashboard.innerHTML=stockPerformanceSummaryMarkup(dashboardStock);
 
   // ══ KPI ══
   const reviewed = data.filter(s => s.status !== 'pending');
   const passed   = data.filter(s => s.status === 'pass' || s.status === 'partial');
   const failed   = data.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
-  const avgComp  = data.length > 0 ? Math.round(data.reduce((sum,s) => sum + calcCompletion(s), 0) / data.length) : 0;
+  const avgComp  = averagePtScore(data);
   const passRate = reviewed.length > 0 ? Math.round(passed.length / reviewed.length * 100) : 0;
 
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
@@ -3951,8 +4082,8 @@ function loadDashboard() {
   const ePassed   = evening.filter(s => s.status === 'pass' || s.status === 'partial');
   const mPassed   = morning.filter(s => s.status === 'pass' || s.status === 'partial');
   const eReviewed = evening.filter(s => s.status !== 'pending');
-  const mAvg = morning.length > 0 ? Math.round(morning.reduce((sum,s) => sum+calcCompletion(s),0)/morning.length) : 0;
-  const eAvg = evening.length > 0 ? Math.round(evening.reduce((sum,s) => sum+calcCompletion(s),0)/evening.length) : 0;
+  const mAvg = averagePtScore(morning);
+  const eAvg = averagePtScore(evening);
   const mPass = mReviewed.length > 0 ? Math.round(mPassed.length/mReviewed.length*100) : 0;
   const ePass = eReviewed.length > 0 ? Math.round(ePassed.length/eReviewed.length*100) : 0;
 
@@ -3964,7 +4095,7 @@ function loadDashboard() {
   set('shiftEveningAvg',   eAvg + '%');
 
   // ══ TREND CHART ══
-  const recent = [...data].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
+  const recent = [...reviewed].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
   const barWrap = document.getElementById('barChart');
   const labelWrap = document.getElementById('barChartLabels');
   const trendSummary = document.getElementById('trendSummary');
@@ -3974,7 +4105,7 @@ function loadDashboard() {
     const linePath=smoothTrendPath(dashboardTrendPoints);const baseY=top+plotHeight;const areaPath=`${linePath} L ${dashboardTrendPoints[dashboardTrendPoints.length-1].x} ${baseY} L ${dashboardTrendPoints[0].x} ${baseY} Z`;
     const grids=[100,50,0].map(value=>{const y=top+((100-value)/100)*plotHeight;return`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="#DDE8F0" stroke-dasharray="4 5"/><text x="${left-9}" y="${y+4}" text-anchor="end" font-size="10" fill="#7A8997">${value}%</text>`;}).join('');
     const points=dashboardTrendPoints.map((point,index)=>{const label=`${thaiDate(point.record.date)} ${point.record.staffName||'ไม่ระบุชื่อ'} ${point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย'} ${point.pct}%`;const dateLabel=thaiDate(point.record.date).split('/').slice(0,2).join('/');return`<g class="trend-point" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="showTrendPoint(${index})" onmouseenter="showTrendPoint(${index})" onkeydown="if(event.key==='Enter'||event.key===' ')showTrendPoint(${index})"><circle class="point-halo" cx="${point.x}" cy="${point.y}" r="8" fill="${point.color}"/><circle class="point-core" cx="${point.x}" cy="${point.y}" r="5" fill="#fff" stroke="${point.color}" stroke-width="2.5"/><text x="${point.x}" y="${Math.max(point.y-11,12)}" text-anchor="middle" font-size="10" font-weight="700" fill="${point.color}">${point.pct}%</text><text x="${point.x}" y="${height-23}" text-anchor="middle" font-size="10" fill="#647585">${escapeHtml(dateLabel)}</text><text x="${point.x}" y="${height-9}" text-anchor="middle" font-size="9" fill="#8A98A5">${point.record.shift==='morning'?'เช้า':'บ่าย'}</text></g>`;}).join('');
-    barWrap.style.width=width+'px';barWrap.innerHTML=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="กราฟแนวโน้มความสมบูรณ์"><defs><linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4AA3DF" stop-opacity=".28"/><stop offset="100%" stop-color="#4AA3DF" stop-opacity=".02"/></linearGradient><filter id="trendShadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0F4C81" flood-opacity=".16"/></filter></defs>${grids}<path d="${areaPath}" fill="url(#trendArea)"/><path d="${linePath}" fill="none" stroke="#1A6BAA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#trendShadow)"/>${points}</svg>`;
+    barWrap.style.width=width+'px';barWrap.innerHTML=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="กราฟแนวโน้มคะแนนหลัง PT ตรวจ"><defs><linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4AA3DF" stop-opacity=".28"/><stop offset="100%" stop-color="#4AA3DF" stop-opacity=".02"/></linearGradient><filter id="trendShadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0F4C81" flood-opacity=".16"/></filter></defs>${grids}<path d="${areaPath}" fill="url(#trendArea)"/><path d="${linePath}" fill="none" stroke="#1A6BAA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#trendShadow)"/>${points}</svg>`;
     const latest=dashboardTrendPoints[dashboardTrendPoints.length-1].pct;const average=Math.round(dashboardTrendPoints.reduce((sum,point)=>sum+point.pct,0)/dashboardTrendPoints.length);const previous=dashboardTrendPoints.length>1?dashboardTrendPoints[dashboardTrendPoints.length-2].pct:null;const delta=previous===null?null:latest-previous;const deltaText=delta===null?'—':`${delta>0?'↑ ':delta<0?'↓ ':''}${Math.abs(delta)}%`;const deltaColor=delta===null?'var(--g6)':delta>0?'var(--g)':delta<0?'var(--r)':'var(--bd)';
     if(trendSummary)trendSummary.innerHTML=`<div class="trend-stat"><div class="trend-stat-label">บันทึกล่าสุด</div><div class="trend-stat-value">${latest}%</div></div><div class="trend-stat"><div class="trend-stat-label">ค่าเฉลี่ย 14 บันทึก</div><div class="trend-stat-value">${average}%</div></div><div class="trend-stat"><div class="trend-stat-label">เทียบกับครั้งก่อน</div><div class="trend-stat-value" style="color:${deltaColor}">${deltaText}</div></div>`;
     if(labelWrap)labelWrap.innerHTML='';showTrendPoint(dashboardTrendPoints.length-1);
@@ -4029,13 +4160,12 @@ function loadDashboard() {
     if(ranked.length === 0) {
       rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
     } else {
-      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>คะแนน PT เฉลี่ย</th><th>ความสมบูรณ์เฉลี่ย</th><th>คะแนนจัดอันดับ</th></tr></thead><tbody>
+      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ผลการประเมิน</th><th>คะแนนเฉลี่ยหลัง PT ตรวจ</th></tr></thead><tbody>
       ${ranked.map((d,i) => `<tr>
         <td><strong style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</strong></td>
         <td style="font-weight:600">${d.name}</td>
         <td>${d.total}${d.official?'':' <small style="color:var(--o)">(ข้อมูลยังน้อย)</small>'}</td>
-        <td><strong style="color:${d.ptAvg>=80?'var(--g)':d.ptAvg>=60?'var(--o)':'var(--r)'}">${d.ptAvg}%</strong><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน</div></td>
-        <td><span style="font-size:13px;font-weight:700;color:${d.avgComp>=80?'var(--g)':d.avgComp>=60?'var(--o)':'var(--r)'}">${d.avgComp}%</span></td>
+        <td><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน</div></td>
         <td><span class="tag ${d.rankScore>=80?'tp':d.rankScore>=60?'tw2':'tf'}">${d.rankScore}%</span></td>
       </tr>`).join('')}</tbody></table>`;
     }
@@ -4049,7 +4179,7 @@ function loadDashboard() {
     byMonth[m].total++;
     if(s.status==='pass'||s.status==='partial') byMonth[m].pass++;
     if(s.status==='pending') byMonth[m].pending++;
-    byMonth[m].compSum += calcCompletion(s);
+    if(s.status!=='pending')byMonth[m].compSum += calcCompletion(s);
   });
   const months = Object.entries(byMonth).sort((a,b) => b[0] > a[0] ? 1 : -1).slice(0,6);
   const mt = document.getElementById('monthlyTable');
@@ -4057,7 +4187,7 @@ function loadDashboard() {
     if(months.length === 0) {
       mt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูล</p>';
     } else {
-      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>ความสมบูรณ์เฉลี่ย</th><th>รอ PT ประเมิน</th><th>ผ่าน/ต้องปรับปรุง</th><th>อัตราผ่าน/ปรับปรุง</th></tr></thead><tbody>
+      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>คะแนนหลัง PT ตรวจ</th><th>รอ PT ประเมิน</th><th>ผ่าน/ต้องปรับปรุง</th><th>อัตราผ่าน/ปรับปรุง</th></tr></thead><tbody>
       ${months.map(([m, d]) => {
         const reviewed = d.total - d.pending;
         const rate = reviewed > 0 ? Math.round(d.pass/reviewed*100) : 0;
@@ -4443,7 +4573,7 @@ function setAdminTab(tab) {
   currentAdminTab=['home','data','retrospective','audit','settings','backup'].includes(tab)?tab:'home';
   const isHome=currentAdminTab==='home';
   const home=document.getElementById('adminHome');if(home)home.style.display=isHome?'grid':'none';
-  const workspace=document.getElementById('adminWorkspaceBar');if(workspace)workspace.style.display=isHome?'none':'flex';
+  const workspace=document.getElementById('adminWorkspaceBar');if(workspace)workspace.style.display=isHome?'none':'grid';
   if(isHome)currentAdminCategory='';
   ['data','retrospective','audit','settings','backup'].forEach(name=>{const active=name===currentAdminTab;const panel=document.getElementById('adminPanel-'+name);const button=document.getElementById('adminTab-'+name);if(panel)panel.style.display=active?'block':'none';if(button){button.style.color=active?'var(--bd)':'var(--g6)';button.style.fontWeight=active?'700':'600';button.style.borderBottom=active?'3px solid var(--bd)':'3px solid transparent';}});
   if(isHome)return;
@@ -4649,7 +4779,7 @@ function renderAdminTable(){
   tb.innerHTML=data.map(s=>{
     const stTag=s.status==='pending'?'<span class="tag tw2">รอ PT ประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
     const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
-    return`<tr><td>${escapeHtml(thaiDate(s.date))} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td>${escapeHtml(s.staffName)}</td><td>${stTag}</td><td>${vrTag}</td><td>${missedPTBadge(s)}</td><td style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})">👁️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:#1565C0" onclick="openAdminChecklistEdit(${s.id})">✏️</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})">🗑️</button></td></tr>`;
+    return`<tr><td data-label="วันที่">${escapeHtml(thaiDate(s.date))} <span style="font-size:11px;color:var(--g6)">${shiftLabel(s.shift||'morning').split(' ')[1]}</span></td><td data-label="ผู้ช่วย">${escapeHtml(s.staffName)}</td><td data-label="สถานะ">${stTag}</td><td data-label="ผลประเมิน">${vrTag}</td><td data-label="PT ไม่ประเมิน">${missedPTBadge(s)}</td><td class="admin-row-actions"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="showDetail(${s.id})" aria-label="เปิดรายละเอียด">👁️ ดู</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:#1565C0" onclick="openAdminChecklistEdit(${s.id})" aria-label="แก้ไขรายการ">✏️ แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteRecord(${s.id})" aria-label="ลบรายการ">🗑️ ลบ</button></td></tr>`;
   }).join('');
 }
 async function clearAllData(){showConfirm('🚨 ล้างข้อมูลทั้งหมดในระบบ? (กู้คืนไม่ได้!)',async()=>{try{const deletedCount=submissions.length;await window.FB.fbClearSubmissions();submissions=[];await writeAuditLog('delete','system_data',`ล้างข้อมูล Checklist ทั้งหมด ${deletedCount} รายการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});renderAdminTable();loadHistory();loadDashboard();updateHistoryFilters();updateDashFilter();showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว','success');}catch(e){showToast('❌ ล้างไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}});}
@@ -4913,7 +5043,7 @@ function loadSupPerson(data) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px">
         <div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:20px;font-weight:800;color:var(--bd)">${avgComplete}%</div>
-          <div style="font-size:11px;color:var(--g6)">ความสมบูรณ์เฉลี่ย</div>
+          <div style="font-size:11px;color:var(--g6)">คะแนนเฉลี่ยหลัง PT ตรวจ</div>
         </div>
         <div style="background:var(--yb);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:20px;font-weight:800;color:#856404">${pending}</div>
@@ -4961,7 +5091,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260802-admin-center-monthly-history-v77';
+const APP_VERSION = 'v20260802-dashboard-period-v81';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -5738,7 +5868,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
   const missedPtTotal=missedPtRecords.reduce((sum,record)=>sum+(record.ptNames||[]).length,0);
   const passRate = reviewed.length > 0 ? Math.round(successful.length/reviewed.length*100) : 0;
-  const avgComp  = data.length > 0 ? Math.round(data.reduce((s,r)=>s+calcCompletion(r),0)/data.length) : 0;
+  const avgComp  = averagePtScore(data);
 
   // จัดกลุ่มรายคน
   const byStaff = {};
@@ -5769,7 +5899,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
         </div>
         <div style="text-align:center;background:#fff;border-radius:6px;padding:10px">
           <div style="font-size:24px;font-weight:800;color:#9C27B0">${avgComp}%</div>
-          <div style="font-size:11px;color:#6C757D">ความสมบูรณ์เฉลี่ย</div>
+        <div style="font-size:11px;color:#6C757D">คะแนนเฉลี่ยหลัง PT ตรวจ</div>
         </div>
         <div style="text-align:center;background:#fff;border-radius:6px;padding:10px">
           <div style="font-size:24px;font-weight:800;color:#28A745">${passRate}%</div>
@@ -5803,7 +5933,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
       const fail = records.filter(r => r.status==='fail');
       const pend = records.filter(r => r.status==='pending');
       const rate = rev.length > 0 ? Math.round(successful.length/rev.length*100) : 0;
-      const avg  = records.length > 0 ? Math.round(records.reduce((s,r)=>s+calcCompletion(r),0)/records.length) : 0;
+      const avg  = averagePtScore(records);
       const rateColor = rate>=80?'#28A745':rate>=60?'#FD7E14':'#DC3545';
 
       return `
@@ -5939,7 +6069,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
   const missedPtTotal=missedPtRecords.reduce((sum,record)=>sum+(record.ptNames||[]).length,0);
-  const avgCompletion = data.length ? Math.round(data.reduce((sum,record)=>sum+calcCompletion(record),0)/data.length) : 0;
+  const avgCompletion = reviewed.length ? Math.round(reviewed.reduce((sum,record)=>sum+calcCompletion(record),0)/reviewed.length) : 0;
   const successRate = reviewed.length ? Math.round(successful.length/reviewed.length*100) : 0;
   const staffFilter = document.getElementById('reportStaff')?.value || 'all';
   const reportRange=activeReportRange||getSelectedReportRange();
@@ -5952,7 +6082,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
     [],
     ['สรุปผล', 'ค่า'],
     ['ทั้งหมด', data.length],
-    ['ความสมบูรณ์เฉลี่ย (%)', avgCompletion],
+    ['คะแนนเฉลี่ยหลัง PT ตรวจ (%)', avgCompletion],
     ['รอ PT ประเมิน', pending.length],
     ['ผู้ช่วยไม่บันทึก Checklist (คน/ครั้ง)', missedAssistantTotal],
     ['PT ไม่ประเมิน (คน/ครั้ง)', missedPtTotal],
@@ -5963,7 +6093,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
     ['ผ่าน/ต้องปรับปรุง', successful.length],
     ['อัตราผ่าน/ปรับปรุง (%)', successRate],
     [],
-    ['ผู้ช่วย', 'วันที่', 'เวร', 'ความสมบูรณ์ Checklist (%)', 'สถานะ', 'ผลการประเมิน', 'PT ผู้ประเมิน', 'PT ไม่ประเมิน', 'ความเห็น PT']
+    ['ผู้ช่วย', 'วันที่', 'เวร', 'คะแนนหลัง PT ตรวจ (%)', 'สถานะ', 'ผลการประเมิน', 'PT ผู้ประเมิน', 'PT ไม่ประเมิน', 'ความเห็น PT']
   ];
   data.slice().sort(newestRecordFirst).forEach(function(record) {
     rows.push([
