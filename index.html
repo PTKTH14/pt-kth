@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-  <meta name="version" content="v20260730-update-toast-fix-v67">
+  <meta name="version" content="v20260802-guided-loading-v74">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -487,7 +487,11 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .sf-name{font-size:13px;font-weight:700}
 .sf-role{font-size:11px;color:var(--g4)}
 .main{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;padding:18px 22px;padding-bottom:80px}
-.view{display:none;min-width:0;max-width:100%}.view.active{display:block}
+.view{display:none;min-width:0;max-width:100%;position:relative}.view.active{display:block}
+.view-busy{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;min-height:110px;margin-bottom:14px;padding:16px;border:1px solid var(--g2);border-radius:var(--r12);background:rgba(255,255,255,.94);color:var(--g6);font-size:13px;font-weight:700}
+.view-busy-head{display:flex;align-items:center;justify-content:center;gap:9px}.view-busy-lines{display:grid;gap:7px}.view-busy-line{height:10px;border-radius:999px;background:linear-gradient(90deg,#EDF1F4 25%,#F8FAFB 45%,#EDF1F4 65%);background-size:240% 100%;animation:loadingSweep 1.2s ease-in-out infinite}.view-busy-line:nth-child(2){width:82%}.view-busy-line:nth-child(3){width:64%}@keyframes loadingSweep{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.view-busy .mini-spin{width:22px;height:22px;border:3px solid var(--g2);border-top-color:var(--bd);border-radius:50%;animation:spin .8s linear infinite}
+.guidance-card{margin-bottom:14px;border:1px solid #D7E7F6;border-left:4px solid #2563EB;border-radius:var(--r12);background:#F8FBFF;box-shadow:var(--sh1);overflow:hidden}.guidance-card>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:12px 15px;color:var(--bd);font-size:13.5px;font-weight:800;cursor:pointer;list-style:none;touch-action:manipulation}.guidance-card>summary::-webkit-details-marker{display:none}.guidance-card>summary::after{content:'ดูวิธีใช้';flex-shrink:0;padding:5px 9px;border:1px solid #BBD4E7;border-radius:999px;background:#fff;color:var(--bm);font-size:10.5px}.guidance-card[open]>summary::after{content:'ย่อ'}.guidance-content{padding:0 15px 14px;color:var(--g6);font-size:12px;line-height:1.75}
 .card,.stock-group,.stock-history-card,.monthly-report-preview{min-width:0;max-width:100%}
 img,svg,canvas{max-width:100%}
 .ph{margin-bottom:18px}
@@ -521,6 +525,9 @@ img,svg,canvas{max-width:100%}
 .missed-form-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--g2)}
 .missed-form-hint{font-size:11.5px;color:var(--g6)}
 .filter-toolbar{margin-bottom:14px!important}
+.date-display-control{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;max-width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--g2);border-radius:8px;background:var(--g1);color:var(--g6);font-size:13px;font-weight:600;line-height:1.35;box-sizing:border-box;overflow-wrap:anywhere}
+.date-filter-input{display:block;width:150px!important;min-width:0!important;max-width:100%;height:44px;box-sizing:border-box}
+.filter-toolbar .date-filter-input{flex:0 1 150px}
 .dashboard-reading-guide{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-2px 0 12px;padding:9px 12px;border:1px solid #D7E7F4;border-radius:9px;background:#F7FBFF;color:var(--g6);font-size:11.5px}
 .dashboard-reading-guide strong{color:var(--bd)}
 .dashboard-reading-guide .guide-arrow{color:#8EABC2;font-weight:800}
@@ -559,8 +566,23 @@ img,svg,canvas{max-width:100%}
 .stock-performance-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .stock-summary-metric{padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD}
 .stock-summary-value{font-size:20px;font-weight:800}.stock-summary-label{font-size:10.5px;color:var(--g6)}
-.admin-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--g2);overflow-x:auto}
-.admin-tab{white-space:nowrap;flex-shrink:0}
+.admin-shell,.admin-panel{width:100%;max-width:100%;min-width:0}
+.admin-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;max-width:100%;min-width:0;margin-bottom:16px;border:1px solid var(--g2);border-radius:12px;background:#fff;overflow:hidden;box-shadow:var(--sh1)}
+.admin-tab{min-width:0;min-height:48px;padding:9px 7px!important;white-space:normal;overflow-wrap:anywhere;line-height:1.3;margin:0!important;border-bottom-width:3px!important;touch-action:manipulation}
+.view-switcher{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:720px;margin:0 0 18px}
+.view-switch-button{display:flex;align-items:center;gap:11px;min-width:0;min-height:66px;padding:11px 14px;border:1.5px solid var(--g2);border-radius:12px;background:#fff;color:var(--g6);font-family:inherit;text-align:left;cursor:pointer;box-shadow:var(--sh1);touch-action:manipulation;transition:border-color .15s,background .15s,box-shadow .15s,transform .15s}
+.view-switch-button:hover{border-color:#8DB9D5;background:#F8FCFF}.view-switch-button:active{transform:scale(.985)}
+.view-switch-button.active{border-color:var(--bm);background:linear-gradient(135deg,#EAF5FC,#F7FBFE);color:var(--bd);box-shadow:0 5px 16px rgba(15,76,129,.13)}
+.view-switch-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:var(--g1);font-size:19px}.view-switch-button.active .view-switch-icon{background:#D8ECF8}
+.view-switch-copy{display:block;min-width:0}.view-switch-title{display:block;font-size:14px;font-weight:800;line-height:1.3}.view-switch-note{display:block;margin-top:2px;font-size:10.5px;font-weight:500;line-height:1.35;color:var(--g5)}
+.responsive-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:100%}
+.responsive-form-grid>*{min-width:0;max-width:100%}
+.cutoff-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.system-field{display:flex;min-width:0;max-width:100%;flex-direction:column;margin:0}
+.system-field>label{min-height:39px;display:flex;align-items:flex-end}
+.system-input{display:block;width:100%!important;min-width:0!important;max-width:100%!important;height:48px;box-sizing:border-box}
+.fixed-form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;width:100%;max-width:100%}
+.fixed-form-row>*{min-width:0;max-width:100%}
 .audit-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .audit-item{padding:13px 14px;border:1px solid var(--g2);border-left:4px solid var(--bd);border-radius:var(--r8);margin-bottom:9px;background:#fff}
 .audit-item.add{border-left-color:var(--g)}.audit-item.update{border-left-color:var(--o)}.audit-item.delete{border-left-color:var(--r)}.audit-item.security,.audit-item.login,.audit-item.logout{border-left-color:#6A1B9A}
@@ -640,7 +662,9 @@ img,svg,canvas{max-width:100%}
 .card canvas{max-width:100%;display:block}
 .card h3{font-size:14.5px;font-weight:800;margin-bottom:14px;color:var(--g8)}
 .chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
-.tw{background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.tw{display:block;width:100%;max-width:100%;background:#fff;border-radius:var(--r12);box-shadow:var(--sh1);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior-inline:contain}
+.dashboard-table-scroll{margin-top:4px;box-shadow:none;border-radius:8px}
+.dashboard-table-scroll table{min-width:720px}
 table{width:100%;border-collapse:collapse}
 .retro-damage{font-weight:800;color:#B02A37;white-space:nowrap}
 .retro-damage small{display:block;margin-top:2px;color:var(--g5);font-size:10.5px;font-weight:600;white-space:normal}
@@ -670,6 +694,8 @@ tr:hover td{background:var(--g1)}
 .fg{margin-bottom:14px}
 .fg label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}
 .fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r8);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .15s}
+.fg,.fg input,.fg select,.fg textarea,.sb-input,.sb-sel,input,select,textarea{min-width:0;max-width:100%;box-sizing:border-box}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%;max-width:100%}.form-grid>*{min-width:0;max-width:100%}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bm)}
 .fg textarea{min-height:75px;resize:vertical}
 .photo-box{border:1.5px dashed #9BC4DF;border-radius:var(--r8);background:#F7FBFF;padding:12px}
@@ -695,8 +721,16 @@ tr:hover td{background:var(--g1)}
 .link-copy{background:var(--bd);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
 .link-copy:hover{background:var(--bm)}
 .link-copy.copied{background:var(--g)}
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-.loading-overlay.hidden{display:none}
+.loading-overlay{position:fixed;inset:0;background:linear-gradient(145deg,#F4F9FD 0%,#FFFFFF 52%,#EAF5FB 100%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
+.loading-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loading-brand{width:min(360px,100%);display:flex;flex-direction:column;align-items:center;text-align:center}
+.loading-logo{width:88px;height:88px;padding:9px;border-radius:24px;background:linear-gradient(145deg,#0F4C81,#1976A8);box-shadow:0 14px 34px rgba(15,76,129,.22);margin-bottom:16px}
+.loading-logo img{width:100%;height:100%;display:block}
+.loading-title{font-size:21px;font-weight:800;color:var(--bd);line-height:1.25}
+.loading-subtitle{font-size:12.5px;color:var(--g5);margin-top:4px}
+.loading-progress{width:min(260px,76vw);height:6px;border-radius:999px;background:#DCEAF3;overflow:hidden;margin-top:18px}
+.loading-progress span{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#0F4C81,#21A366);animation:loadingSlide 1.15s ease-in-out infinite alternate}
+@keyframes loadingSlide{from{transform:translateX(-35%)}to{transform:translateX(175%)}}
 .spin{width:44px;height:44px;border:4px solid var(--g2);border-top-color:var(--bd);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));padding:5px 7px env(safe-area-inset-bottom);background:rgba(255,255,255,.98);border-top:1px solid var(--g2);box-shadow:0 -4px 18px rgba(15,76,129,.14);z-index:300;align-items:stretch;overflow:hidden}
@@ -745,8 +779,23 @@ tr:hover td{background:var(--g1)}
   .monthly-report-preview{padding:12px}
   .filter-toolbar{padding:12px!important}
   .filter-toolbar input,.filter-toolbar select{max-width:100%}
+  .filter-toolbar .date-filter-input{flex:1 1 180px;width:100%!important}
+  .filter-toolbar>span{flex:0 0 auto}
   .mf .btn{flex:1;justify-content:center;min-width:120px}
   .audit-summary{grid-template-columns:1fr}
+  .admin-shell{overflow:hidden}
+  .admin-tabs{grid-template-columns:repeat(2,minmax(0,1fr));border-radius:10px}
+  .admin-tab{font-size:12px!important;min-height:50px;border-right:1px solid var(--g2)!important;border-bottom:1px solid var(--g2)!important}
+  .admin-tab:last-child{grid-column:1/-1}
+  .view-switcher{gap:8px;max-width:none}
+  .view-switch-button{min-height:62px;padding:9px 10px;gap:8px}
+  .view-switch-icon{width:34px;height:34px;flex-basis:34px;font-size:17px}
+  .view-switch-title{font-size:13px}.view-switch-note{font-size:9.5px}
+  .responsive-form-grid,.cutoff-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .system-field>label{min-height:0}
+  .filter-toolbar{width:100%;max-width:100%;overflow:hidden}
+  .filter-toolbar>*{min-width:0}
   .trend-summary{grid-template-columns:1fr 1fr}.trend-stat:last-child{grid-column:1/-1}
   .trend-stage{min-width:720px}
   .dashboard-reading-guide{display:none}
@@ -785,6 +834,7 @@ tr:hover td{background:var(--g1)}
 @media(min-width:769px) and (max-width:1050px){.live{display:none}.tsubtitle{max-width:360px}}
 @media(min-width:901px) and (max-width:1400px){
   .stock-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cutoff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(min-width:901px) and (max-width:1180px) and (orientation:landscape), (min-width:1101px) and (max-width:1180px){
   .sidebar{width:200px}
@@ -873,9 +923,13 @@ tr:hover td{background:var(--g1)}
 <body>
 
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="spin"></div>
-  <div style="font-size:15px;color:var(--g6);font-weight:700">🔥 กำลังเชื่อมต่อ Firebase...</div>
-  <div style="font-size:12px;color:var(--g4)" id="loadingDetail">โหลดข้อมูลจาก Cloud</div>
+  <div class="loading-brand">
+    <div class="loading-logo"><img src="icon-512.svg" alt="โลโก้ Checklist PT KTH"></div>
+    <div class="loading-title">Checklist PT KTH</div>
+    <div class="loading-subtitle">ระบบงานผู้ช่วยนักกายภาพบำบัด</div>
+    <div class="loading-progress" aria-hidden="true"><span></span></div>
+  </div>
+  <div style="font-size:13.5px;color:var(--g6);font-weight:700;margin-top:6px" id="loadingDetail">กำลังเตรียมระบบ...</div>
 </div>
 
 <div class="topbar">
@@ -919,7 +973,8 @@ tr:hover td{background:var(--g1)}
   </div>
   <div class="sb-sec">
     <label>วันที่บันทึก</label>
-    <input type="date" class="sb-input" id="dateInput" disabled aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ">
+    <input type="hidden" id="dateInput">
+    <div id="dateInputDisplay" class="date-display-control" role="status" aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div>
     <div style="margin-top:8px">
       <label style="font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ประเภทเวร</label>
       <div class="shift-row">
@@ -964,7 +1019,8 @@ tr:hover td{background:var(--g1)}
   <div class="mobile-controls" style="display:none;gap:8px;margin-bottom:14px;flex-direction:column">
     <select class="sb-sel" id="staffSelectMobile" style="width:100%"><option value="">— เลือกชื่อผู้ช่วย —</option></select>
     <div style="display:flex;gap:8px">
-      <input type="date" class="sb-input" id="dateInputMobile" style="flex:1" disabled aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ" title="ระบบกำหนดเป็นวันปัจจุบันอัตโนมัติ">
+      <input type="hidden" id="dateInputMobile">
+      <div id="dateInputMobileDisplay" class="date-display-control" role="status" aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div>
       <div class="shift-row" style="flex:1;margin:0">
         <button class="shift-btn active-morning" id="shiftMorningM" onclick="setShift('morning')">🌅 เช้า</button>
         <button class="shift-btn" id="shiftAfternoonM" onclick="setShift('afternoon')">🌙 บ่าย</button>
@@ -987,7 +1043,6 @@ tr:hover td{background:var(--g1)}
   <div class="act-row">
     <button class="btn btn-pri" onclick="openSubmitModal()">📤 ส่งให้ PT ประเมิน</button>
     <button class="btn btn-out" onclick="resetChecklist()">🔄 ล้างทั้งหมด</button>
-    <button class="btn btn-out" onclick="window.print()">🖨️ พิมพ์</button>
   </div>
 </div>
 
@@ -998,10 +1053,10 @@ tr:hover td{background:var(--g1)}
     <div><div class="stock-hero-title">เช็กของคงเหลือ แล้วระบบช่วยคำนวณจำนวนที่ควรเบิก</div><div class="stock-hero-note">กรอกจำนวนคงเหลือและจำนวนเบิก ระบบจะแสดง “เพียงพอ” หรือ “ต้องการเบิก” ให้อัตโนมัติ</div></div>
     <span class="stock-week-badge" id="stockDueBadge">📅 กำลังตรวจรอบสต็อก</span>
   </div>
-  <div class="card" style="margin-bottom:14px;border-left:4px solid #2563EB;background:#F8FBFF">
-    <h3 style="margin-bottom:6px">ℹ️ วิธีบันทึกการตรวจสต็อก</h3>
-    <div style="font-size:12px;color:var(--g6);line-height:1.75"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
-  </div>
+  <details class="guidance-card">
+    <summary>ℹ️ วิธีบันทึกการตรวจสต็อก</summary>
+    <div class="guidance-content"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
+  </details>
   <div class="card stock-meta-grid">
     <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="hidden" id="stockDate"><div id="stockDateDisplay" class="stock-week-display stock-date-display" role="status" aria-label="วันที่ตรวจสต็อก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div></div>
     <div class="fg"><label>รอบตรวจ <span style="color:var(--r)">*</span></label><select id="stockSchedule" class="sb-sel" onchange="changeStockSchedule()"><option value="">— เลือกรอบตรวจ —</option></select></div>
@@ -1088,7 +1143,7 @@ tr:hover td{background:var(--g1)}
   <div class="ph ph-row">
     <div><h1>📊 Dashboard ภาพรวม</h1><p>วิเคราะห์ข้อมูลจาก Checklist และผลประเมินของ PT</p></div>
     <div class="ph-actions">
-      <button class="btn btn-out" style="padding:7px 14px;font-size:13px" onclick="refreshDashboard()">🔄 รีเฟรช</button>
+      <button class="btn btn-out" style="padding:7px 14px;font-size:13px" onclick="refreshDashboard()">🔄 โหลดข้อมูลใหม่</button>
     </div>
   </div>
 
@@ -1096,9 +1151,9 @@ tr:hover td{background:var(--g1)}
   <div class="card filter-toolbar dashboard-filter" style="padding:12px 16px">
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <span style="font-size:13px;font-weight:700;color:var(--g8)">🗓 ช่วงเวลา:</span>
-      <input type="date" id="dashStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <input type="date" id="dashStartDate" class="sb-input date-filter-input">
       <span style="font-size:13px;color:var(--g6)">ถึง</span>
-      <input type="date" id="dashEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+      <input type="date" id="dashEndDate" class="sb-input date-filter-input">
       <select id="dashFilter" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">👥 ผู้ช่วยทั้งหมด</option></select>
       <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadDashboard()">🔍 ดู</button>
       <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetDashFilter()">ล้าง</button>
@@ -1153,19 +1208,19 @@ tr:hover td{background:var(--g1)}
   <div class="card" style="margin-bottom:16px">
     <h3>⚠️ 5 อันดับรายการที่ทำไม่ครบบ่อย</h3>
     <p style="font-size:12px;color:var(--g6);margin-top:-8px;margin-bottom:12px">นับจากรายการที่ไม่ได้ทำ หรือ PT ประเมินไม่ผ่าน</p>
-    <div id="issueTable"></div>
+    <div id="issueTable" class="tw dashboard-table-scroll"></div>
   </div>
 
   <!-- RANKING -->
   <div class="card" style="margin-bottom:16px">
     <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="จัดอันดับเฉพาะ Checklist ที่ PT ประเมินแล้ว เรียงจากอัตราผ่าน/ปรับปรุงสูงสุด หากเท่ากันจะดูความสมบูรณ์เฉลี่ย">i</button></h3>
-    <div id="rankTable"></div>
+    <div id="rankTable" class="tw dashboard-table-scroll"></div>
   </div>
 
   <!-- สถิติรายเดือน -->
   <div class="card" style="margin-bottom:16px">
     <h3>📅 สรุปรายเดือน <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย สรุปรายเดือน" data-help="รวมผล Checklist แยกตามเดือนจากช่วงวันที่และชื่อผู้ช่วยที่เลือก โดยแสดงย้อนหลังสูงสุด 6 เดือน">i</button></h3>
-    <div id="monthlyTable"></div>
+    <div id="monthlyTable" class="tw dashboard-table-scroll"></div>
   </div>
 
 </div>
@@ -1193,9 +1248,9 @@ tr:hover td{background:var(--g1)}
   <div class="ph"><h1>📋 ประวัติการบันทึก</h1></div>
   <div class="card filter-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center">
     <span style="font-size:13px;font-weight:700">กรองวันที่:</span>
-    <input type="date" id="hisStartDate" class="sb-input" style="width:auto;padding:6px 9px">
+    <input type="date" id="hisStartDate" class="sb-input date-filter-input">
     <span style="font-size:13px;color:var(--g6)">ถึง</span>
-    <input type="date" id="hisEndDate" class="sb-input" style="width:auto;padding:6px 9px">
+    <input type="date" id="hisEndDate" class="sb-input date-filter-input">
     <select id="hisFilterStaff" class="sb-input" style="width:auto;padding:6px 9px"><option value="">ผู้ช่วยทั้งหมด</option></select>
     <select id="hisFilterStatus" class="sb-input" style="width:auto;padding:6px 9px">
       <option value="">สถานะทั้งหมด</option>
@@ -1224,7 +1279,8 @@ tr:hover td{background:var(--g1)}
       <div class="missed-form-grid">
         <div class="fg">
           <label>📅 วันที่เกิดรายการ</label>
-          <input type="date" id="missedEvalDate">
+          <input type="hidden" id="missedEvalDate">
+          <div id="missedEvalDateDisplay" class="date-display-control" role="status" aria-label="วันที่เกิดรายการ">—</div>
         </div>
         <div class="fg">
           <label>🌅 ประเภทเวร</label>
@@ -1364,18 +1420,18 @@ tr:hover td{background:var(--g1)}
   <!-- ตัวกรอง -->
   <div class="card filter-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;align-items:center">
     <span style="font-size:13px;font-weight:700">กรองข้อมูล:</span>
-    <input type="date" id="supStartDate" class="sb-input" style="width:auto;padding:5px 9px">
+    <input type="date" id="supStartDate" class="sb-input date-filter-input">
     <span style="font-size:13px;color:var(--g6)">ถึง</span>
-    <input type="date" id="supEndDate" class="sb-input" style="width:auto;padding:5px 9px">
+    <input type="date" id="supEndDate" class="sb-input date-filter-input">
     <select id="supFilterStaff" class="sb-input" style="width:auto;padding:5px 9px"><option value="all">ผู้ช่วยทั้งหมด</option></select>
     <button class="btn btn-pri" style="padding:5px 14px;font-size:12.5px" onclick="loadSupervisor()">🔍 ดู</button>
     <button class="btn btn-out" style="padding:5px 14px;font-size:12.5px" onclick="resetSupFilter()">ล้าง</button>
   </div>
 
   <!-- แท็บย่อย -->
-  <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--g2)">
-    <button class="sup-tab active" id="supTab-daily" onclick="setSupTab('daily')" style="padding:10px 20px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--bd);border-bottom:3px solid var(--bd);margin-bottom:-2px">📅 รายวัน</button>
-    <button class="sup-tab" id="supTab-person" onclick="setSupTab('person')" style="padding:10px 20px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">👤 รายบุคคล</button>
+  <div class="view-switcher" role="tablist" aria-label="เลือกรูปแบบรายงานหัวหน้างาน">
+    <button class="sup-tab view-switch-button active" id="supTab-daily" role="tab" aria-selected="true" aria-controls="supView-daily" onclick="setSupTab('daily')"><span class="view-switch-icon">📅</span><span class="view-switch-copy"><strong class="view-switch-title">รายวัน</strong><small class="view-switch-note">ดู Checklist ตามวันที่และเวร</small></span></button>
+    <button class="sup-tab view-switch-button" id="supTab-person" role="tab" aria-selected="false" aria-controls="supView-person" onclick="setSupTab('person')"><span class="view-switch-icon">👤</span><span class="view-switch-copy"><strong class="view-switch-title">รายบุคคล</strong><small class="view-switch-note">สรุปผลงานแยกตามผู้ช่วย</small></span></button>
   </div>
 
   <div id="supPrivateEvaluationPanel" class="card" style="display:none;margin-bottom:16px;border-left:4px solid #7B1FA2">
@@ -1442,7 +1498,7 @@ tr:hover td{background:var(--g1)}
     <button class="btn btn-pri" style="width:100%;justify-content:center;margin-top:10px" onclick="adminLogin()">เข้าสู่ระบบ</button>
     <button class="btn" style="width:100%;justify-content:center;background:none;color:var(--bm);margin-top:7px" onclick="sendAdminPasswordReset()">ลืมรหัสผ่าน</button>
   </div>
-  <div id="adminDashSec" style="display:none">
+  <div id="adminDashSec" class="admin-shell" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3 style="font-size:16px;font-weight:800;color:var(--bd)">ศูนย์จัดการระบบ</h3>
       <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="adminLogout()">🚪 ออก</button>
@@ -1455,7 +1511,7 @@ tr:hover td{background:var(--g1)}
       <button class="admin-tab" id="adminTab-backup" onclick="setAdminTab('backup')" style="padding:10px 18px;background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--g6);border-bottom:3px solid transparent;margin-bottom:-2px">💾 สำรองข้อมูล</button>
     </div>
 
-    <div id="adminPanel-data">
+    <div id="adminPanel-data" class="admin-panel">
       <div class="tw" style="overflow-x:auto;margin-bottom:20px">
         <table>
           <thead><tr><th>วันที่</th><th>ผู้ช่วย</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th>จัดการ</th></tr></thead>
@@ -1466,7 +1522,7 @@ tr:hover td{background:var(--g1)}
       <div class="card" style="margin:20px 0">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
           <h3 style="margin:0">🔒 รายงานประเมินผู้ช่วยรายบุคคล</h3>
-          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="loadAdminEvaluationReports()">🔄 รีเฟรช</button>
+          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="loadAdminEvaluationReports()">🔄 โหลดข้อมูลใหม่</button>
         </div>
         <div id="adminEvaluationList"><div style="text-align:center;color:var(--g4);padding:16px">กำลังโหลด...</div></div>
       </div>
@@ -1475,7 +1531,7 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
 
-    <div id="adminPanel-retrospective" style="display:none">
+    <div id="adminPanel-retrospective" class="admin-panel" style="display:none">
       <div class="card" style="border-left:4px solid var(--r)">
         <div style="margin-bottom:16px">
           <h3 style="margin-bottom:5px">🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน</h3>
@@ -1515,14 +1571,14 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
 
-    <div id="adminPanel-audit" style="display:none">
+    <div id="adminPanel-audit" class="admin-panel" style="display:none">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:14px">
           <div>
             <h3 style="margin-bottom:4px">🕘 ประวัติการใช้งานเว็บไซต์</h3>
             <p style="font-size:12px;color:var(--g6)">ตรวจสอบการเพิ่ม แก้ไข หรือลบค่าเสียหาย รายงาน และการตั้งค่าที่สำคัญ</p>
           </div>
-          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="loadAuditLogs(true)">🔄 รีเฟรช</button>
+          <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="loadAuditLogs(true)">🔄 โหลดข้อมูลใหม่</button>
         </div>
         <div class="filter-toolbar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--g1);border-radius:var(--r8);padding:10px 12px">
           <select id="auditCategoryFilter" class="sb-input" style="width:auto;padding:6px 9px" onchange="renderAuditLogs()">
@@ -1534,7 +1590,7 @@ tr:hover td{background:var(--g1)}
             <option value="system_data">ข้อมูลระบบ</option>
             <option value="security">ความปลอดภัย</option>
           </select>
-          <input type="date" id="auditDateFilter" class="sb-input" style="width:auto;padding:6px 9px" onchange="renderAuditLogs()">
+          <input type="date" id="auditDateFilter" class="sb-input date-filter-input" onchange="renderAuditLogs()">
           <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="clearAuditFilters()">ล้างตัวกรอง</button>
         </div>
         <div id="auditSummary" class="audit-summary"></div>
@@ -1542,18 +1598,18 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
 
-    <div id="adminPanel-settings" style="display:none">
+    <div id="adminPanel-settings" class="admin-panel" style="display:none">
       <div class="card" style="max-width:760px;border-left:4px solid var(--bd)">
         <h3 style="margin-bottom:6px">⏰ ตั้งเวลา Cutoff การบันทึก</h3>
         <p style="font-size:12px;color:var(--g6);margin-bottom:12px">แอดมินแก้เวลาแล้วบันทึกครั้งเดียว เครื่องอื่นจะใช้เวลาชุดนี้หลังโหลดข้อมูลจาก Firebase</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-          <div class="fg"><label>ผู้ช่วย เวรเช้า</label><input type="time" id="cutoffAssistantMorning"></div>
-          <div class="fg"><label>PT เวรเช้า</label><input type="time" id="cutoffPtMorning"></div>
-          <div class="fg"><label>ผู้ช่วย เวรบ่าย</label><input type="time" id="cutoffAssistantAfternoon"></div>
-          <div class="fg"><label>PT เวรบ่าย</label><input type="time" id="cutoffPtAfternoon"></div>
-          <div class="fg"><label>ผู้ช่วย วันเสาร์</label><input type="time" id="cutoffAssistantSaturday"></div>
-          <div class="fg"><label>PT วันเสาร์</label><input type="time" id="cutoffPtSaturday"></div>
-          <div class="fg"><label>แจ้งงานเบิกค้างเกินกำหนด</label><input type="number" id="stockOverdueDays" min="1" max="30" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">จำนวนวันที่อยู่สถานะ “กำลังเบิกของ” ก่อนขึ้นกระดิ่ง</div></div>
+        <div class="responsive-form-grid cutoff-grid">
+          <div class="fg system-field"><label>ผู้ช่วย เวรเช้า</label><input class="system-input" type="time" id="cutoffAssistantMorning"></div>
+          <div class="fg system-field"><label>PT เวรเช้า</label><input class="system-input" type="time" id="cutoffPtMorning"></div>
+          <div class="fg system-field"><label>ผู้ช่วย เวรบ่าย</label><input class="system-input" type="time" id="cutoffAssistantAfternoon"></div>
+          <div class="fg system-field"><label>PT เวรบ่าย</label><input class="system-input" type="time" id="cutoffPtAfternoon"></div>
+          <div class="fg system-field"><label>ผู้ช่วย วันเสาร์</label><input class="system-input" type="time" id="cutoffAssistantSaturday"></div>
+          <div class="fg system-field"><label>PT วันเสาร์</label><input class="system-input" type="time" id="cutoffPtSaturday"></div>
+          <div class="fg system-field"><label>แจ้งงานเบิกค้างเกินกำหนด</label><input class="system-input" type="number" id="stockOverdueDays" min="1" max="30" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">จำนวนวันที่อยู่สถานะ “กำลังเบิกของ” ก่อนขึ้นกระดิ่ง</div></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
@@ -1632,7 +1688,7 @@ tr:hover td{background:var(--g1)}
       <div class="card" style="max-width:720px;margin-top:20px;border-left:4px solid var(--bm)">
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
           <div><h3 style="margin-bottom:4px">คำขอสมัครบัญชีหัวหน้างาน</h3><p style="font-size:12px;color:var(--g6);line-height:1.6">ตรวจสอบชื่อและอีเมลก่อนอนุมัติ ผู้สมัครจะเข้าใช้งานได้หลังได้รับอนุมัติเท่านั้น</p></div>
-          <button class="btn btn-out" style="padding:6px 11px;font-size:12px" onclick="loadSupervisorRequests()">รีเฟรช</button>
+          <button class="btn btn-out" style="padding:6px 11px;font-size:12px" onclick="loadSupervisorRequests()">🔄 โหลดข้อมูลใหม่</button>
         </div>
         <div id="supervisorRequestSummary" style="font-size:12px;color:var(--g6);margin-bottom:9px">กำลังโหลดคำขอ...</div>
         <div id="supervisorRequestList"><div style="text-align:center;color:var(--g4);padding:18px">กำลังโหลด...</div></div>
@@ -1662,7 +1718,7 @@ tr:hover td{background:var(--g1)}
       </div>
     </div>
 
-    <div id="adminPanel-backup" style="display:none">
+    <div id="adminPanel-backup" class="admin-panel" style="display:none">
       <div class="card" style="max-width:760px;border-left:4px solid var(--bd)">
         <h3 style="margin-bottom:6px">💾 ดาวน์โหลดข้อมูลสำรอง Firebase</h3>
         <p style="font-size:12.5px;color:var(--g6);line-height:1.7;margin-bottom:14px">เก็บ Checklist ผลประเมิน รายงานส่วนตัว รายการผู้ไม่ปฏิบัติงานตามกำหนด ประวัติการใช้งาน และรายชื่อบุคลากรไว้ในไฟล์ JSON หนึ่งไฟล์</p>
@@ -1871,11 +1927,11 @@ tr:hover td{background:var(--g1)}
         </div>
         <div class="fg" id="reportCustomStartGroup" style="display:none">
           <label style="font-size:12px">วันที่เริ่มต้น</label>
-          <input type="date" id="reportCustomStart" onchange="previewMonthlyReport()">
+          <input type="date" id="reportCustomStart" class="date-filter-input" onchange="previewMonthlyReport()">
         </div>
         <div class="fg" id="reportCustomEndGroup" style="display:none">
           <label style="font-size:12px">วันที่สิ้นสุด</label>
-          <input type="date" id="reportCustomEnd" onchange="previewMonthlyReport()">
+          <input type="date" id="reportCustomEnd" class="date-filter-input" onchange="previewMonthlyReport()">
         </div>
         <div class="fg">
           <label style="font-size:12px">ผู้ช่วย</label>
@@ -2141,6 +2197,7 @@ async function initializeFirebaseAuth(){
 
 // ══ INIT ══
 function hydrateCachedStartup(){
+  const hasCachedStartupData=['pt_staff','pt_ptlist','pt_submissions','pt_system_settings','pt_stock_catalog','pt_stock_requests'].some(key=>localStorage.getItem(key)!==null);
   staffList=readLocalJSON('pt_staff',[]);
   ptList=readLocalJSON('pt_ptlist',[]);
   submissions=readLocalJSON('pt_submissions',[]);
@@ -2165,8 +2222,9 @@ function hydrateCachedStartup(){
   renderMissedEvalOptions();
   renderRetrospectiveHistory();
   loadHistory();
-  document.getElementById('loadingOverlay').classList.add('hidden');
+  setLoadingDetail(hasCachedStartupData?'พบข้อมูลในเครื่อง กำลังตรวจข้อมูลล่าสุด...':'กำลังเตรียมข้อมูลสำหรับการเปิดใช้งานครั้งแรก...');
   setSyncBadge('syncing','⏳ กำลังอัปเดต');
+  return hasCachedStartupData;
 }
 function hasUnsavedAppWork(){
   if(Object.values(checkState||{}).some(state=>state==='done'||state==='na'))return true;
@@ -2272,7 +2330,6 @@ async function init(){
     }
   }
   try{await syncPendingAssistantEvaluations();}catch(error){console.warn('Pending private reports remain local:',error);}
-  document.getElementById('loadingOverlay').classList.add('hidden');
   // init UI
   document.getElementById('dateInput').value = fmtDate(new Date());
   document.getElementById('dateInputMobile').value = fmtDate(new Date());
@@ -2318,6 +2375,8 @@ async function init(){
     const n=this.options[this.selectedIndex]?.text;
     document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อผู้ช่วย —')?n:'เลือกชื่อก่อน';
   });
+  setLoadingDetail(window.FB?'ข้อมูลพร้อม ใช้งานได้แล้ว':'เปิดด้วยข้อมูลในเครื่อง');
+  requestAnimationFrame(()=>setTimeout(()=>document.getElementById('loadingOverlay')?.classList.add('hidden'),120));
 }
 init().catch(error=>{console.error('App startup failed:',error);showStartupError(error);});
 
@@ -2445,11 +2504,18 @@ function refreshWebAlerts(showPopup){
 function openWebAlerts(){closeModal('webAlertModal');switchView('alerts',null);setMobileNav('alerts');refreshWebAlerts(false);}
 
 function runViewTask(viewName,task){
+  const target=document.getElementById('view-'+viewName);
+  let busy=target?.querySelector(':scope > .view-busy');
+  if(target&&!busy){busy=document.createElement('div');busy.className='view-busy';busy.setAttribute('role','status');busy.setAttribute('aria-live','polite');busy.innerHTML='<div class="view-busy-head"><span class="mini-spin"></span><span>กำลังเตรียมข้อมูลหน้านี้...</span></div><div class="view-busy-lines" aria-hidden="true"><span class="view-busy-line"></span><span class="view-busy-line"></span><span class="view-busy-line"></span></div>';target.prepend(busy);}
+  if(target)target.setAttribute('aria-busy','true');
+  const finish=()=>{busy?.remove();target?.removeAttribute('aria-busy');};
   try{
     const result=task();
-    if(result&&typeof result.catch==='function')result.catch(error=>showViewLoadError(viewName,error));
+    if(result&&typeof result.then==='function')return result.catch(error=>showViewLoadError(viewName,error)).finally(finish);
+    finish();
     return result;
   }catch(error){
+    finish();
     showViewLoadError(viewName,error);
     return null;
   }
@@ -2508,7 +2574,7 @@ function setShift(s){
 }
 
 document.getElementById('dateInput').addEventListener('change',updateDateDisplay);
-function updateDateDisplay(){const v=document.getElementById('dateInput').value;document.getElementById('todayChip').textContent=v||'—';document.getElementById('todayLabel').textContent=v?thaiDate(v):'';}
+function updateDateDisplay(){const v=document.getElementById('dateInput').value;document.getElementById('todayChip').textContent=v||'—';document.getElementById('todayLabel').textContent=v?thaiDate(v):'';const display=v?thaiDate(v):'—';const desktopDisplay=document.getElementById('dateInputDisplay');const mobileDisplay=document.getElementById('dateInputMobileDisplay');if(desktopDisplay)desktopDisplay.textContent=display;if(mobileDisplay)mobileDisplay.textContent=display;}
 document.getElementById('staffSelect').addEventListener('change',function(){const n=this.options[this.selectedIndex]?.text;document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อ —')?n:'เลือกชื่อก่อน';document.getElementById('staffSelectMobile').value=this.value;});
 
 // ══ CHECKLIST ══
@@ -3384,6 +3450,7 @@ async function searchHistory(){
 }
 function loadMoreHistory(){historyVisibleCount+=HISTORY_PAGE_SIZE;loadHistory();}
 function updateHistoryFilters(){const sel=document.getElementById('hisFilterStaff');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${escapeHtml(n)}"${cur===n?' selected':''}>${escapeHtml(n)}</option>`).join('');}
+function setMissedEvalDateValue(value){const dateValue=value||localDateKey(new Date());const input=document.getElementById('missedEvalDate');const display=document.getElementById('missedEvalDateDisplay');if(input)input.value=dateValue;if(display)display.textContent=thaiDate(dateValue)||'—';return dateValue;}
 function missedEvalDate(){return document.getElementById('missedEvalDate')?.value||fmtDate(new Date());}
 function checkedMissedValues(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input=>input.value);}
 function updateMissedSelectionCounts(){
@@ -3417,7 +3484,7 @@ function enforceMissedPTLimit(input){
 function resetMissedEvalForm(clearPending){
   editingMissedEvaluationId=null;
   if(clearPending!==false)clearPendingMissedAlertAction();
-  const date=document.getElementById('missedEvalDate');if(date)date.value=localDateKey(new Date());
+  setMissedEvalDateValue(localDateKey(new Date()));
   const shift=document.getElementById('missedEvalShift');if(shift)shift.value='morning';
   const personType=document.getElementById('missedEvalPersonType');if(personType)personType.value='both';
   const label=document.getElementById('missedEvalEditLabel');if(label)label.textContent='';
@@ -3428,7 +3495,7 @@ function loadMissedEvalForEdit(id){
   const record=missedEvaluations.find(item=>item.id===id);if(!record)return;
   clearPendingMissedAlertAction();
   editingMissedEvaluationId=id;
-  document.getElementById('missedEvalDate').value=record.date;
+  setMissedEvalDateValue(record.date);
   document.getElementById('missedEvalShift').value=record.shift||'morning';
   document.getElementById('missedEvalPersonType').value='both';
   renderMissedEvalOptions();
@@ -3490,7 +3557,7 @@ function updateMissedEvalAdminPanel(){
   const lock=document.getElementById('missedEvalAdminLock');const form=document.getElementById('missedEvalAdminForm');
   if(!lock||!form)return;
   lock.style.display=isAdminLoggedIn?'none':'block';form.style.display=isAdminLoggedIn?'block':'none';
-  if(isAdminLoggedIn&&!document.getElementById('missedEvalDate').value)document.getElementById('missedEvalDate').value=localDateKey(new Date());
+  if(isAdminLoggedIn&&!document.getElementById('missedEvalDate').value)setMissedEvalDateValue(localDateKey(new Date()));
   if(isAdminLoggedIn)renderMissedEvalOptions();
 }
 function renderMissedEvalSummary(){
@@ -4521,9 +4588,8 @@ function setSupTab(tab) {
   currentSupTab = tab;
   document.querySelectorAll('.sup-tab').forEach(b => {
     const isActive = b.id === 'supTab-' + tab;
-    b.style.color = isActive ? 'var(--bd)' : 'var(--g6)';
-    b.style.fontWeight = isActive ? '700' : '600';
-    b.style.borderBottom = isActive ? '3px solid var(--bd)' : '3px solid transparent';
+    b.classList.toggle('active',isActive);
+    b.setAttribute('aria-selected',String(isActive));
   });
   document.getElementById('supView-daily').style.display  = tab === 'daily'  ? 'block' : 'none';
   document.getElementById('supView-person').style.display = tab === 'person' ? 'block' : 'none';
@@ -4753,7 +4819,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260730-update-toast-fix-v67';
+const APP_VERSION = 'v20260802-guided-loading-v74';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
