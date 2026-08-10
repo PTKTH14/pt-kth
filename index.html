@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260802-dismissible-help-v82">
+<meta name="version" content="v20260810-midday-checklist-v84">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -221,7 +221,7 @@
               submissionId: String(record.id),
               staffName: String(record.staffName || ''),
               date: String(record.date || ''),
-              shift: record.shift === 'afternoon' ? 'afternoon' : 'morning',
+              shift: normalizeShift(record.shift),
               ptReviewer: String(record.ptReviewer || ''),
               note: String(record.ptSupervisorNote || ''),
               createdAt: String(record.ptReviewTime || new Date().toISOString()),
@@ -475,6 +475,7 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .shift-row{display:flex;gap:6px;margin-top:6px}
 .shift-btn{flex:1;padding:6px 4px;border:1.5px solid var(--g2);border-radius:6px;background:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;color:var(--g6)}
 .shift-btn.active-morning{background:#FFF3E0;border-color:#FF9800;color:#E65100}
+.shift-btn.active-midday{background:#FFF8D9;border-color:#E5A900;color:#8A6500}
 .shift-btn.active-afternoon{background:#E3F2FD;border-color:#2196F3;color:#1565C0}
 .nav{flex:1;padding:6px 0}
 .ni{display:flex;align-items:center;gap:9px;padding:10px 16px;font-size:13.5px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;color:var(--g6)}
@@ -599,6 +600,7 @@ img,svg,canvas{max-width:100%}
 .dlabel{font-size:13.5px;color:var(--g6)}
 .shift-chip{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
 .sc-morning{background:#FFF3E0;color:#E65100}
+.sc-midday{background:#FFF8D9;color:#8A6500}
 .sc-afternoon{background:#E3F2FD;color:#1565C0}
 .prog-pill{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--g6)}
 .pbo{width:100px;height:7px;background:var(--g2);border-radius:4px;overflow:hidden}
@@ -1023,6 +1025,7 @@ tr:hover td{background:var(--g1)}
       <label style="font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ประเภทเวร</label>
       <div class="shift-row">
         <button class="shift-btn active-morning" id="shiftMorning" onclick="setShift('morning')">🌅 เวรเช้า</button>
+        <button class="shift-btn" id="shiftMidday" onclick="setShift('midday')">☀️ ก่อนบ่าย</button>
         <button class="shift-btn" id="shiftAfternoon" onclick="setShift('afternoon')">🌙 เวรบ่าย</button>
       </div>
     </div>
@@ -1062,11 +1065,12 @@ tr:hover td{background:var(--g1)}
   <div class="ph"><h1>📋 บันทึก Checklist ประจำวัน</h1><p>คลิกรายการที่ดำเนินการแล้ว • กด N/A ถ้ารายการนั้นไม่เกี่ยวข้องวันนี้</p></div>
   <div class="mobile-controls" style="display:none;gap:8px;margin-bottom:14px;flex-direction:column">
     <select class="sb-sel" id="staffSelectMobile" style="width:100%"><option value="">— เลือกชื่อผู้ช่วย —</option></select>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-direction:column">
       <input type="hidden" id="dateInputMobile">
       <div id="dateInputMobileDisplay" class="date-display-control" role="status" aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div>
       <div class="shift-row" style="flex:1;margin:0">
         <button class="shift-btn active-morning" id="shiftMorningM" onclick="setShift('morning')">🌅 เช้า</button>
+        <button class="shift-btn" id="shiftMiddayM" onclick="setShift('midday')">☀️ ก่อนบ่าย</button>
         <button class="shift-btn" id="shiftAfternoonM" onclick="setShift('afternoon')">🌙 บ่าย</button>
       </div>
     </div>
@@ -1232,7 +1236,7 @@ tr:hover td{background:var(--g1)}
     <div class="kc" style="border-left-color:#00BCD4"><div class="kn" style="color:#00BCD4" id="kpiPassRate">0%</div><div class="kl">🏆 อัตราผ่าน/ปรับปรุง <button type="button" class="help-tip tip-left" aria-label="คำอธิบาย อัตราผ่านหรือต้องปรับปรุง" data-help="จำนวนผล ผ่าน และ ต้องปรับปรุง หารด้วยจำนวน Checklist ที่ PT ประเมินแล้ว โดยไม่นับรายการที่ยังรอ PT ประเมิน ตัวเลขนี้เป็นผลจาก PT ไม่ใช่ความสมบูรณ์ของการกรอก">i</button></div></div>
   </div>
 
-  <!-- ROW: เวรเช้า vs บ่าย -->
+  <!-- ROW: เวรเช้า / ก่อนเริ่มเวรบ่าย / เวรบ่าย -->
   <div class="shift-summary-grid">
     <div class="card" style="margin-bottom:0;border-left:4px solid #FF9800">
       <h3 style="font-size:13px;margin-bottom:10px">🌅 เวรเช้า</h3>
@@ -1240,6 +1244,14 @@ tr:hover td{background:var(--g1)}
         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#E65100" id="shiftMorningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMorningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMorningPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-left:4px solid #E5A900">
+      <h3 style="font-size:13px;margin-bottom:10px">☀️ ก่อนเริ่มเวรบ่าย</h3>
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#8A6500" id="shiftMiddayCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMiddayAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMiddayPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
       </div>
     </div>
     <div class="card" style="margin-bottom:0;border-left:4px solid #2196F3">
@@ -1352,13 +1364,13 @@ tr:hover td{background:var(--g1)}
       <div class="missed-form-grid">
         <div class="fg">
           <label>📅 วันที่เกิดรายการ</label>
-          <input type="hidden" id="missedEvalDate">
-          <div id="missedEvalDateDisplay" class="date-display-control" role="status" aria-label="วันที่เกิดรายการ">—</div>
+          <input type="date" id="missedEvalDate" aria-label="วันที่เกิดรายการค่าเสียหาย">
         </div>
         <div class="fg">
           <label>🌅 ประเภทเวร</label>
           <select id="missedEvalShift" onchange="renderMissedEvalOptions()">
             <option value="morning">🌅 เวรเช้า — PT ได้ 1 คน</option>
+            <option value="midday">☀️ ก่อนเริ่มเวรบ่าย — PT ได้ 1 คน</option>
             <option value="afternoon">🌙 เวรบ่าย — PT เลือกได้สูงสุด 2 คน</option>
           </select>
         </div>
@@ -1381,7 +1393,7 @@ tr:hover td{background:var(--g1)}
         </section>
         <section class="missed-person-panel" id="missedPTGroup">
           <div class="missed-panel-head">
-            <div class="missed-panel-title">🩺 PT ที่ไม่ได้ประเมิน<span class="missed-panel-note">เวรเช้า 1 คน • เวรบ่ายสูงสุด 2 คน</span></div>
+            <div class="missed-panel-title">🩺 PT ที่ไม่ได้ประเมิน<span class="missed-panel-note">เวรเช้า/ก่อนเวรบ่าย 1 คน • เวรบ่ายสูงสุด 2 คน</span></div>
             <span class="missed-count" id="missedPTCount">เลือก 0 คน</span>
           </div>
           <div id="missedPTOptions" class="missed-option-list"></div>
@@ -1693,6 +1705,8 @@ tr:hover td{background:var(--g1)}
         <div class="responsive-form-grid cutoff-grid">
           <div class="fg system-field"><label>ผู้ช่วย เวรเช้า</label><input class="system-input" type="time" id="cutoffAssistantMorning"></div>
           <div class="fg system-field"><label>PT เวรเช้า</label><input class="system-input" type="time" id="cutoffPtMorning"></div>
+          <div class="fg system-field"><label>ผู้ช่วย ก่อนเริ่มเวรบ่าย</label><input class="system-input" type="time" id="cutoffAssistantMidday"></div>
+          <div class="fg system-field"><label>PT ก่อนเริ่มเวรบ่าย</label><input class="system-input" type="time" id="cutoffPtMidday"></div>
           <div class="fg system-field"><label>ผู้ช่วย เวรบ่าย</label><input class="system-input" type="time" id="cutoffAssistantAfternoon"></div>
           <div class="fg system-field"><label>PT เวรบ่าย</label><input class="system-input" type="time" id="cutoffPtAfternoon"></div>
           <div class="fg system-field"><label>ผู้ช่วย วันเสาร์</label><input class="system-input" type="time" id="cutoffAssistantSaturday"></div>
@@ -1757,6 +1771,7 @@ tr:hover td{background:var(--g1)}
           <h3 style="margin-bottom:0">📋 จัดการรายการ Checklist</h3>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('morning')" id="clTabMorning">🌅 จ.-ศ. เช้า</button>
+            <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('midday')" id="clTabMidday">☀️ ก่อนเริ่มเวรบ่าย</button>
             <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('evening')" id="clTabEvening">🌙 จ.-ศ. บ่าย</button>
             <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('saturdayMorning')" id="clTabSaturdayMorning">🌅 เสาร์เช้า</button>
             <button class="btn btn-out" style="padding:5px 12px;font-size:12.5px" onclick="setClShift('saturdayEvening')" id="clTabSaturdayEvening">🌙 เสาร์บ่าย</button>
@@ -2114,6 +2129,17 @@ const CL = {
       'เก็บ, และจัดเรียงรองเท้าผู้รับบริการให้เป็นระเบียบ'
     ]
   },
+  midday: {
+    label:'เตรียมงานก่อนเวรบ่าย (≤13.30 น.)', emoji:'☀️', cls:'morning', shifts:['midday'],
+    items:[
+      'ช่วงพักเที่ยง — เก็บเตียงให้พร้อมใช้งานในช่วงบ่าย',
+      'ช่วงพักเที่ยง — ปิดพักเครื่องมือกายภาพ',
+      'ช่วงพักเที่ยง — ปิดเครื่องปรับอากาศและระบบส่องสว่าง',
+      'ก่อนเริ่มงานช่วงบ่าย / OT — เปิดระบบส่องสว่างและเครื่องปรับอากาศ',
+      'ก่อนเริ่มงานช่วงบ่าย / OT — เปิดเครื่องมือกายภาพ',
+      'ก่อนเริ่มงานช่วงบ่าย / OT — พับผ้ารองหมอน / รองไหล่ให้พร้อมใช้'
+    ]
+  },
   evening: {
     label:'ก่อนเลิกงาน (ส.≤15.30 / จ.-ศ.≤19.30 น.)', emoji:'🌙', cls:'evening', shifts:['afternoon'],
     items:[
@@ -2137,6 +2163,7 @@ const CL = {
 };
 const DEFAULT_CL_ITEMS = {
   morning: [...CL.morning.items],
+  midday: [...CL.midday.items],
   evening: [...CL.evening.items]
 };
 
@@ -2447,7 +2474,7 @@ async function init(){
         : DEFAULT_STOCK_CATALOG.map(item=>({...item}));
       localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));
       if(config && config.checklistItems) {
-        ['morning','evening','saturdayMorning','saturdayEvening'].forEach(shift=>{
+        ['morning','midday','evening','saturdayMorning','saturdayEvening'].forEach(shift=>{
           const items=config.checklistItems[shift];
           localStorage.setItem('custom_cl_'+shift,JSON.stringify(Array.isArray(items)?items:getDefaultClItems(shift)));
         });
@@ -2557,7 +2584,10 @@ function syncLockedOperationDates(){
 }
 function thaiDate(s){if(!s)return'';const value=String(s).slice(0,10);const parts=value.split('-');if(parts.length!==3)return String(s);const year=Number(parts[0]);if(!year||!parts[1]||!parts[2])return String(s);return`${parts[2]}/${parts[1]}/${year+543}`;}
 function newestRecordFirst(a,b){const aTime=String(a?.ptReviewTime||a?.reviewedAt||a?.submitTime||a?.createdAt||a?.updatedAt||a?.date||'');const bTime=String(b?.ptReviewTime||b?.reviewedAt||b?.submitTime||b?.createdAt||b?.updatedAt||b?.date||'');return bTime.localeCompare(aTime)||(Number(b?.id||0)-Number(a?.id||0));}
-function shiftLabel(s){return s==='morning'?'🌅 เวรเช้า':'🌙 เวรบ่าย';}
+function normalizeShift(shift){return shift==='midday'?'midday':shift==='afternoon'?'afternoon':'morning';}
+function shiftLabel(s){return s==='midday'?'☀️ ก่อนเริ่มเวรบ่าย':s==='afternoon'?'🌙 เวรบ่าย':'🌅 เวรเช้า';}
+function shiftShortLabel(s){return s==='midday'?'ก่อนบ่าย':s==='afternoon'?'บ่าย':'เช้า';}
+function shiftIcon(s){return s==='midday'?'☀️':s==='afternoon'?'🌙':'🌅';}
 function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<start)return false;if(end&&ds>end)return false;return true;}
 function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
 function startClock(){let activeDay='';const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const currentDay=localDateKey(now);if(currentDay!==activeDay){activeDay=currentDay;syncLockedOperationDates();}const minuteKey=currentDay+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
@@ -2582,12 +2612,12 @@ function formatItemText(t){return t.replace(/\(([^)]+)\)/g,'(<span style="color:
 function getWebAlertStatus(now){
   const current=now||new Date();const today=localDateKey(current);const minutes=current.getHours()*60+current.getMinutes();
   const buildShiftStatus=(shift,assistantDeadline,ptDeadline)=>{const shiftSubmissions=submissions.filter(item=>item.date===today&&(item.shift||'morning')===shift);return{submissions:shiftSubmissions,assistantSubmissionMissing:minutes>=assistantDeadline&&shiftSubmissions.length===0,pendingPtReviews:minutes>=ptDeadline?shiftSubmissions.filter(item=>item.status==='pending'||!item.ptVerdict):[],afterAssistantDeadline:minutes>=assistantDeadline,afterPtDeadline:minutes>=ptDeadline};};
-  return{today,minutes,current,morning:buildShiftStatus('morning',getEffectiveDeadline('assistant','morning',today),getEffectiveDeadline('pt','morning',today)),afternoon:buildShiftStatus('afternoon',getEffectiveDeadline('assistant','afternoon',today),getEffectiveDeadline('pt','afternoon',today))};
+  return{today,minutes,current,morning:buildShiftStatus('morning',getEffectiveDeadline('assistant','morning',today),getEffectiveDeadline('pt','morning',today)),midday:buildShiftStatus('midday',getEffectiveDeadline('assistant','midday',today),getEffectiveDeadline('pt','midday',today)),afternoon:buildShiftStatus('afternoon',getEffectiveDeadline('assistant','afternoon',today),getEffectiveDeadline('pt','afternoon',today))};
 }
 function getWebAlertShiftConfig(status,shift){
-  const isMorning=shift==='morning';const data=status[shift];const saturday=isSaturdayKey(status.today);
+  const normalizedShift=normalizeShift(shift);const isMorning=normalizedShift==='morning';const data=status[normalizedShift];const saturday=isSaturdayKey(status.today);
   const assistantDeadline=getEffectiveDeadline('assistant',shift,status.today);const ptDeadline=getEffectiveDeadline('pt',shift,status.today);
-  return{shift,data,label:saturday?`วันเสาร์ • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:isMorning?'เวรเช้า':'เวรบ่าย',icon:saturday?'🗓️':isMorning?'🌅':'🌙',assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${saturday?'sat-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${saturday?'sat-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
+  return{shift:normalizedShift,data,label:saturday&&normalizedShift!=='midday'?`วันเสาร์ • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:saturday&&normalizedShift!=='midday'?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${saturday&&normalizedShift!=='midday'?'sat-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${saturday&&normalizedShift!=='midday'?'sat-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
 }
 function isWebAlertResolved(status,key,shift){
   return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
@@ -2607,7 +2637,7 @@ function getOverdueStockRecords(now){
 }
 function getActiveWebAlerts(status){
   const alerts=[];
-  ['morning','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
+  ['morning','midday','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
   getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้`,names:[]}));
   const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
   const deferredAlcohol=stockSource.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&stockDeferredReceiptDue(record));if(deferredAlcohol.length)alerts.push({key:'stock-alcohol-receipt',shift:'stock',personType:'stock',count:deferredAlcohol.length,type:'warning',title:`🧴 มีรายการ Alcohol รอยืนยันรับของ ${deferredAlcohol.length} รอบ`,detail:'ถึงวันรับของแล้ว กรุณาเปิดรายการเดิมและบันทึกผลที่ได้รับจริง โดยระบบจะไม่เปลี่ยนคะแนนผู้ช่วย',names:deferredAlcohol.slice(0,5).map(record=>record.responsible)});
@@ -2646,7 +2676,7 @@ function renderWebAlerts(status,alerts){
   const list=document.getElementById('webAlertList');const now=document.getElementById('webAlertNow');if(!list||!now)return;
   now.textContent=`ตรวจล่าสุด ${getThaiTimestamp(status.current)} • ข้อมูลวันที่ ${status.today}`;
   const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');const overdueStock=getOverdueStockRecords(status.current);const dueStock=getDueStockSchedules(status);const openStockButton=`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`;const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+dueStock.map(schedule=>webAlertCard('danger',`ยังไม่พบบันทึกรอบ ${escapeHtml(schedule.name)}`,`เลยเวลาที่ควรส่ง ${escapeHtml(schedule.dueTime)} น.`,[],openStockButton)).join('')+(overdueStock.length?webAlertCard('danger',`งานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,'กรุณาติดตามสถานะการรับของ',overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`),openStockButton):'')+(pendingStock.length?webAlertCard('warning',`พร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว',pendingStock.slice(0,5).map(record=>record.responsible),openStockButton):webAlertCard('success','ไม่มีงานเบิกของพร้อมประเมิน','รายการที่กำลังเบิกจะแสดงในหน้า PT แต่ยังประเมินไม่ได้',[]));
-  list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
+  list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'midday')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
 }
 function maybeShowWebAlertPopup(status,alerts){
   const unseen=alerts.filter(alert=>!localStorage.getItem(`pt_web_alert_seen_${status.today}_${alert.key}`));if(!unseen.length)return;
@@ -2657,7 +2687,7 @@ function maybeShowWebAlertPopup(status,alerts){
 }
 function showWebAlertDemo(){
   const body=document.getElementById('webAlertModalBody');const modal=document.getElementById('webAlertModal');if(!body||!modal)return;
-  body.innerHTML=webAlertCard('danger','🌅 เวรเช้า — ยังไม่พบบันทึกของผู้ช่วย','ตัวอย่างเมื่อเลยเวลา 08:30 น.',[],webAlertActionButton('assistant','assistant-0830','morning',true))+webAlertCard('warning','🌅 เวรเช้า — มี Checklist รอ PT','ตัวอย่างเมื่อเลยเวลา 09:30 น.',[],webAlertActionButton('pt','pt-0930','morning',true))+webAlertCard('danger','🌙 เวรบ่าย — ยังไม่พบบันทึกของผู้ช่วย','ตัวอย่างเมื่อเลยเวลา 20:00 น.',[],webAlertActionButton('assistant','assistant-2000','afternoon',true))+webAlertCard('warning','🌙 เวรบ่าย — มี Checklist รอ PT','ตัวอย่างเมื่อเลยเวลา 20:30 น.',[],webAlertActionButton('pt','pt-2030','afternoon',true))+'<div style="font-size:12px;color:var(--g6);margin-top:8px">นี่เป็นเพียงตัวอย่างหน้าตาป๊อปอัป ไม่มีการบันทึกข้อมูลหรือคิดค่าเสียหาย</div>';
+  body.innerHTML=webAlertCard('danger','🌅 เวรเช้า — ยังไม่พบบันทึกของผู้ช่วย','ตัวอย่างเมื่อเลยเวลา 08:30 น.',[],webAlertActionButton('assistant','assistant-0830','morning',true))+webAlertCard('warning','🌅 เวรเช้า — มี Checklist รอ PT','ตัวอย่างเมื่อเลยเวลา 09:30 น.',[],webAlertActionButton('pt','pt-0930','morning',true))+webAlertCard('danger','☀️ ก่อนเริ่มเวรบ่าย — ยังไม่พบบันทึกของผู้ช่วย','ตัวอย่างเมื่อเลยเวลา 13:30 น.',[],webAlertActionButton('assistant','assistant-1330','midday',true))+webAlertCard('warning','☀️ ก่อนเริ่มเวรบ่าย — มี Checklist รอ PT','ตัวอย่างเมื่อเลยเวลา 14:00 น.',[],webAlertActionButton('pt','pt-1400','midday',true))+webAlertCard('danger','🌙 เวรบ่าย — ยังไม่พบบันทึกของผู้ช่วย','ตัวอย่างเมื่อเลยเวลา 20:00 น.',[],webAlertActionButton('assistant','assistant-2000','afternoon',true))+webAlertCard('warning','🌙 เวรบ่าย — มี Checklist รอ PT','ตัวอย่างเมื่อเลยเวลา 20:30 น.',[],webAlertActionButton('pt','pt-2030','afternoon',true))+'<div style="font-size:12px;color:var(--g6);margin-top:8px">นี่เป็นเพียงตัวอย่างหน้าตาป๊อปอัป ไม่มีการบันทึกข้อมูลหรือคิดค่าเสียหาย</div>';
   modal.classList.add('open');
 }
 function refreshWebAlerts(showPopup){
@@ -2727,13 +2757,15 @@ function switchView(v,el){
 
 // ══ SHIFT ══
 function setShift(s){
-  currentShift=s;
+  currentShift=normalizeShift(s);
   document.getElementById('shiftMorning').className='shift-btn'+(s==='morning'?' active-morning':'');
+  document.getElementById('shiftMidday').className='shift-btn'+(s==='midday'?' active-midday':'');
   document.getElementById('shiftAfternoon').className='shift-btn'+(s==='afternoon'?' active-afternoon':'');
   document.getElementById('shiftMorningM').className='shift-btn'+(s==='morning'?' active-morning':'');
+  document.getElementById('shiftMiddayM').className='shift-btn'+(s==='midday'?' active-midday':'');
   document.getElementById('shiftAfternoonM').className='shift-btn'+(s==='afternoon'?' active-afternoon':'');
   document.getElementById('shiftChip').textContent=shiftLabel(s);
-  document.getElementById('shiftChip').className='shift-chip '+(s==='morning'?'sc-morning':'sc-afternoon');
+  document.getElementById('shiftChip').className='shift-chip '+(s==='morning'?'sc-morning':s==='midday'?'sc-midday':'sc-afternoon');
   checkState={};buildChecklist();
 }
 
@@ -2816,11 +2848,11 @@ function isCompactLayout(){return window.matchMedia('(max-width: 900px), (orient
 function getActiveStaff(){const sel=isCompactLayout()?document.getElementById('staffSelectMobile'):document.getElementById('staffSelect');return{value:sel?.value,text:sel?.options[sel.selectedIndex]?.text};}
 function getActiveDate(){return syncLockedOperationDates();}
 const DEFAULT_SHIFT_DEADLINES = {
-  assistant: { morning: 8*60+30, afternoon: 20*60, saturday: 16*60 },
-  pt: { morning: 9*60+30, afternoon: 20*60+30, saturday: 16*60+30 }
+  assistant: { morning: 8*60+30, midday: 13*60+30, afternoon: 20*60, saturday: 16*60 },
+  pt: { morning: 9*60+30, midday: 14*60, afternoon: 20*60+30, saturday: 16*60+30 }
 };
 let SHIFT_DEADLINES = cloneShiftDeadlines(DEFAULT_SHIFT_DEADLINES);
-function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,afternoon:Number(source?.assistant?.afternoon)||1200,saturday:Number(source?.assistant?.saturday)||960},pt:{morning:Number(source?.pt?.morning)||570,afternoon:Number(source?.pt?.afternoon)||1230,saturday:Number(source?.pt?.saturday)||990}};}
+function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,midday:Number(source?.assistant?.midday)||810,afternoon:Number(source?.assistant?.afternoon)||1200,saturday:Number(source?.assistant?.saturday)||960},pt:{morning:Number(source?.pt?.morning)||570,midday:Number(source?.pt?.midday)||840,afternoon:Number(source?.pt?.afternoon)||1230,saturday:Number(source?.pt?.saturday)||990}};}
 function normalizeStockSchedule(schedule,index){
   const categories=Array.isArray(schedule?.categories)?[...new Set(schedule.categories.map(String).filter(Boolean))]:[];
   const weekday=Number(schedule?.weekday);
@@ -2833,17 +2865,17 @@ function applySystemSettings(settings){const normalized=normalizeSystemSettings(
 function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0,10)+'T00:00:00').getDay()===6;}
-function getEffectiveDeadline(role,shift,date){if(isSaturdayKey(date))return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[shift==='afternoon'?'afternoon':'morning'];}
+function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayKey(date)&&normalizedShift!=='midday')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
-  const normalizedShift=shift==='afternoon'?'afternoon':'morning';
+  const normalizedShift=normalizeShift(shift);
   const deadline=getEffectiveDeadline(role,normalizedShift,date);
   const deadlineText=minutesToTimeText(deadline||0);
   const today=fmtDate(new Date());
   if(date<today)return{locked:true,deadlineText,message:`⛔ เลยวันที่บันทึกแล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}ย้อนหลังได้`};
   if(date>today)return{locked:false,deadlineText,message:''};
   const now=new Date();const current=now.getHours()*60+now.getMinutes();
-  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isSaturdayKey(date)?'วันเสาร์':normalizedShift==='morning'?'เวรเช้า':'เวรบ่าย'}ได้`};
+  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isSaturdayKey(date)&&normalizedShift!=='midday'?'วันเสาร์':shiftLabel(normalizedShift).replace(/^\S+\s/,'')}ได้`};
   return{locked:false,deadlineText,message:''};
 }
 function getMissedEvaluationRecord(date,shift){return missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===(shift||'morning'))||null;}
@@ -3377,7 +3409,7 @@ function openReview(idx){
   document.getElementById('rvDateChip').textContent=rec.date;
   document.getElementById('rvStaffLabel').textContent=rec.staffName;
   document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
-  document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':'sc-afternoon');
+  document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':rec.shift==='midday'?'sc-midday':'sc-afternoon');
   const stats=submissionCompletionStats(rec);
   document.getElementById('rvProg').textContent=`ความครบถ้วนตอนส่ง: ${calcSubmissionCompletion(rec)}% (${stats.done}/${stats.total})`;
   const container=document.getElementById('reviewGroups');container.innerHTML='';
@@ -3555,7 +3587,7 @@ async function submitReview(){
   rec.ptEvals={...reviewEvals};
   delete rec.ptPhotos;
   rec.ptReviewTime=now.toISOString();rec.ptReviewTimeDisplay=getThaiTimestamp(now);
-  const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:rec.shift==='afternoon'?'afternoon':'morning',ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
+  const privateNote=supervisorNote?{id:now.getTime()*1000+Math.floor(Math.random()*1000),submissionId:String(rec.id),staffName:String(rec.staffName||''),date:String(rec.date||''),shift:normalizeShift(rec.shift),ptReviewer:reviewer,note:supervisorNote,createdAt:now.toISOString(),timeDisplay:getThaiTimestamp(now)}:null;
   setSyncBadge('syncing','⏳ Saving...');
   try{
     isSavingChecklistReview=true;const saveButton=document.getElementById('checklistReviewSaveBtn');if(saveButton){saveButton.disabled=true;saveButton.textContent='⏳ กำลังบันทึก...';}
@@ -3594,7 +3626,7 @@ function readPendingMissedAlertAction(){
 }
 function clearPendingMissedAlertAction(){activeMissedAlertKey='';sessionStorage.removeItem(pendingMissedAlertStorageKey);}
 function startMissedEvaluationFromAlert(personType,alertKey,shift){
-  const action={personType:personType==='pt'?'pt':'assistant',alertKey,date:localDateKey(new Date()),shift:shift==='afternoon'?'afternoon':'morning'};
+  const action={personType:personType==='pt'?'pt':'assistant',alertKey,date:localDateKey(new Date()),shift:normalizeShift(shift)};
   sessionStorage.setItem(pendingMissedAlertStorageKey,JSON.stringify(action));
   closeModal('webAlertModal');
   if(!isAdminLoggedIn){
@@ -3610,7 +3642,7 @@ function resumePendingMissedAlertAction(){
   activeMissedAlertKey=action.alertKey||'';
   switchView('history',document.getElementById('nav-history'));setMobileNav('history');
   const date=document.getElementById('missedEvalDate');const shift=document.getElementById('missedEvalShift');const personType=document.getElementById('missedEvalPersonType');
-  const actionShift=action.shift==='afternoon'?'afternoon':'morning';
+  const actionShift=normalizeShift(action.shift);
   if(date)date.value=action.date||localDateKey(new Date());if(shift)shift.value=actionShift;if(personType)personType.value=action.personType==='pt'?'pt':'assistant';
   const old=missedEvaluations.find(item=>item.date===(action.date||localDateKey(new Date()))&&(item.shift||'morning')===actionShift);
   editingMissedEvaluationId=old?.id||null;
@@ -3653,7 +3685,7 @@ async function searchHistory(){
 }
 function loadMoreHistory(){historyVisibleCount+=HISTORY_PAGE_SIZE;loadHistory();}
 function updateHistoryFilters(){const sel=document.getElementById('hisFilterStaff');if(!sel)return;const cur=sel.value;const names=[...new Set(submissions.map(s=>s.staffName))];sel.innerHTML='<option value="">ผู้ช่วยทั้งหมด</option>'+names.map(n=>`<option value="${escapeHtml(n)}"${cur===n?' selected':''}>${escapeHtml(n)}</option>`).join('');}
-function setMissedEvalDateValue(value){const dateValue=value||localDateKey(new Date());const input=document.getElementById('missedEvalDate');const display=document.getElementById('missedEvalDateDisplay');if(input)input.value=dateValue;if(display)display.textContent=thaiDate(dateValue)||'—';return dateValue;}
+function setMissedEvalDateValue(value){const dateValue=value||localDateKey(new Date());setThaiDateValue('missedEvalDate',dateValue);return dateValue;}
 function missedEvalDate(){return document.getElementById('missedEvalDate')?.value||fmtDate(new Date());}
 function checkedMissedValues(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input=>input.value);}
 function updateMissedSelectionCounts(){
@@ -4045,7 +4077,7 @@ function smoothTrendPath(points){
 function showTrendPoint(index){
   const point=dashboardTrendPoints[index];const detail=document.getElementById('trendDetail');if(!point||!detail)return;
   document.querySelectorAll('.trend-point').forEach((element,pointIndex)=>element.classList.toggle('active',pointIndex===index));
-  const shift=point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย';
+  const shift=shiftLabel(point.record.shift).replace(/^\S+\s/,'');
   const verdict=point.record.ptVerdict||point.record.status||'pending';
   const verdictInfo=verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
   const comment=point.record.ptComment?`<div style="font-size:11px;color:var(--g6);margin-top:4px;max-width:360px">“${escapeHtml(point.record.ptComment)}”</div>`:'';
@@ -4082,21 +4114,29 @@ function loadDashboard() {
   set('kpiAvg',      avgComp + '%');
   set('kpiPassRate', passRate + '%');
 
-  // ══ เวรเช้า vs บ่าย ══
+  // ══ เวรเช้า / ก่อนเริ่มเวรบ่าย / เวรบ่าย ══
   const morning = data.filter(s => s.shift === 'morning');
-  const evening = data.filter(s => s.shift !== 'morning');
+  const midday = data.filter(s => s.shift === 'midday');
+  const evening = data.filter(s => s.shift === 'afternoon');
   const mReviewed = morning.filter(s => s.status !== 'pending');
+  const dReviewed = midday.filter(s => s.status !== 'pending');
   const ePassed   = evening.filter(s => s.status === 'pass' || s.status === 'partial');
+  const dPassed   = midday.filter(s => s.status === 'pass' || s.status === 'partial');
   const mPassed   = morning.filter(s => s.status === 'pass' || s.status === 'partial');
   const eReviewed = evening.filter(s => s.status !== 'pending');
   const mAvg = averagePtScore(morning);
+  const dAvg = averagePtScore(midday);
   const eAvg = averagePtScore(evening);
   const mPass = mReviewed.length > 0 ? Math.round(mPassed.length/mReviewed.length*100) : 0;
+  const dPass = dReviewed.length > 0 ? Math.round(dPassed.length/dReviewed.length*100) : 0;
   const ePass = eReviewed.length > 0 ? Math.round(ePassed.length/eReviewed.length*100) : 0;
 
   set('shiftMorningCount', morning.length);
   set('shiftMorningPass',  mPass + '%');
   set('shiftMorningAvg',   mAvg + '%');
+  set('shiftMiddayCount', midday.length);
+  set('shiftMiddayPass',  dPass + '%');
+  set('shiftMiddayAvg',   dAvg + '%');
   set('shiftEveningCount', evening.length);
   set('shiftEveningPass',  ePass + '%');
   set('shiftEveningAvg',   eAvg + '%');
@@ -4111,7 +4151,7 @@ function loadDashboard() {
     dashboardTrendPoints=recent.map((record,index)=>{const pct=calcCompletion(record);const x=recent.length===1?left+plotWidth/2:left+(plotWidth/(recent.length-1))*index;const y=top+((100-pct)/100)*plotHeight;return{record,pct,x,y,color:pct>=80?'#28A745':pct>=60?'#E5A900':'#E63946'};});
     const linePath=smoothTrendPath(dashboardTrendPoints);const baseY=top+plotHeight;const areaPath=`${linePath} L ${dashboardTrendPoints[dashboardTrendPoints.length-1].x} ${baseY} L ${dashboardTrendPoints[0].x} ${baseY} Z`;
     const grids=[100,50,0].map(value=>{const y=top+((100-value)/100)*plotHeight;return`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="#DDE8F0" stroke-dasharray="4 5"/><text x="${left-9}" y="${y+4}" text-anchor="end" font-size="10" fill="#7A8997">${value}%</text>`;}).join('');
-    const points=dashboardTrendPoints.map((point,index)=>{const label=`${thaiDate(point.record.date)} ${point.record.staffName||'ไม่ระบุชื่อ'} ${point.record.shift==='morning'?'เวรเช้า':'เวรบ่าย'} ${point.pct}%`;const dateLabel=thaiDate(point.record.date).split('/').slice(0,2).join('/');return`<g class="trend-point" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="showTrendPoint(${index})" onmouseenter="showTrendPoint(${index})" onkeydown="if(event.key==='Enter'||event.key===' ')showTrendPoint(${index})"><circle class="point-halo" cx="${point.x}" cy="${point.y}" r="8" fill="${point.color}"/><circle class="point-core" cx="${point.x}" cy="${point.y}" r="5" fill="#fff" stroke="${point.color}" stroke-width="2.5"/><text x="${point.x}" y="${Math.max(point.y-11,12)}" text-anchor="middle" font-size="10" font-weight="700" fill="${point.color}">${point.pct}%</text><text x="${point.x}" y="${height-23}" text-anchor="middle" font-size="10" fill="#647585">${escapeHtml(dateLabel)}</text><text x="${point.x}" y="${height-9}" text-anchor="middle" font-size="9" fill="#8A98A5">${point.record.shift==='morning'?'เช้า':'บ่าย'}</text></g>`;}).join('');
+    const points=dashboardTrendPoints.map((point,index)=>{const label=`${thaiDate(point.record.date)} ${point.record.staffName||'ไม่ระบุชื่อ'} ${shiftLabel(point.record.shift)} ${point.pct}%`;const dateLabel=thaiDate(point.record.date).split('/').slice(0,2).join('/');return`<g class="trend-point" tabindex="0" role="button" aria-label="${escapeHtml(label)}" onclick="showTrendPoint(${index})" onmouseenter="showTrendPoint(${index})" onkeydown="if(event.key==='Enter'||event.key===' ')showTrendPoint(${index})"><circle class="point-halo" cx="${point.x}" cy="${point.y}" r="8" fill="${point.color}"/><circle class="point-core" cx="${point.x}" cy="${point.y}" r="5" fill="#fff" stroke="${point.color}" stroke-width="2.5"/><text x="${point.x}" y="${Math.max(point.y-11,12)}" text-anchor="middle" font-size="10" font-weight="700" fill="${point.color}">${point.pct}%</text><text x="${point.x}" y="${height-23}" text-anchor="middle" font-size="10" fill="#647585">${escapeHtml(dateLabel)}</text><text x="${point.x}" y="${height-9}" text-anchor="middle" font-size="9" fill="#8A98A5">${shiftShortLabel(point.record.shift)}</text></g>`;}).join('');
     barWrap.style.width=width+'px';barWrap.innerHTML=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="กราฟแนวโน้มคะแนนหลัง PT ตรวจ"><defs><linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4AA3DF" stop-opacity=".28"/><stop offset="100%" stop-color="#4AA3DF" stop-opacity=".02"/></linearGradient><filter id="trendShadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0F4C81" flood-opacity=".16"/></filter></defs>${grids}<path d="${areaPath}" fill="url(#trendArea)"/><path d="${linePath}" fill="none" stroke="#1A6BAA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#trendShadow)"/>${points}</svg>`;
     const latest=dashboardTrendPoints[dashboardTrendPoints.length-1].pct;const average=Math.round(dashboardTrendPoints.reduce((sum,point)=>sum+point.pct,0)/dashboardTrendPoints.length);const previous=dashboardTrendPoints.length>1?dashboardTrendPoints[dashboardTrendPoints.length-2].pct:null;const delta=previous===null?null:latest-previous;const deltaText=delta===null?'—':`${delta>0?'↑ ':delta<0?'↓ ':''}${Math.abs(delta)}%`;const deltaColor=delta===null?'var(--g6)':delta>0?'var(--g)':delta<0?'var(--r)':'var(--bd)';
     if(trendSummary)trendSummary.innerHTML=`<div class="trend-stat"><div class="trend-stat-label">บันทึกล่าสุด</div><div class="trend-stat-value">${latest}%</div></div><div class="trend-stat"><div class="trend-stat-label">ค่าเฉลี่ย 14 บันทึก</div><div class="trend-stat-value">${average}%</div></div><div class="trend-stat"><div class="trend-stat-label">เทียบกับครั้งก่อน</div><div class="trend-stat-value" style="color:${deltaColor}">${deltaText}</div></div>`;
@@ -4221,9 +4261,11 @@ function fillSystemSettingsForm(settings){
   const normalized=normalizeSystemSettings(settings||{deadlines:SHIFT_DEADLINES});
   const map={
     cutoffAssistantMorning:normalized.deadlines.assistant.morning,
+    cutoffAssistantMidday:normalized.deadlines.assistant.midday,
     cutoffAssistantAfternoon:normalized.deadlines.assistant.afternoon,
     cutoffAssistantSaturday:normalized.deadlines.assistant.saturday,
     cutoffPtMorning:normalized.deadlines.pt.morning,
+    cutoffPtMidday:normalized.deadlines.pt.midday,
     cutoffPtAfternoon:normalized.deadlines.pt.afternoon,
     cutoffPtSaturday:normalized.deadlines.pt.saturday
   };
@@ -4234,8 +4276,8 @@ function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHI
 async function saveSystemSettings(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
   const values={
-    assistant:{morning:timeTextToMinutes(document.getElementById('cutoffAssistantMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffAssistantAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffAssistantSaturday')?.value)},
-    pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffPtSaturday')?.value)}
+    assistant:{morning:timeTextToMinutes(document.getElementById('cutoffAssistantMorning')?.value),midday:timeTextToMinutes(document.getElementById('cutoffAssistantMidday')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffAssistantAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffAssistantSaturday')?.value)},
+    pt:{morning:timeTextToMinutes(document.getElementById('cutoffPtMorning')?.value),midday:timeTextToMinutes(document.getElementById('cutoffPtMidday')?.value),afternoon:timeTextToMinutes(document.getElementById('cutoffPtAfternoon')?.value),saturday:timeTextToMinutes(document.getElementById('cutoffPtSaturday')?.value)}
   };
   if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
   const overdueDays=Math.round(Number(document.getElementById('stockOverdueDays')?.value));if(!Number.isFinite(overdueDays)||overdueDays<1||overdueDays>30)return showToast('⚠️ จำนวนวันแจ้งงานค้างต้องอยู่ระหว่าง 1–30 วัน','warning');
@@ -4635,7 +4677,7 @@ function firebaseBackupCounts(data){
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),midday:getClItems('midday'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
   if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
@@ -5084,7 +5126,7 @@ function loadSupPerson(data) {
           ${notes.map(r => `
             <div style="border-bottom:1px solid rgba(156,39,176,.2);padding:8px 0;font-size:13px">
               <div style="font-size:11.5px;color:#9C27B0;font-weight:700;margin-bottom:4px">
-                📅 ${escapeHtml(thaiDate(r.date))} | ${r.shift==='morning'?'🌅 เวรเช้า':'🌙 เวรบ่าย'} — ประเมินโดย ${escapeHtml(r.ptReviewer||'—')}
+                📅 ${escapeHtml(thaiDate(r.date))} | ${shiftLabel(r.shift)} — ประเมินโดย ${escapeHtml(r.ptReviewer||'—')}
               </div>
               <div style="color:#4A148C;line-height:1.6;white-space:pre-wrap">${escapeHtml(r.ptSupervisorNote)}</div>
             </div>`).join('')}
@@ -5098,7 +5140,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260802-dismissible-help-v82';
+const APP_VERSION = 'v20260810-midday-checklist-v84';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -5572,6 +5614,7 @@ function getClItems(shift) {
 
 function getDefaultClItems(shift){
   if(shift==='morning')return [...DEFAULT_CL_ITEMS.morning];
+  if(shift==='midday')return [...DEFAULT_CL_ITEMS.midday];
   if(shift==='evening')return [...DEFAULT_CL_ITEMS.evening];
   if(shift==='saturdayMorning')return [...DEFAULT_SAT_MORNING_ITEMS];
   if(shift==='saturdayEvening')return [...DEFAULT_SAT_EVENING_ITEMS];
@@ -5584,13 +5627,13 @@ function isClItemStarred(shift,text){const value=getClStars()[clStarKey(shift,te
 function setClItemStarred(shift,text,starred){const stars=getClStars();stars[clStarKey(shift,text)]=!!starred;localStorage.setItem('custom_cl_stars',JSON.stringify(stars));}
 
 async function saveChecklistItemsToFirebase(){
-  const checklistItems={morning:getClItems('morning'),evening:getClItems('evening'),saturdayMorning:getClItems('saturdayMorning'),saturdayEvening:getClItems('saturdayEvening'),stars:getClStars()};
+  const checklistItems={morning:getClItems('morning'),midday:getClItems('midday'),evening:getClItems('evening'),saturdayMorning:getClItems('saturdayMorning'),saturdayEvening:getClItems('saturdayEvening'),stars:getClStars()};
   if(window.FB?.fbSaveChecklistConfig)await window.FB.fbSaveChecklistConfig(checklistItems);
 }
 
 function setClShift(shift) {
   currentClShift = shift;
-  [['morning','clTabMorning'],['evening','clTabEvening'],['saturdayMorning','clTabSaturdayMorning'],['saturdayEvening','clTabSaturdayEvening']].forEach(([key,id])=>{const tab=document.getElementById(id);if(tab){tab.className=shift===key?'btn btn-pri':'btn btn-out';tab.style.padding='5px 12px';tab.style.fontSize='12.5px';}});
+  [['morning','clTabMorning'],['midday','clTabMidday'],['evening','clTabEvening'],['saturdayMorning','clTabSaturdayMorning'],['saturdayEvening','clTabSaturdayEvening']].forEach(([key,id])=>{const tab=document.getElementById(id);if(tab){tab.className=shift===key?'btn btn-pri':'btn btn-out';tab.style.padding='5px 12px';tab.style.fontSize='12.5px';}});
   renderClItems();
 }
 
@@ -5704,6 +5747,7 @@ function resetClItems() {
 function _applyCLCustom() {
   // apply custom items เข้า CL object
   CL.morning.items = getClItems('morning');
+  CL.midday.items = getClItems('midday');
   CL.evening.items = getClItems('evening');
 }
 
