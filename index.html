@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260815-mobile-dashboard-history-v88">
+<meta name="version" content="v20260815-public-holidays-v89">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -588,6 +588,8 @@ img,svg,canvas{max-width:100%}
 .view-switch-copy{display:block;min-width:0}.view-switch-title{display:block;font-size:14px;font-weight:800;line-height:1.3}.view-switch-note{display:block;margin-top:2px;font-size:10.5px;font-weight:500;line-height:1.35;color:var(--g5)}
 .responsive-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:100%}
 .responsive-form-grid>*{min-width:0;max-width:100%}
+.holiday-form-grid{grid-template-columns:1fr 1fr 1.4fr}
+.holiday-admin-row{display:grid;grid-template-columns:minmax(105px,.55fr) minmax(180px,1.4fr) auto;gap:9px;align-items:center;padding:9px 10px;border-top:1px solid var(--g2)}
 .cutoff-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 .system-field{display:flex;min-width:0;max-width:100%;flex-direction:column;margin:0}
 .system-field>label{min-height:39px;display:flex;align-items:flex-end}
@@ -807,7 +809,7 @@ tr:hover td{background:var(--g1)}
   .view-switch-button{min-height:62px;padding:9px 10px;gap:8px}
   .view-switch-icon{width:34px;height:34px;flex-basis:34px;font-size:17px}
   .view-switch-title{font-size:13px}.view-switch-note{font-size:9.5px}
-  .responsive-form-grid{grid-template-columns:1fr}.cutoff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .responsive-form-grid{grid-template-columns:1fr}.cutoff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.holiday-form-grid{grid-template-columns:1fr}.holiday-admin-row{grid-template-columns:1fr}.holiday-admin-row>div{justify-content:flex-start!important}.holiday-admin-row .btn{min-height:44px;padding:8px 12px!important;font-size:12px!important}
   input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),select,textarea,.thai-date-input,.date-display-control,.stock-week-display{max-width:100%!important;box-sizing:border-box!important;font-size:16px}
   .form-grid{grid-template-columns:1fr}
   .system-field>label{min-height:0}
@@ -1607,7 +1609,7 @@ tr:hover td{background:var(--g1)}
     <div id="adminHome" class="admin-home-grid">
       <button class="admin-home-card" onclick="setAdminTab('data')"><span>📊</span><strong>ภาพรวมข้อมูล</strong><small>รายการล่าสุด รายงาน และข้อมูลภาพรวม</small></button>
       <button class="admin-home-card" onclick="openAdminCategory('people')"><span>👥</span><strong>บุคลากร</strong><small>ผู้ช่วย PT และบัญชีหัวหน้างาน</small></button>
-      <button class="admin-home-card" onclick="openAdminCategory('schedule')"><span>⏰</span><strong>เวลาและรอบงาน</strong><small>Cutoff และรอบตรวจสต็อก</small></button>
+      <button class="admin-home-card" onclick="openAdminCategory('schedule')"><span>⏰</span><strong>เวลาและรอบงาน</strong><small>Cutoff วันหยุดราชการ และรอบตรวจสต็อก</small></button>
       <button class="admin-home-card" onclick="openAdminCategory('inventory')"><span>📦</span><strong>รายการวัสดุ</strong><small>เพิ่ม แก้ไข และปิดรายการสต็อก</small></button>
       <button class="admin-home-card" onclick="openAdminCategory('checklist')"><span>📋</span><strong>งานและ Checklist</strong><small>จัดการหัวข้องานทุกเวร</small></button>
       <button class="admin-home-card" onclick="setAdminTab('retrospective')"><span>🔎</span><strong>ตรวจสอบย้อนหลัง</strong><small>ปรับผลและบันทึกหลักฐาน</small></button>
@@ -1725,14 +1727,30 @@ tr:hover td{background:var(--g1)}
           <div class="fg system-field"><label>PT ก่อนเริ่มเวรบ่าย</label><input class="system-input" type="time" id="cutoffPtMidday"></div>
           <div class="fg system-field"><label>ผู้ช่วย เวรบ่าย</label><input class="system-input" type="time" id="cutoffAssistantAfternoon"></div>
           <div class="fg system-field"><label>PT เวรบ่าย</label><input class="system-input" type="time" id="cutoffPtAfternoon"></div>
-          <div class="fg system-field"><label>ผู้ช่วย วันเสาร์</label><input class="system-input" type="time" id="cutoffAssistantSaturday"></div>
-          <div class="fg system-field"><label>PT วันเสาร์</label><input class="system-input" type="time" id="cutoffPtSaturday"></div>
+          <div class="fg system-field"><label>ผู้ช่วย วันเสาร์/วันหยุด</label><input class="system-input" type="time" id="cutoffAssistantSaturday"></div>
+          <div class="fg system-field"><label>PT วันเสาร์/วันหยุด</label><input class="system-input" type="time" id="cutoffPtSaturday"></div>
           <div class="fg system-field"><label>แจ้งงานเบิกค้างเกินกำหนด</label><input class="system-input" type="number" id="stockOverdueDays" min="1" max="30" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">จำนวนวันที่อยู่สถานะ “กำลังเบิกของ” ก่อนขึ้นกระดิ่ง</div></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
           <button class="btn btn-out" onclick="resetSystemSettingsForm()">↩ ค่าเริ่มต้น</button>
         </div>
+      </div>
+      <div class="card" data-admin-category="schedule" style="max-width:760px;border-left:4px solid #B7791F">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div><h3 style="margin-bottom:5px">🗓️ ปฏิทินวันหยุดราชการ</h3><p style="font-size:12px;color:var(--g6);line-height:1.6">วันหยุดที่ยืนยันแล้วจะใช้เวลาเวรบ่ายแบบวันเสาร์ 16:00 / 16:30 น. ส่วนเวรเช้าและก่อนบ่ายใช้เวลาปกติ</p></div>
+          <span id="holidayYearStatus" class="tag td0">กำลังตรวจสอบปีปัจจุบัน</span>
+        </div>
+        <div class="responsive-form-grid holiday-form-grid">
+          <div class="fg"><label>วันเริ่มต้น</label><input type="date" id="holidayStartDate" aria-label="เลือกวันเริ่มต้นวันหยุด"></div>
+          <div class="fg"><label>วันสิ้นสุด</label><input type="date" id="holidayEndDate" aria-label="เลือกวันสิ้นสุดวันหยุด"></div>
+          <div class="fg"><label>ชื่อวันหยุด</label><input type="text" id="holidayName" placeholder="เช่น วันเฉลิมพระชนมพรรษา"></div>
+        </div>
+        <div class="act-row" style="margin-top:10px">
+          <button class="btn btn-suc" onclick="savePublicHoliday()">＋ เพิ่มวันหยุด</button>
+          <button class="btn btn-out" onclick="copyPreviousYearHolidays()">คัดลอกจากปีก่อน</button>
+        </div>
+        <div id="publicHolidayList" style="margin-top:14px"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีวันหยุดที่บันทึก</div></div>
       </div>
       <div class="card" data-admin-category="people" style="max-width:560px">
         <h3>👥 จัดการรายชื่อผู้ช่วยนักกายภาพ</h3>
@@ -2649,9 +2667,9 @@ function getWebAlertStatus(now){
   return{today,minutes,current,morning:buildShiftStatus('morning',getEffectiveDeadline('assistant','morning',today),getEffectiveDeadline('pt','morning',today)),midday:buildShiftStatus('midday',getEffectiveDeadline('assistant','midday',today),getEffectiveDeadline('pt','midday',today)),afternoon:buildShiftStatus('afternoon',getEffectiveDeadline('assistant','afternoon',today),getEffectiveDeadline('pt','afternoon',today))};
 }
 function getWebAlertShiftConfig(status,shift){
-  const normalizedShift=normalizeShift(shift);const isMorning=normalizedShift==='morning';const data=status[normalizedShift];const saturday=isSaturdayKey(status.today);
+  const normalizedShift=normalizeShift(shift);const isMorning=normalizedShift==='morning';const data=status[normalizedShift];const saturday=isSaturdayKey(status.today);const holiday=publicHolidayByDate(status.today);const specialDay=saturday||holiday;
   const assistantDeadline=getEffectiveDeadline('assistant',shift,status.today);const ptDeadline=getEffectiveDeadline('pt',shift,status.today);
-  return{shift:normalizedShift,data,label:saturday&&normalizedShift!=='midday'?`วันเสาร์ • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:saturday&&normalizedShift!=='midday'?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${saturday&&normalizedShift!=='midday'?'sat-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${saturday&&normalizedShift!=='midday'?'sat-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
+  return{shift:normalizedShift,data,label:specialDay&&normalizedShift!=='midday'?`${holiday?holiday.name:'วันเสาร์'} • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:specialDay&&normalizedShift!=='midday'?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${specialDay&&normalizedShift!=='midday'?'special-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${specialDay&&normalizedShift!=='midday'?'special-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
 }
 function isWebAlertResolved(status,key,shift){
   return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
@@ -2887,6 +2905,7 @@ const DEFAULT_SHIFT_DEADLINES = {
   pt: { morning: 9*60+30, midday: 14*60, afternoon: 20*60+30, saturday: 16*60+30 }
 };
 let SHIFT_DEADLINES = cloneShiftDeadlines(DEFAULT_SHIFT_DEADLINES);
+let publicHolidays=[];
 function cloneShiftDeadlines(source){return{assistant:{morning:Number(source?.assistant?.morning)||510,midday:Number(source?.assistant?.midday)||810,afternoon:Number(source?.assistant?.afternoon)||1200,saturday:Number(source?.assistant?.saturday)||960},pt:{morning:Number(source?.pt?.morning)||570,midday:Number(source?.pt?.midday)||840,afternoon:Number(source?.pt?.afternoon)||1230,saturday:Number(source?.pt?.saturday)||990}};}
 function normalizeStockSchedule(schedule,index){
   const categories=Array.isArray(schedule?.categories)?[...new Set(schedule.categories.map(String).filter(Boolean))]:[];
@@ -2895,12 +2914,16 @@ function normalizeStockSchedule(schedule,index){
   return{id:String(schedule?.id||`stock-round-${Date.now()}-${index||0}`),name:String(schedule?.name||`รอบตรวจ ${Number(index||0)+1}`).trim().slice(0,80),weekday:Number.isInteger(weekday)&&weekday>=0&&weekday<=6?weekday:1,dueTime:/^\d{2}:\d{2}$/.test(String(schedule?.dueTime||''))?String(schedule.dueTime):'12:00',receiveWeekday:Number.isInteger(receiveWeekday)&&receiveWeekday>=0&&receiveWeekday<=6?receiveWeekday:null,categories:categories.length?categories:['medical','general','cleaning','alcohol','other'],active:schedule?.active!==false};
 }
 function cloneStockSchedules(source){const rows=Array.isArray(source)&&source.length?source:DEFAULT_STOCK_SCHEDULES;return rows.map(normalizeStockSchedule);}
-function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3};}
-function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);stockOverdueDays=normalized.stockOverdueDays;try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
+function normalizePublicHolidays(records){const seen=new Set();return(Array.isArray(records)?records:[]).map(record=>({date:String(record?.date||'').slice(0,10),name:String(record?.name||'วันหยุดราชการ').trim()||'วันหยุดราชการ',confirmed:record?.confirmed!==false})).filter(record=>/^\d{4}-\d{2}-\d{2}$/.test(record.date)&&!seen.has(record.date)&&seen.add(record.date)).sort((a,b)=>a.date.localeCompare(b.date));}
+function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3,publicHolidays:normalizePublicHolidays(settings?.publicHolidays)};}
+function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);stockOverdueDays=normalized.stockOverdueDays;publicHolidays=normalizePublicHolidays(normalized.publicHolidays);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
 function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0,10)+'T00:00:00').getDay()===6;}
-function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayKey(date)&&normalizedShift!=='midday')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
+function publicHolidayByDate(date){const key=String(date||'').slice(0,10);return publicHolidays.find(record=>record.date===key&&record.confirmed!==false)||null;}
+function isPublicHolidayKey(date){return Boolean(publicHolidayByDate(date));}
+function isSaturdayOrHolidayKey(date){return isSaturdayKey(date)||isPublicHolidayKey(date);}
+function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayOrHolidayKey(date)&&normalizedShift!=='midday')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
   const normalizedShift=normalizeShift(shift);
@@ -2910,7 +2933,7 @@ function getTimeLockInfo(date,shift,role){
   if(date<today)return{locked:true,deadlineText,message:`⛔ เลยวันที่บันทึกแล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}ย้อนหลังได้`};
   if(date>today)return{locked:false,deadlineText,message:''};
   const now=new Date();const current=now.getHours()*60+now.getMinutes();
-  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isSaturdayKey(date)&&normalizedShift!=='midday'?'วันเสาร์':shiftLabel(normalizedShift).replace(/^\S+\s/,'')}ได้`};
+  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isPublicHolidayKey(date)&&normalizedShift!=='midday'?'วันหยุดราชการ':isSaturdayKey(date)&&normalizedShift!=='midday'?'วันเสาร์':shiftLabel(normalizedShift).replace(/^\S+\s/,'')}ได้`};
   return{locked:false,deadlineText,message:''};
 }
 function getMissedEvaluationRecord(date,shift){return missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===(shift||'morning'))||null;}
@@ -2950,7 +2973,7 @@ function editStockSchedule(index){
   document.getElementById('stockScheduleName').value=schedule.name;document.getElementById('stockScheduleWeekday').value=String(schedule.weekday);document.getElementById('stockScheduleDueTime').value=schedule.dueTime;document.getElementById('stockScheduleReceiveWeekday').value=schedule.receiveWeekday===null?'':String(schedule.receiveWeekday);renderStockScheduleCategoryChoices(schedule.categories);document.getElementById('stockScheduleName').focus();
 }
 async function persistStockSchedules(action,detail){
-  const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays});
+  const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays,publicHolidays});
   if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
   await window.FB.fbSaveSystemSettings(settings);applySystemSettings(settings);renderStockSchedulesAdmin();renderStockScheduleOptions();await writeAuditLog(action,'settings',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
 }
@@ -4302,6 +4325,33 @@ function loadDashboard() {
 }
 
 // ══ SETTINGS ══
+let editingPublicHolidayDate='';
+function publicHolidayYear(record){return Number(String(record?.date||'').slice(0,4))||0;}
+function renderPublicHolidaysAdmin(){
+  const list=document.getElementById('publicHolidayList');const status=document.getElementById('holidayYearStatus');if(!list)return;
+  const currentYear=new Date().getFullYear();const currentRecords=publicHolidays.filter(record=>publicHolidayYear(record)===currentYear);const nextRecords=publicHolidays.filter(record=>publicHolidayYear(record)===currentYear+1);const currentCount=currentRecords.filter(record=>record.confirmed!==false).length;const currentDraft=currentRecords.length-currentCount;const nextCount=nextRecords.filter(record=>record.confirmed!==false).length;const nextDraft=nextRecords.length-nextCount;
+  if(status){status.className=`tag ${currentCount?'tp':'tw2'}`;status.textContent=`ปี ${currentYear+543} ใช้งาน ${currentCount} วัน${currentDraft?` • แบบร่าง ${currentDraft}`:''} | ปี ${currentYear+544} ใช้งาน ${nextCount} วัน${nextDraft?` • แบบร่าง ${nextDraft}`:''}`;}
+  const start=document.getElementById('holidayStartDate');const end=document.getElementById('holidayEndDate');if(start&&!start.value){const today=localDateKey(new Date());setThaiDateValue('holidayStartDate',today,false);setThaiDateValue('holidayEndDate',today,false);}
+  const visible=publicHolidays.filter(record=>publicHolidayYear(record)>=currentYear-1);
+  const notice=!nextCount?`<div style="margin-bottom:10px;padding:9px 11px;border:1px solid #F2D49B;border-radius:8px;background:#FFF9ED;color:#7A5200;font-size:11.5px">ปี ${currentYear+544} ยังไม่มีข้อมูล เมื่อได้รับประกาศราชการให้เพิ่มหรือคัดลอกจากปีก่อนแล้วตรวจแก้ไขก่อนใช้งาน</div>`:'';
+  list.innerHTML=notice+(visible.length?visible.map(record=>{const index=publicHolidays.findIndex(item=>item.date===record.date);const draft=record.confirmed===false;return`<div class="holiday-admin-row"><strong style="color:var(--bd)">${escapeHtml(formatThaiInputDate(record.date))}</strong><span style="font-size:12.5px">${escapeHtml(record.name)} ${draft?'<span class="tag tw2">แบบร่าง — ยังไม่ใช้เวลาเวรวันหยุด</span>':'<span class="tag tp">ใช้งานแล้ว</span>'}</span><div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">${draft?`<button class="btn btn-suc" style="padding:5px 8px;font-size:11px" onclick="confirmPublicHoliday(${index})">ยืนยันใช้</button>`:''}<button class="btn btn-out" style="padding:5px 8px;font-size:11px" onclick="editPublicHoliday(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 8px;font-size:11px;color:var(--r)" onclick="deletePublicHoliday(${index})">ลบ</button></div></div>`;}).join(''):'<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีวันหยุดที่บันทึก</div>');
+}
+function editPublicHoliday(index){const record=publicHolidays[index];if(!record)return;editingPublicHolidayDate=record.date;setThaiDateValue('holidayStartDate',record.date,false);setThaiDateValue('holidayEndDate',record.date,false);document.getElementById('holidayName').value=record.name;document.getElementById('holidayName').focus();}
+async function persistPublicHolidays(action,detail){const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays,publicHolidays});if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');await window.FB.fbSaveSystemSettings(settings);applySystemSettings(settings);renderPublicHolidaysAdmin();buildChecklist();refreshWebAlerts(false);await writeAuditLog(action,'settings',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});}
+async function savePublicHoliday(){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const start=document.getElementById('holidayStartDate')?.value||'';const end=document.getElementById('holidayEndDate')?.value||start;const name=(document.getElementById('holidayName')?.value||'').trim();
+  if(!start||!end)return showToast('⚠️ กรุณาเลือกวันที่','warning');if(end<start)return showToast('⚠️ วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น','warning');if(!name)return showToast('⚠️ กรุณากรอกชื่อวันหยุด','warning');
+  const startDate=parseIsoDate(start);const endDate=parseIsoDate(end);if(!startDate||!endDate||Math.round((endDate-startDate)/86400000)>31)return showToast('⚠️ เพิ่มวันหยุดต่อครั้งได้ไม่เกิน 31 วัน','warning');
+  const original=[...publicHolidays];if(editingPublicHolidayDate)publicHolidays=publicHolidays.filter(record=>record.date!==editingPublicHolidayDate);
+  const additions=[];for(let date=new Date(startDate);date<=endDate;date.setDate(date.getDate()+1))additions.push({date:localDateKey(date),name,confirmed:true});const replacing=new Set(additions.map(record=>record.date));publicHolidays=normalizePublicHolidays([...publicHolidays.filter(record=>!replacing.has(record.date)),...additions]);
+  try{await persistPublicHolidays(editingPublicHolidayDate?'update':'add',`${editingPublicHolidayDate?'แก้ไข':'เพิ่ม'}วันหยุดราชการ ${name} ${formatThaiInputDate(start)}${end!==start?' ถึง '+formatThaiInputDate(end):''}`);editingPublicHolidayDate='';document.getElementById('holidayName').value='';showToast('✅ บันทึกวันหยุดแล้ว ทุกอุปกรณ์จะใช้เวลาเวรชุดเดียวกัน','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ บันทึกวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+}
+function deletePublicHoliday(index){const record=publicHolidays[index];if(!record)return;showConfirm(`ลบ ${record.name} วันที่ ${formatThaiInputDate(record.date)} ใช่หรือไม่?`,async()=>{const original=[...publicHolidays];publicHolidays.splice(index,1);try{await persistPublicHolidays('delete',`ลบวันหยุดราชการ ${record.name} ${formatThaiInputDate(record.date)}`);showToast('✅ ลบวันหยุดแล้ว','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ ลบวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});}
+function confirmPublicHoliday(index){const record=publicHolidays[index];if(!record||record.confirmed!==false)return;showConfirm(`ยืนยันใช้ ${record.name} วันที่ ${formatThaiInputDate(record.date)} และใช้เวลาเวรวันเสาร์ใช่หรือไม่?`,async()=>{const original=publicHolidays.map(item=>({...item}));publicHolidays[index]={...record,confirmed:true};try{await persistPublicHolidays('update',`ยืนยันวันหยุดราชการ ${record.name} ${formatThaiInputDate(record.date)}`);showToast('✅ ยืนยันวันหยุดแล้ว ระบบเริ่มใช้เวลาเวรวันหยุด','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ ยืนยันวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});}
+function copyPreviousYearHolidays(){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const targetYear=new Date().getFullYear()+1;const sourceYear=targetYear-1;const source=publicHolidays.filter(record=>publicHolidayYear(record)===sourceYear);if(!source.length)return showToast(`⚠️ ยังไม่มีวันหยุดปี ${sourceYear+543} ให้คัดลอก`,'warning');
+  showConfirm(`คัดลอกวันหยุด ${source.length} วันจากปี ${sourceYear+543} ไปปี ${targetYear+543} เป็นแบบร่างใช่หรือไม่? แบบร่างจะยังไม่เปลี่ยนเวลาเวรจนกว่าแอดมินกดยืนยัน`,async()=>{const original=[...publicHolidays];const copied=source.map(record=>({...record,date:`${targetYear}${record.date.slice(4)}`,confirmed:false})).filter(record=>{const parsed=parseIsoDate(record.date);return parsed&&localDateKey(parsed)===record.date;});publicHolidays=normalizePublicHolidays([...publicHolidays,...copied]);try{await persistPublicHolidays('add',`คัดลอกวันหยุดปี ${sourceYear+543} ไปเป็นแบบร่างปี ${targetYear+543}`);showToast('✅ คัดลอกเป็นแบบร่างแล้ว กรุณาตรวจและกดยืนยันทีละวัน','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ คัดลอกวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});
+}
 function fillSystemSettingsForm(settings){
   const normalized=normalizeSystemSettings(settings||{deadlines:SHIFT_DEADLINES});
   const map={
@@ -4326,7 +4376,7 @@ async function saveSystemSettings(){
   };
   if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
   const overdueDays=Math.round(Number(document.getElementById('stockOverdueDays')?.value));if(!Number.isFinite(overdueDays)||overdueDays<1||overdueDays>30)return showToast('⚠️ จำนวนวันแจ้งงานค้างต้องอยู่ระหว่าง 1–30 วัน','warning');
-  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),stockOverdueDays:overdueDays,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
+  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),stockOverdueDays:overdueDays,publicHolidays:normalizePublicHolidays(publicHolidays),updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
   try{
     applySystemSettings(settings);
     if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
@@ -4343,8 +4393,8 @@ function renderSettings(){
   if(!isAdminLoggedIn) return;
   const sl=document.getElementById('staffListUI');if(sl)sl.innerHTML=(!staffList||staffList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':staffList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bd)">👤</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removeStaff(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
   const pl=document.getElementById('ptListUI');if(pl)pl.innerHTML=(!ptList||ptList.length===0)?'<div style="color:var(--g4);font-size:13px;padding:6px 0">ยังไม่มีรายชื่อ</div>':ptList.map((n,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#EDE7F6;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div><span style="font-size:13.5px">${escapeHtml(n)}</span></div><button onclick="removePT(${i})" style="background:none;border:none;color:var(--r);cursor:pointer;font-size:13px;padding:4px 9px;border-radius:5px;font-family:inherit">🗑️ ลบ</button></div>`).join('');
-  fillSystemSettingsForm({deadlines:SHIFT_DEADLINES,stockOverdueDays});
-  renderStockScheduleCategoryChoices();renderStockSchedulesAdmin();
+  fillSystemSettingsForm({deadlines:SHIFT_DEADLINES,stockOverdueDays,publicHolidays});
+  renderPublicHolidaysAdmin();renderStockScheduleCategoryChoices();renderStockSchedulesAdmin();
   renderClItems();
 }
 
@@ -4687,7 +4737,7 @@ function setAdminTab(tab) {
     if(!notice){notice=document.createElement('div');notice.className='admin-panel-error card';notice.style.cssText='border-left:4px solid var(--r);background:#FFF7F8;margin-bottom:14px';panel.prepend(notice);}
     notice.innerHTML='<strong style="color:var(--r)">⚠️ โหลดข้อมูลบางส่วนไม่สำเร็จ</strong><div style="font-size:12px;color:var(--g6);margin-top:4px">ส่วนอื่นของแอดมินยังใช้งานได้ กรุณากดรีเฟรชแล้วลองเปิดแท็บนี้ใหม่</div>';
   };
-  if(currentAdminTab==='settings'){run(renderSettings);run(renderStockCatalogAdmin);run(renderStockSchedulesAdmin);run(loadSupervisorRequests);}
+  if(currentAdminTab==='settings'){run(renderSettings);run(renderPublicHolidaysAdmin);run(renderStockCatalogAdmin);run(renderStockSchedulesAdmin);run(loadSupervisorRequests);}
   if(currentAdminTab==='data')run(renderStockPerformancePanels);
   if(currentAdminTab==='retrospective')run(renderRetrospectiveAdmin);
   if(currentAdminTab==='audit')run(()=>loadAuditLogs(false));
@@ -4718,12 +4768,12 @@ function rejectSupervisorRequest(index){
 let pendingFirebaseRestore=null;
 function firebaseBackupCounts(data){
   const source=data||{};const config=source.config||{};
-  return{staff:Array.isArray(config.staffList)?config.staffList.length:0,pt:Array.isArray(config.ptList)?config.ptList.length:0,submissions:Array.isArray(source.submissions)?source.submissions.length:0,reports:Array.isArray(source.assistantEvaluations)?source.assistantEvaluations.length:0,notes:Array.isArray(source.supervisorNotes)?source.supervisorNotes.length:0,missed:Array.isArray(source.missedEvaluations)?source.missedEvaluations.length:0,audit:Array.isArray(source.auditLogs)?source.auditLogs.length:0,stock:Array.isArray(source.stockRequests)?source.stockRequests.length:0};
+  return{staff:Array.isArray(config.staffList)?config.staffList.length:0,pt:Array.isArray(config.ptList)?config.ptList.length:0,holidays:normalizePublicHolidays(config.systemSettings?.publicHolidays).length,submissions:Array.isArray(source.submissions)?source.submissions.length:0,reports:Array.isArray(source.assistantEvaluations)?source.assistantEvaluations.length:0,notes:Array.isArray(source.supervisorNotes)?source.supervisorNotes.length:0,missed:Array.isArray(source.missedEvaluations)?source.missedEvaluations.length:0,audit:Array.isArray(source.auditLogs)?source.auditLogs.length:0,stock:Array.isArray(source.stockRequests)?source.stockRequests.length:0};
 }
 function backupMetric(label,value,color){return`<div style="padding:10px;border:1px solid var(--g2);border-radius:8px;background:#fff;text-align:center"><div style="font-size:20px;font-weight:800;color:${color||'var(--bd)'}">${value}</div><div style="font-size:11px;color:var(--g6)">${label}</div></div>`;}
 function renderBackupPanelSummary(data){
-  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),midday:getClItems('midday'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
-  if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
+  const current=data||{config:{staffList,ptList,checklistItems:{morning:getClItems('morning'),midday:getClItems('midday'),evening:getClItems('evening')},systemSettings:normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays,publicHolidays}),stockCatalog},submissions,assistantEvaluations:evaluationRecords,supervisorNotes,missedEvaluations,auditLogs,stockRequests:stockRecords};const counts=firebaseBackupCounts(current);const summary=document.getElementById('backupCurrentSummary');
+  if(summary)summary.innerHTML=backupMetric('Checklist',counts.submissions)+backupMetric('เบิกของ/สต็อก',counts.stock,'#8A5A00')+backupMetric('รายงานส่วนตัว',counts.reports,'#7B1FA2')+backupMetric('หมายเหตุลับ',counts.notes,'#9A4B00')+backupMetric('ผู้ไม่ประเมิน',counts.missed,'var(--o)')+backupMetric('ประวัติ',counts.audit,'var(--g6)')+backupMetric('วันหยุด',counts.holidays,'#B7791F')+backupMetric('ผู้ช่วย',counts.staff,'var(--g)')+backupMetric('PT',counts.pt,'#1565C0');
   const last=document.getElementById('lastBackupDisplay');const saved=localStorage.getItem('pt_last_firebase_backup');if(last)last.textContent=saved?`ดาวน์โหลดล่าสุดในอุปกรณ์นี้: ${saved}`:'ยังไม่เคยดาวน์โหลดในอุปกรณ์นี้';
 }
 function retentionCutoffDate(years){
@@ -4804,7 +4854,7 @@ async function reloadFirebaseStateAfterRestore(){
   const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs(),window.FB.fbGetStockRequests(),window.FB.fbGetRetrospectiveChecks()]);
   const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];retrospectiveChecks=Array.isArray(results[7])?results[7]:[];
   localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));localStorage.setItem('pt_retrospective_checks',JSON.stringify(retrospectiveChecks));
-  updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderAdminTable();renderMissedEvalSummary();renderRetrospectiveHistory();renderRetrospectiveAdmin();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
+  updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderPublicHolidaysAdmin();renderAdminTable();renderMissedEvalSummary();renderRetrospectiveHistory();renderRetrospectiveAdmin();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
 }
 function confirmFirebaseRestore(){
   if(!isAdminLoggedIn)return showToast('⛔ กรุณาเข้าสู่ระบบแอดมินก่อน','error');
@@ -5185,7 +5235,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260815-mobile-dashboard-history-v88';
+const APP_VERSION = 'v20260815-public-holidays-v89';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
