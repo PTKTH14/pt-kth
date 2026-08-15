@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260810-midday-checklist-v84';
+const CACHE_NAME = 'pt-kth-v20260815-mobile-dashboard-history-v88';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {

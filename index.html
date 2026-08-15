@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260810-midday-checklist-v84">
+<meta name="version" content="v20260815-mobile-dashboard-history-v88">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -474,6 +474,10 @@ body{font-family:'Noto Sans Thai',sans-serif;background:#F0F4F8;color:var(--g8);
 .sb-input:focus{border-color:var(--bm)}
 .shift-row{display:flex;gap:6px;margin-top:6px}
 .shift-btn{flex:1;padding:6px 4px;border:1.5px solid var(--g2);border-radius:6px;background:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;color:var(--g6)}
+.desktop-shift-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.desktop-shift-row .shift-btn{width:100%;min-width:0;min-height:58px;padding:7px 3px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;line-height:1.15;white-space:nowrap;overflow:hidden}
+.desktop-shift-row .shift-btn-icon{flex:0 0 auto;font-size:14px;line-height:1}
+.desktop-shift-row .shift-btn-label{max-width:100%;font-size:10.5px;line-height:1.15;white-space:nowrap}
 .shift-btn.active-morning{background:#FFF3E0;border-color:#FF9800;color:#E65100}
 .shift-btn.active-midday{background:#FFF8D9;border-color:#E5A900;color:#8A6500}
 .shift-btn.active-afternoon{background:#E3F2FD;border-color:#2196F3;color:#1565C0}
@@ -964,6 +968,17 @@ tr:hover td{background:var(--g1)}
   .ph{margin-bottom:16px}.ph h1{font-size:22px;line-height:1.3}.ph p{font-size:12.5px;line-height:1.55}
   .card{padding:15px}
 }
+/* QC v88: prevent clipped mobile dashboard content and fully collapse advanced filters */
+.history-advanced:not([open])>.filter-toolbar{display:none!important}
+@media(max-width:560px){
+  .dashboard-kpi-grid>*{width:auto!important;min-width:0!important;max-width:100%!important}
+  .dashboard-kpi-grid .kc{overflow:hidden}
+  .dashboard-kpi-grid .kl{white-space:normal;overflow-wrap:anywhere}
+  .trend-card{min-width:0;max-width:100%;overflow:hidden}
+  .trend-head,.trend-head h3,.trend-summary,.trend-scroll,.trend-detail{min-width:0;max-width:100%}
+  .trend-head h3{width:100%;white-space:normal;overflow-wrap:anywhere}
+  .trend-scroll{width:100%;box-sizing:border-box}
+}
 </style>
 </head>
 <body>
@@ -1023,10 +1038,10 @@ tr:hover td{background:var(--g1)}
     <div id="dateInputDisplay" class="date-display-control" role="status" aria-label="วันที่บันทึก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div>
     <div style="margin-top:8px">
       <label style="font-size:10.5px;color:var(--g6);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ประเภทเวร</label>
-      <div class="shift-row">
-        <button class="shift-btn active-morning" id="shiftMorning" onclick="setShift('morning')">🌅 เวรเช้า</button>
-        <button class="shift-btn" id="shiftMidday" onclick="setShift('midday')">☀️ ก่อนบ่าย</button>
-        <button class="shift-btn" id="shiftAfternoon" onclick="setShift('afternoon')">🌙 เวรบ่าย</button>
+      <div class="shift-row desktop-shift-row">
+        <button class="shift-btn active-morning" id="shiftMorning" onclick="setShift('morning')"><span class="shift-btn-icon">🌅</span><span class="shift-btn-label">เวรเช้า</span></button>
+        <button class="shift-btn" id="shiftMidday" onclick="setShift('midday')"><span class="shift-btn-icon">☀️</span><span class="shift-btn-label">ก่อนบ่าย</span></button>
+        <button class="shift-btn" id="shiftAfternoon" onclick="setShift('afternoon')"><span class="shift-btn-icon">🌙</span><span class="shift-btn-label">เวรบ่าย</span></button>
       </div>
     </div>
   </div>
@@ -1425,10 +1440,11 @@ tr:hover td{background:var(--g1)}
       </summary>
       <div id="retrospectivePublicList" class="retro-disclosure-content"><div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการ</div></div>
     </details>
+  <div id="historyMissingMidday" data-history-panel="checklist"></div>
   <div class="tw" data-history-panel="checklist" style="overflow-x:auto">
     <table>
       <thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>สถานะ</th><th>ผลประเมิน</th><th>PT ไม่ประเมิน</th><th></th></tr></thead>
-      <tbody id="historyBody"><tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการ</td></tr></tbody>
+    <tbody id="historyBody"><tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ยังไม่มีรายการ</td></tr></tbody>
     </table>
   </div>
   <div id="historyLoadMoreWrap" data-history-panel="checklist" style="display:none;text-align:center;padding:14px 0 4px">
@@ -2588,6 +2604,24 @@ function normalizeShift(shift){return shift==='midday'?'midday':shift==='afterno
 function shiftLabel(s){return s==='midday'?'☀️ ก่อนเริ่มเวรบ่าย':s==='afternoon'?'🌙 เวรบ่าย':'🌅 เวรเช้า';}
 function shiftShortLabel(s){return s==='midday'?'ก่อนบ่าย':s==='afternoon'?'บ่าย':'เช้า';}
 function shiftIcon(s){return s==='midday'?'☀️':s==='afternoon'?'🌙':'🌅';}
+const MIDDAY_TRACKING_START_DATE='2026-08-10';
+function getMissingMiddayRounds(filters){
+  filters=filters||{};
+  const start=filters.start||'';const end=filters.end||'';const monthKey=filters.monthKey||'';const today=localDateKey(new Date());
+  const operatingDates=[...new Set(submissions.filter(item=>{
+    const date=String(item?.date||'');const shift=normalizeShift(item?.shift);
+    return date>=MIDDAY_TRACKING_START_DATE&&date<=today&&shift!=='midday'&&(!start||date>=start)&&(!end||date<=end)&&(!monthKey||date.startsWith(monthKey));
+  }).map(item=>String(item.date)))];
+  return operatingDates.filter(date=>{
+    const day=new Date(`${date}T12:00:00`).getDay();
+    if(day===6)return false;
+    if(submissions.some(item=>String(item?.date||'')===date&&normalizeShift(item?.shift)==='midday'))return false;
+    return getTimeLockInfo(date,'midday','assistant').locked;
+  }).map(date=>{
+    const damage=(Array.isArray(missedEvaluations)?missedEvaluations:[]).find(item=>item&&item.date===date&&normalizeShift(item.shift)==='midday'&&Array.isArray(item.assistantNames)&&item.assistantNames.length);
+    return{date,shift:'midday',damage,handled:!!damage};
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+}
 function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<start)return false;if(end&&ds>end)return false;return true;}
 function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
 function startClock(){let activeDay='';const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const currentDay=localDateKey(now);if(currentDay!==activeDay){activeDay=currentDay;syncLockedOperationDates();}const minuteKey=currentDay+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
@@ -2770,7 +2804,7 @@ function setShift(s){
 }
 
 document.getElementById('dateInput').addEventListener('change',updateDateDisplay);
-function updateDateDisplay(){const v=document.getElementById('dateInput').value;document.getElementById('todayChip').textContent=v||'—';document.getElementById('todayLabel').textContent=v?thaiDate(v):'';const display=v?thaiDate(v):'—';const desktopDisplay=document.getElementById('dateInputDisplay');const mobileDisplay=document.getElementById('dateInputMobileDisplay');if(desktopDisplay)desktopDisplay.textContent=display;if(mobileDisplay)mobileDisplay.textContent=display;}
+function updateDateDisplay(){const v=document.getElementById('dateInput').value;const display=v?thaiDate(v):'—';document.getElementById('todayChip').textContent=display;document.getElementById('todayLabel').textContent='';const desktopDisplay=document.getElementById('dateInputDisplay');const mobileDisplay=document.getElementById('dateInputMobileDisplay');if(desktopDisplay)desktopDisplay.textContent=display;if(mobileDisplay)mobileDisplay.textContent=display;}
 document.getElementById('staffSelect').addEventListener('change',function(){const n=this.options[this.selectedIndex]?.text;document.getElementById('sidebarName').textContent=(n&&n!=='— เลือกชื่อ —')?n:'เลือกชื่อก่อน';document.getElementById('staffSelectMobile').value=this.value;});
 
 // ══ CHECKLIST ══
@@ -2783,9 +2817,10 @@ const DEFAULT_SAT_EVENING_ITEMS = [
 function isSaturdayDate(date){return date ? new Date(date+'T00:00:00').getDay()===6 : new Date().getDay()===6;}
 function checklistItemsForGroup(groupKey,date){
   const base=[...(CL[groupKey]?.items||[])];
-  const saturdayKey=groupKey==='morning'?'saturdayMorning':'saturdayEvening';
-  const items=isSaturdayDate(date)?base.concat(getClItems(saturdayKey)):base;
-  return items.map(text=>isClItemStarred(groupKey,text)||(isSaturdayDate(date)&&isClItemStarred(saturdayKey,text))?`${text} ⭐`:text);
+  const saturdayKey=groupKey==='morning'?'saturdayMorning':groupKey==='evening'?'saturdayEvening':'';
+  const includeSaturdayItems=isSaturdayDate(date)&&!!saturdayKey;
+  const items=includeSaturdayItems?base.concat(getClItems(saturdayKey)):base;
+  return items.map(text=>isClItemStarred(groupKey,text)||(includeSaturdayItems&&isClItemStarred(saturdayKey,text))?`${text} ⭐`:text);
 }
 function buildChecklist(){
   const wrap=document.getElementById('checklistGroups');if(!wrap)return;wrap.innerHTML='';
@@ -3393,12 +3428,14 @@ function loadReviewView(){
   const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
   const pendingStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const pl=document.getElementById('pendingList');if(!pl)return;
+  const missingMidday=getMissingMiddayRounds({monthKey:selectedMonth}).filter(item=>!item.handled);
+  const missingMiddayHtml=missingMidday.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:#9A6700">☀️ ก่อนเริ่มเวรบ่ายที่ไม่มี Checklist ${missingMidday.length} วัน</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingMidday.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel('midday')}</span></td><td>ไม่มีการส่ง Checklist รอบก่อนเริ่มเวรบ่าย</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-midday-${item.date}','midday','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div>`:'';
   const expiredHtml=expired.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:var(--r)">⛔ Checklist เลยเวลาประจำเดือน ${expired.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${expired.map(s=>{const pct=calcCompletion(s);const damage=missedPtRecordForSubmission(s);const ptNames=damage?.ptNames||[];return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${ptNames.length?`<span class="tag tf">${escapeHtml(ptNames.join(', '))}</span>`:'<span class="tag tw2">รอแอดมินบันทึก</span>'}</td><td><span class="tag" style="background:#F3F4F6;color:var(--g6)">${damage?'บันทึกค่าเสียหายแล้ว':'เลยเวลา'}</span></td></tr>`;}).join('')}</tbody></table></div>`:'';
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
   const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
-  pl.innerHTML=checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
+  pl.innerHTML=missingMiddayHtml+checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -3625,8 +3662,8 @@ function readPendingMissedAlertAction(){
   try{return JSON.parse(sessionStorage.getItem(pendingMissedAlertStorageKey)||'null');}catch(e){return null;}
 }
 function clearPendingMissedAlertAction(){activeMissedAlertKey='';sessionStorage.removeItem(pendingMissedAlertStorageKey);}
-function startMissedEvaluationFromAlert(personType,alertKey,shift){
-  const action={personType:personType==='pt'?'pt':'assistant',alertKey,date:localDateKey(new Date()),shift:normalizeShift(shift)};
+function startMissedEvaluationForDate(personType,alertKey,shift,date){
+  const action={personType:personType==='pt'?'pt':'assistant',alertKey,date:date||localDateKey(new Date()),shift:normalizeShift(shift)};
   sessionStorage.setItem(pendingMissedAlertStorageKey,JSON.stringify(action));
   closeModal('webAlertModal');
   if(!isAdminLoggedIn){
@@ -3637,6 +3674,7 @@ function startMissedEvaluationFromAlert(personType,alertKey,shift){
   }
   resumePendingMissedAlertAction();
 }
+function startMissedEvaluationFromAlert(personType,alertKey,shift){startMissedEvaluationForDate(personType,alertKey,shift,localDateKey(new Date()));}
 function resumePendingMissedAlertAction(){
   const action=readPendingMissedAlertAction();if(!action||!isAdminLoggedIn)return false;
   activeMissedAlertKey=action.alertKey||'';
@@ -3811,6 +3849,13 @@ function loadHistory(){
   let data=[...submissions].sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   updateMissedEvalAdminPanel();renderMissedEvalSummary();renderRetrospectiveHistory();
+  const missingHost=document.getElementById('historyMissingMidday');
+  let missingMidday=getMissingMiddayRounds({start:fStart,end:fEnd});
+  if(fStaff)missingMidday=missingMidday.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));
+  if(fStatus&&fStatus!=='pending')missingMidday=[];
+  if(missingHost){
+    missingHost.innerHTML=missingMidday.length?`<div class="card" style="margin-bottom:14px;border-left:4px solid #F59E0B"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">☀️ ประวัติรอบก่อนเริ่มเวรบ่ายที่ขาดส่ง</h3><p style="font-size:12px;color:var(--g6)">ระบบตรวจจากวันที่มีงานเวรเช้าหรือเวรบ่ายจริง แต่ไม่พบ Checklist รอบก่อนเริ่มบ่าย</p></div><span class="tag tw2">${missingMidday.length} วัน</span></div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingMidday.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>${item.handled?'<span class="tag tp">ดำเนินการแล้ว</span>':'<span class="tag tf">ยังไม่บันทึก</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-midday-${item.date}','midday','${item.date}')">บันทึกย้อนหลัง</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></div>`:'';
+  }
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
   if(data.length===0){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--g4);padding:24px">ไม่พบรายการ</td></tr>';if(loadMoreWrap)loadMoreWrap.style.display='none';return;}
@@ -5140,7 +5185,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260810-midday-checklist-v84';
+const APP_VERSION = 'v20260815-mobile-dashboard-history-v88';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
