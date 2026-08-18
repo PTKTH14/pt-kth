@@ -3803,6 +3803,7 @@ function resumePendingMissedAlertAction(){
   const action=readPendingMissedAlertAction();if(!action||!isAdminLoggedIn)return false;
   activeMissedAlertKey=action.alertKey||'';
   switchView('history',document.getElementById('nav-history'));setMobileNav('history');
+  setHistoryPanel('damage');
   const date=document.getElementById('missedEvalDate');const shift=document.getElementById('missedEvalShift');const personType=document.getElementById('missedEvalPersonType');
   const actionShift=normalizeShift(action.shift);
   if(date)date.value=action.date||localDateKey(new Date());if(shift)shift.value=actionShift;if(personType)personType.value=action.personType==='pt'?'pt':'assistant';
@@ -5348,7 +5349,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260818-admin-purchase-v93';
+const APP_VERSION = 'v20260818-historical-action-v94';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
