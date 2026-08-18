@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260815-public-holidays-v89';
+const CACHE_NAME = 'pt-kth-v20260818-admin-purchase-v92';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {

@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260815-public-holidays-v89">
+<meta name="version" content="v20260818-admin-purchase-v92">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1120,7 +1120,7 @@ tr:hover td{background:var(--g1)}
   </div>
   <details class="guidance-card">
     <summary>ℹ️ วิธีบันทึกการตรวจสต็อก</summary>
-    <div class="guidance-content"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span></div>
+    <div class="guidance-content"><strong>เพียงพอ</strong> = ไม่ได้กรอกจำนวนเบิก • <strong>ต้องการเบิก</strong> = กรอกจำนวนเบิกมากกว่า 0 • <strong>พบปัญหา</strong> = ของชำรุด สูญหาย จำนวนจริงไม่ตรง หรือมีเหตุที่ตัวเลขอธิบายไม่ได้ เมื่อเลือกแล้วต้องเขียนหมายเหตุ<br><span style="color:#1D4ED8;font-weight:700">ลำดับงาน: บันทึกและแจ้ง PT → กดกำลังส่งเบิก → รับของแล้ว → แชร์ LINE ให้ PT บันทึกผลที่ได้รับและประเมิน</span><br><strong>Alcohol แยกรอบ:</strong> รอรับของวันพฤหัส แล้วจึงกดรับของและให้ PT ประเมินครั้งเดียว คะแนนไม่ปนกับวัสดุทั่วไป</div>
   </details>
   <div class="card stock-meta-grid">
     <div class="fg"><label>วันที่ตรวจสต็อก</label><input type="hidden" id="stockDate"><div id="stockDateDisplay" class="stock-week-display stock-date-display" role="status" aria-label="วันที่ตรวจสต็อก กำหนดเป็นวันปัจจุบันอัตโนมัติ">—</div></div>
@@ -1782,7 +1782,7 @@ tr:hover td{background:var(--g1)}
           <div class="fg"><label>วันที่คาดว่าจะได้รับของ</label><select id="stockScheduleReceiveWeekday"><option value="">ไม่กำหนด</option><option value="1">วันจันทร์</option><option value="2">วันอังคาร</option><option value="3">วันพุธ</option><option value="4">วันพฤหัสบดี</option><option value="5">วันศุกร์</option><option value="6">วันเสาร์</option><option value="0">วันอาทิตย์</option></select></div>
         </div>
         <div class="fg"><label>หมวดวัสดุในรอบนี้</label><div id="stockScheduleCategoryChoices" class="stock-schedule-category-grid"></div></div>
-        <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockSchedule()">💾 บันทึกรอบตรวจ</button><button class="btn btn-out" onclick="createAlcoholSchedulePreset()">🧴 สร้างรอบแอลกอฮอล์ — รับวันพฤหัส</button></div>
+        <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockSchedule()">💾 บันทึกรอบตรวจ</button><button class="btn btn-out" onclick="createAlcoholSchedulePreset()">♻️ คืนค่ารอบ Alcohol — รับวันพฤหัส</button></div>
         <div style="margin:8px 0 10px;padding:8px 10px;border-radius:8px;background:#EEF7FF;color:var(--bd);font-size:11.5px;line-height:1.6">หนึ่งหมวดอยู่ได้หลายรอบ ระบบจะเลือกตามวันที่ให้อัตโนมัติ แต่ผู้ช่วยยังเปลี่ยนรอบเองได้เมื่อบันทึกย้อนหลังหรือทำงานเพิ่มเติม</div>
         <div id="stockScheduleAdminList" class="stock-schedule-list"></div>
       </div>
@@ -1791,11 +1791,12 @@ tr:hover td{background:var(--g1)}
           <div><h3 style="margin-bottom:4px">📦 จัดการรายการสต็อก</h3><p style="font-size:12px;color:var(--g6)">เพิ่ม แก้ไข ปิดใช้งาน หรือลบรายการที่ยังไม่มีประวัติได้ และมีผลทุกอุปกรณ์</p></div>
           <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="resetStockCatalogEditor()">ล้างแบบฟอร์ม</button>
         </div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.4fr;gap:9px">
           <div class="fg"><label>ชื่อรายการ</label><input id="stockCatalogName" placeholder="เช่น ถุงมือยาง"></div>
           <div class="fg"><label>หมวด</label><select id="stockCatalogCategory"><option value="medical">วัสดุการแพทย์</option><option value="general">วัสดุทั่วไป</option><option value="cleaning">ทำความสะอาด</option><option value="alcohol">แอลกอฮอล์</option><option value="other">อื่น ๆ</option></select></div>
           <div class="fg"><label>หน่วย</label><input id="stockCatalogUnit" placeholder="กล่อง"></div>
           <div class="fg"><label>จำนวนเป้าหมาย</label><input id="stockCatalogTarget" type="number" min="0" step="1" placeholder="0"></div>
+          <div class="fg"><label>วิธีดำเนินการ</label><select id="stockCatalogFlow"><option value="hospital">เบิกจากโรงพยาบาล — ส่ง PT ประเมิน</option><option value="admin_notice">แจ้งแอดมินจัดซื้อ — ไม่ประเมิน</option></select></div>
         </div>
         <div class="act-row" style="margin-top:0"><button class="btn btn-pri" onclick="saveStockCatalogItem()">💾 บันทึกรายการ</button></div>
         <div id="stockCatalogAdminList" style="margin-top:12px"></div>
@@ -2202,7 +2203,7 @@ const DEFAULT_CL_ITEMS = {
 };
 
 // ══ STATE ══
-let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[], reviewMonthKey='';
+let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=[], evaluationRecords=[], supervisorNotes=[], supervisorRequests=[], dashboardTrendPoints=[], missedEvaluations=[], retrospectiveChecks=[], auditLogs=[], stockRecords=[], stockDraftItems=[], stockExtraItems=[], reviewMonthKey='', lastSubmittedChecklist=null;
 document.addEventListener('click',event=>{
   const tip=event.target.closest?.('.help-tip');
   const wasOpen=tip?.classList.contains('is-open');
@@ -2236,7 +2237,8 @@ const DEFAULT_STOCK_CATALOG=[
   {id:'alcohol-gel',category:'alcohol',categoryLabel:'แอลกอฮอล์',icon:'🧴',name:'Gel Alcohol (ล้างมือ)',targetQty:null,targetLabel:'กำหนดตามการใช้งาน',unit:'ขวด'}
 ];
 const DEFAULT_STOCK_SCHEDULES=[
-  {id:'weekly-all',name:'ตรวจสต็อกประจำสัปดาห์',weekday:1,dueTime:'12:00',categories:['medical','general','cleaning','alcohol','other'],active:true}
+  {id:'weekly-general',name:'วัสดุทั่วไปและการแพทย์',weekday:1,dueTime:'12:00',categories:['medical','general','cleaning','other'],active:true},
+  {id:'alcohol-room',name:'แอลกอฮอล์ (ห้องยา)',weekday:1,dueTime:'12:00',receiveWeekday:4,categories:['alcohol'],active:true}
 ];
 let stockCatalog=DEFAULT_STOCK_CATALOG.map(item=>({...item}));
 let stockSchedules=DEFAULT_STOCK_SCHEDULES.map(item=>({...item,categories:[...item.categories]}));
@@ -2247,7 +2249,7 @@ const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
 let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], retrospectivePhotos=[], lastRetrospectiveShareId=null, isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false, isDeletingRetrospective=false;
 let authUser=null, authRole='', authProfile=null;
-let lastWebAlertMinute='', activeAdminChecklistEditId=null;
+let lastWebAlertMinute='', activeAdminChecklistEditId=null, latestDataSyncPromise=null, lastLatestDataSyncAt=0;
 
 function showStartupError(error){
   const message=friendlyErrorMessage(error);
@@ -2448,6 +2450,51 @@ function hydrateCachedStartup(){
   setSyncBadge('syncing','⏳ กำลังอัปเดต');
   return hasCachedStartupData;
 }
+function clearExpiredWebAlertSeenKeys(today){
+  const keepPrefix=`pt_web_alert_seen_${today}_`;
+  try{for(let index=localStorage.length-1;index>=0;index--){const key=localStorage.key(index);if(key?.startsWith('pt_web_alert_seen_')&&!key.startsWith(keepPrefix))localStorage.removeItem(key);}}catch(error){}
+}
+function markCurrentWebAlertsSeen(){
+  const status=getWebAlertStatus(new Date());
+  getActiveWebAlerts(status).forEach(alert=>localStorage.setItem(`pt_web_alert_seen_${status.today}_${alert.key}`,'1'));
+}
+function renderLatestSyncedState(){
+  updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderMissedEvalOptions();renderMissedEvalSummary();renderRetrospectiveHistory();renderRetrospectiveAdmin();renderStockHistory();renderStockPerformancePanels();
+  if(document.getElementById('view-history')?.classList.contains('active'))loadHistory();
+  if(document.getElementById('view-review')?.classList.contains('active'))loadReviewView();
+  if(document.getElementById('view-dashboard')?.classList.contains('active'))loadDashboard();
+  if(isAdminLoggedIn&&document.getElementById('view-admin')?.classList.contains('active'))renderAdminTable();
+  refreshWebAlerts(false);
+}
+async function syncLatestFirebaseData(options){
+  const force=options?.force===true;const now=Date.now();
+  if(!window.FB||!navigator.onLine||hasUnsavedAppWork())return false;
+  if(latestDataSyncPromise)return latestDataSyncPromise;
+  if(!force&&now-lastLatestDataSyncAt<15000)return false;
+  latestDataSyncPromise=(async()=>{
+    setSyncBadge('syncing','⏳ กำลังอัปเดต');
+    try{
+      const tasks=[window.FB.fbGetConfig(),window.FB.fbGetRecentSubmissions(500),window.FB.fbGetRecentMissedEvaluations(500),window.FB.fbGetRecentStockRequests(300),window.FB.fbGetRecentRetrospectiveChecks(500)];
+      const results=await Promise.allSettled(tasks);const value=index=>results[index]?.status==='fulfilled'?results[index].value:null;const config=value(0)||{};
+      staffList=Array.isArray(config.staffList)?config.staffList:staffList;ptList=Array.isArray(config.ptList)?config.ptList:ptList;applySystemSettings(config.systemSettings);
+      if(Array.isArray(config.stockCatalog)&&config.stockCatalog.length)stockCatalog=config.stockCatalog.map(normalizeStockCatalogItem);
+      if(config.checklistItems){['morning','midday','evening','saturdayMorning','saturdayEvening'].forEach(shift=>localStorage.setItem('custom_cl_'+shift,JSON.stringify(Array.isArray(config.checklistItems[shift])?config.checklistItems[shift]:getDefaultClItems(shift))));localStorage.setItem('custom_cl_stars',JSON.stringify(config.checklistItems.stars||{}));_applyCLCustom();}
+      submissions=Array.isArray(value(1))?value(1):submissions;missedEvaluations=Array.isArray(value(2))?value(2):missedEvaluations;stockRecords=Array.isArray(value(3))?value(3):stockRecords;retrospectiveChecks=Array.isArray(value(4))?value(4):retrospectiveChecks;
+      results.forEach((result,index)=>{if(result.status==='rejected')console.warn(`Firebase resume sync ${index} failed:`,result.reason);});
+      writeLocalJSON('pt_staff',staffList);writeLocalJSON('pt_ptlist',ptList);writeLocalJSON('pt_submissions',submissions);writeLocalJSON('pt_missed_evaluations',missedEvaluations);writeLocalJSON('pt_stock_catalog',stockCatalog);writeLocalJSON('pt_stock_requests',stockRecords);writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);
+      lastLatestDataSyncAt=Date.now();renderLatestSyncedState();setSyncBadge('synced','🔥 Firebase');return true;
+    }catch(error){setSyncBadge('error','⚠️ ซิงก์ไม่สำเร็จ');console.warn('Latest Firebase sync failed:',error);return false;}
+    finally{latestDataSyncPromise=null;}
+  })();
+  return latestDataSyncPromise;
+}
+function setupAppResumeSync(){
+  const sync=()=>syncLatestFirebaseData({force:true});
+  window.addEventListener('pageshow',event=>{if(event.persisted)sync();});
+  window.addEventListener('focus',()=>syncLatestFirebaseData());
+  window.addEventListener('online',sync);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync();else closeModal('webAlertModal');});
+}
 function hasUnsavedAppWork(){
   if(Object.values(checkState||{}).some(state=>state==='done'||state==='na'))return true;
   if(editingStockRecordId)return true;
@@ -2561,7 +2608,9 @@ async function init(){
   updateEvaluationDropdowns();
   const stockDate=document.getElementById('stockDate');if(stockDate&&!stockDate.value)stockDate.value=fmtDate(new Date());
   if(!hasUnsavedAppWork()){createStockDraft();buildChecklist();}
-  startClock();
+  clearExpiredWebAlertSeenKeys(localDateKey(new Date()));
+  refreshWebAlerts(false);markCurrentWebAlertsSeen();
+  startClock();setupAppResumeSync();
   // loadDashboard จะถูกเรียกเมื่อเปิดหน้า dashboard
   updateHistoryFilters();
   updateDashFilter();
@@ -2572,6 +2621,14 @@ async function init(){
   if(retrospectiveDetails&&isCompactLayout())retrospectiveDetails.open=false;
   syncRetrospectiveDisclosureLabel();
   loadHistory();
+  const linkedReviewId=new URLSearchParams(window.location.search).get('review');
+  if(linkedReviewId){
+    switchView('review',document.getElementById('nav-review'));setMobileNav('review');
+    await loadReviewView();
+    const reviewIndex=submissions.findIndex(record=>String(record.id)===String(linkedReviewId));
+    if(reviewIndex>=0&&submissions[reviewIndex].status==='pending'&&!getTimeLockInfo(submissions[reviewIndex].date,submissions[reviewIndex].shift||'morning','pt').locked)openReview(reviewIndex);
+    else showToast(reviewIndex<0?'⚠️ ไม่พบ Checklist จากลิงก์นี้':'ℹ️ Checklist นี้ประเมินแล้วหรือเลยเวลา','warning');
+  }
   const linkedStockId=new URLSearchParams(window.location.search).get('stock');
   if(linkedStockId&&stockRecords.some(record=>Number(record.id)===Number(linkedStockId))){
     switchView('review',document.getElementById('nav-review'));setMobileNav('review');openStockReview(Number(linkedStockId));
@@ -2622,24 +2679,31 @@ function normalizeShift(shift){return shift==='midday'?'midday':shift==='afterno
 function shiftLabel(s){return s==='midday'?'☀️ ก่อนเริ่มเวรบ่าย':s==='afternoon'?'🌙 เวรบ่าย':'🌅 เวรเช้า';}
 function shiftShortLabel(s){return s==='midday'?'ก่อนบ่าย':s==='afternoon'?'บ่าย':'เช้า';}
 function shiftIcon(s){return s==='midday'?'☀️':s==='afternoon'?'🌙':'🌅';}
-const MIDDAY_TRACKING_START_DATE='2026-08-10';
-function getMissingMiddayRounds(filters){
+const CHECKLIST_TRACKING_START_DATE='2026-08-10';
+const MIDDAY_TRACKING_START_DATE=CHECKLIST_TRACKING_START_DATE;
+const CHECKLIST_SHIFT_ORDER={afternoon:0,midday:1,morning:2};
+function isChecklistOperatingDate(date){return new Date(`${date}T12:00:00`).getDay()!==0;}
+function getMissingChecklistRounds(filters){
   filters=filters||{};
-  const start=filters.start||'';const end=filters.end||'';const monthKey=filters.monthKey||'';const today=localDateKey(new Date());
-  const operatingDates=[...new Set(submissions.filter(item=>{
-    const date=String(item?.date||'');const shift=normalizeShift(item?.shift);
-    return date>=MIDDAY_TRACKING_START_DATE&&date<=today&&shift!=='midday'&&(!start||date>=start)&&(!end||date<=end)&&(!monthKey||date.startsWith(monthKey));
-  }).map(item=>String(item.date)))];
-  return operatingDates.filter(date=>{
-    const day=new Date(`${date}T12:00:00`).getDay();
-    if(day===6)return false;
-    if(submissions.some(item=>String(item?.date||'')===date&&normalizeShift(item?.shift)==='midday'))return false;
-    return getTimeLockInfo(date,'midday','assistant').locked;
-  }).map(date=>{
-    const damage=(Array.isArray(missedEvaluations)?missedEvaluations:[]).find(item=>item&&item.date===date&&normalizeShift(item.shift)==='midday'&&Array.isArray(item.assistantNames)&&item.assistantNames.length);
-    return{date,shift:'midday',damage,handled:!!damage};
-  }).sort((a,b)=>b.date.localeCompare(a.date));
+  const start=filters.start||'';const end=filters.end||'';const monthKey=filters.monthKey||'';const today=filters.today||localDateKey(new Date());
+  const firstDate=[CHECKLIST_TRACKING_START_DATE,start].filter(Boolean).sort().slice(-1)[0]||CHECKLIST_TRACKING_START_DATE;
+  const lastDate=[today,end].filter(Boolean).sort()[0]||today;
+  const rows=[];const cursor=new Date(`${firstDate}T12:00:00`);const last=new Date(`${lastDate}T12:00:00`);
+  while(cursor<=last){
+    const date=localDateKey(cursor);
+    if((!monthKey||date.startsWith(monthKey))&&isChecklistOperatingDate(date)){
+      ['morning','midday','afternoon'].forEach(shift=>{
+        if(!getTimeLockInfo(date,shift,'assistant').locked)return;
+        if(submissions.some(item=>String(item?.date||'')===date&&normalizeShift(item?.shift)===shift))return;
+        const damage=(Array.isArray(missedEvaluations)?missedEvaluations:[]).find(item=>item&&item.date===date&&normalizeShift(item.shift)===shift&&Array.isArray(item.assistantNames)&&item.assistantNames.length);
+        rows.push({date,shift,damage,handled:!!damage});
+      });
+    }
+    cursor.setDate(cursor.getDate()+1);
+  }
+  return rows.sort((a,b)=>b.date.localeCompare(a.date)||(CHECKLIST_SHIFT_ORDER[a.shift]??9)-(CHECKLIST_SHIFT_ORDER[b.shift]??9));
 }
+function getMissingMiddayRounds(filters){return getMissingChecklistRounds(filters).filter(item=>item.shift==='midday');}
 function isDateInRange(ds,start,end){if(!start&&!end)return true;if(start&&ds<start)return false;if(end&&ds>end)return false;return true;}
 function getThaiTimestamp(d){const dt=d||new Date();const day=String(dt.getDate()).padStart(2,'0');const month=String(dt.getMonth()+1).padStart(2,'0');const year=dt.getFullYear()+543;const hh=String(dt.getHours()).padStart(2,'0');const mm=String(dt.getMinutes()).padStart(2,'0');return`${day}/${month}/${year} ${hh}:${mm}`;}
 function startClock(){let activeDay='';const tick=()=>{const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('th-TH');const currentDay=localDateKey(now);if(currentDay!==activeDay){activeDay=currentDay;syncLockedOperationDates();}const minuteKey=currentDay+'-'+now.getHours()+'-'+now.getMinutes();if(minuteKey!==lastWebAlertMinute){lastWebAlertMinute=minuteKey;refreshWebAlerts(true);}};tick();setInterval(tick,1000);}
@@ -2685,13 +2749,13 @@ function stockStageAgeDays(record,now){
   return Math.max(0,Math.floor((currentDay-startDay)/86400000));
 }
 function getOverdueStockRecords(now){
-  return (typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>!record.ptVerdict&&stockStage(record)==='procuring'&&stockStageAgeDays(record,now)>=stockOverdueDays);
+  return (typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='procuring'&&stockStageAgeDays(record,now)>=stockOverdueDays);
 }
 function getActiveWebAlerts(status){
   const alerts=[];
   ['morning','midday','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
   getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้`,names:[]}));
-  const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
+  const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
   const deferredAlcohol=stockSource.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&stockDeferredReceiptDue(record));if(deferredAlcohol.length)alerts.push({key:'stock-alcohol-receipt',shift:'stock',personType:'stock',count:deferredAlcohol.length,type:'warning',title:`🧴 มีรายการ Alcohol รอยืนยันรับของ ${deferredAlcohol.length} รอบ`,detail:'ถึงวันรับของแล้ว กรุณาเปิดรายการเดิมและบันทึกผลที่ได้รับจริง โดยระบบจะไม่เปลี่ยนคะแนนผู้ช่วย',names:deferredAlcohol.slice(0,5).map(record=>record.responsible)});
   const overdueStock=getOverdueStockRecords(status.current);if(overdueStock.length)alerts.push({key:'stock-overdue',shift:'stock',personType:'stock',count:overdueStock.length,type:'danger',title:`🚚 มีงานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,detail:'กรุณาติดตามสถานะการรับของ เพื่อป้องกันงานตกหล่น',names:overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`)});
   return alerts;
@@ -2913,7 +2977,15 @@ function normalizeStockSchedule(schedule,index){
   const receiveWeekday=schedule?.receiveWeekday===''||schedule?.receiveWeekday===null||schedule?.receiveWeekday===undefined?null:Number(schedule.receiveWeekday);
   return{id:String(schedule?.id||`stock-round-${Date.now()}-${index||0}`),name:String(schedule?.name||`รอบตรวจ ${Number(index||0)+1}`).trim().slice(0,80),weekday:Number.isInteger(weekday)&&weekday>=0&&weekday<=6?weekday:1,dueTime:/^\d{2}:\d{2}$/.test(String(schedule?.dueTime||''))?String(schedule.dueTime):'12:00',receiveWeekday:Number.isInteger(receiveWeekday)&&receiveWeekday>=0&&receiveWeekday<=6?receiveWeekday:null,categories:categories.length?categories:['medical','general','cleaning','alcohol','other'],active:schedule?.active!==false};
 }
-function cloneStockSchedules(source){const rows=Array.isArray(source)&&source.length?source:DEFAULT_STOCK_SCHEDULES;return rows.map(normalizeStockSchedule);}
+function cloneStockSchedules(source){
+  const original=Array.isArray(source)&&source.length?source:DEFAULT_STOCK_SCHEDULES;
+  let rows=original.map(normalizeStockSchedule);
+  const alcoholOnly=rows.find(schedule=>schedule.categories.length===1&&schedule.categories[0]==='alcohol');
+  const mixedAlcohol=rows.find(schedule=>schedule.categories.includes('alcohol')&&schedule.categories.length>1);
+  rows=rows.map(schedule=>schedule.categories.length>1?normalizeStockSchedule({...schedule,categories:schedule.categories.filter(category=>category!=='alcohol')}):schedule).filter(schedule=>schedule.categories.length);
+  if(!alcoholOnly)rows.push(normalizeStockSchedule({id:'alcohol-room',name:'แอลกอฮอล์ (ห้องยา)',weekday:mixedAlcohol?.weekday??1,dueTime:mixedAlcohol?.dueTime||'12:00',receiveWeekday:4,categories:['alcohol'],active:mixedAlcohol?.active!==false}));
+  return rows;
+}
 function normalizePublicHolidays(records){const seen=new Set();return(Array.isArray(records)?records:[]).map(record=>({date:String(record?.date||'').slice(0,10),name:String(record?.name||'วันหยุดราชการ').trim()||'วันหยุดราชการ',confirmed:record?.confirmed!==false})).filter(record=>/^\d{4}-\d{2}-\d{2}$/.test(record.date)&&!seen.has(record.date)&&seen.add(record.date)).sort((a,b)=>a.date.localeCompare(b.date));}
 function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3,publicHolidays:normalizePublicHolidays(settings?.publicHolidays)};}
 function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);stockOverdueDays=normalized.stockOverdueDays;publicHolidays=normalizePublicHolidays(normalized.publicHolidays);try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
@@ -2990,38 +3062,40 @@ async function toggleStockSchedule(index){
 }
 async function createAlcoholSchedulePreset(){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
-  showConfirm('สร้างรอบแอลกอฮอล์ (ห้องยา) แยกต่างหาก โดยตรวจวันจันทร์และคาดว่ารับของวันพฤหัส ใช่หรือไม่?',async()=>{
+  showConfirm('คืนค่ารอบ Alcohol (ห้องยา) แยกจากวัสดุทั่วไป โดยตรวจวันจันทร์และรับของวันพฤหัส ใช่หรือไม่?',async()=>{
     try{
       stockSchedules=stockSchedules.map(schedule=>normalizeStockSchedule({...schedule,categories:(schedule.categories||[]).filter(category=>category!=='alcohol')})).filter(schedule=>schedule.categories.length);
       const preset=normalizeStockSchedule({id:'alcohol-room',name:'แอลกอฮอล์ (ห้องยา)',weekday:1,dueTime:'12:00',receiveWeekday:4,categories:['alcohol'],active:true});
       const existingIndex=stockSchedules.findIndex(schedule=>schedule.id===preset.id);
       if(existingIndex>=0)stockSchedules[existingIndex]=preset;else stockSchedules.push(preset);
-      await persistStockSchedules('add','สร้างรอบแอลกอฮอล์ (ห้องยา) คาดว่ารับของวันพฤหัส');
+      await persistStockSchedules('update','คืนค่ารอบ Alcohol (ห้องยา) แยกจากวัสดุทั่วไป รับของวันพฤหัส');
       resetStockScheduleEditor();
-      showToast('✅ สร้างรอบแอลกอฮอล์แล้ว สามารถแก้วันและเวลาได้ภายหลัง','success');
+      showToast('✅ คืนค่ารอบ Alcohol แล้ว สามารถแก้วันและเวลาได้ภายหลัง','success');
     }catch(error){showToast('❌ สร้างรอบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
   });
 }
 function deleteStockSchedule(index){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const schedule=stockSchedules[index];if(!schedule)return;
+  const isAlcoholRound=schedule.categories.length===1&&schedule.categories[0]==='alcohol';
+  if(isAlcoholRound)return showConfirm(`รอบ “${schedule.name}” เป็นรอบ Alcohol แยกเพื่อป้องกันคะแนนปนกับวัสดุทั่วไป จึงไม่ควรลบ ระบบจะปิดใช้งานแทน`,async()=>{schedule.active=false;await persistStockSchedules('update',`ปิดใช้งานรอบ Alcohol ${schedule.name}`);showToast('✅ ปิดใช้งานรอบ Alcohol แล้ว','success');});
   const hasHistory=stockRecords.some(record=>(record.scheduleId||'weekly-all')===schedule.id);
   if(hasHistory)return showConfirm(`รอบ “${schedule.name}” มีประวัติใช้งาน จึงลบไม่ได้ ระบบจะปิดใช้งานแทน`,async()=>{schedule.active=false;await persistStockSchedules('update',`ปิดใช้งานรอบ ${schedule.name} เนื่องจากมีประวัติ`);showToast('✅ ปิดใช้งานรอบตรวจแล้ว','success');});
   showConfirm(`ลบรอบตรวจ “${schedule.name}” ใช่หรือไม่?`,async()=>{try{stockSchedules.splice(index,1);await persistStockSchedules('delete',`ลบรอบตรวจสต็อก ${schedule.name}`);resetStockScheduleEditor();showToast('🗑️ ลบรอบตรวจแล้ว','success');}catch(error){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});
 }
 function normalizeStockCatalogItem(item,index){
   const category=String(item?.category||'other');const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;
-  return{id:String(item?.id||`stock-${Date.now()}-${index||0}`),category,categoryLabel:String(item?.categoryLabel||meta.label),icon:String(item?.icon||meta.icon),name:String(item?.name||'').trim(),targetQty:item?.targetQty===null?null:Math.max(0,Number(item?.targetQty||0)),targetLabel:String(item?.targetLabel||''),unit:String(item?.unit||'ชิ้น').trim(),weekly:Boolean(item?.weekly),active:item?.active!==false};
+  return{id:String(item?.id||`stock-${Date.now()}-${index||0}`),category,categoryLabel:String(item?.categoryLabel||meta.label),icon:String(item?.icon||meta.icon),name:String(item?.name||'').trim(),targetQty:item?.targetQty===null?null:Math.max(0,Number(item?.targetQty||0)),targetLabel:String(item?.targetLabel||''),unit:String(item?.unit||'ชิ้น').trim(),weekly:Boolean(item?.weekly),flow:item?.flow==='admin_notice'?'admin_notice':'hospital',active:item?.active!==false};
 }
 function renderStockCatalogAdmin(){
   const wrap=document.getElementById('stockCatalogAdminList');if(!wrap)return;
-  wrap.innerHTML=stockCatalog.length?stockCatalog.map((item,index)=>`<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:9px;margin-bottom:7px;background:${item.active===false?'#F4F5F6':'#fff'};opacity:${item.active===false?'.72':'1'}"><div><strong>${escapeHtml(item.icon)} ${escapeHtml(item.name)}</strong> <span class="tag ${item.active===false?'td0':'tp'}">${item.active===false?'ปิดใช้งาน':'ใช้งาน'}</span><div style="font-size:11px;color:var(--g6)">${escapeHtml(item.categoryLabel)} • เป้าหมาย ${item.targetQty===null?escapeHtml(item.targetLabel||'ตามเหมาะสม'):`${item.targetQty} ${escapeHtml(item.unit)}`}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editStockCatalogItem(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="toggleStockCatalogItem(${index})">${item.active===false?'เปิดใช้':'ปิดใช้'}</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px;color:var(--r)" onclick="deleteStockCatalogItem(${index})">ลบ</button></div></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:16px">ยังไม่มีรายการหลัก</div>';
+  wrap.innerHTML=stockCatalog.length?stockCatalog.map((item,index)=>`<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--g2);border-radius:9px;margin-bottom:7px;background:${item.active===false?'#F4F5F6':'#fff'};opacity:${item.active===false?'.72':'1'}"><div><strong>${escapeHtml(item.icon)} ${escapeHtml(item.name)}</strong> <span class="tag ${item.active===false?'td0':'tp'}">${item.active===false?'ปิดใช้งาน':'ใช้งาน'}</span> <span class="tag" style="background:${item.flow==='admin_notice'?'#FFF4D6':'#E8F3FF'};color:${item.flow==='admin_notice'?'#8A5A00':'#155A92'}">${item.flow==='admin_notice'?'แจ้งแอดมินจัดซื้อ':'ส่ง PT ประเมิน'}</span><div style="font-size:11px;color:var(--g6)">${escapeHtml(item.categoryLabel)} • เป้าหมาย ${item.targetQty===null?escapeHtml(item.targetLabel||'ตามเหมาะสม'):`${item.targetQty} ${escapeHtml(item.unit)}`}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="editStockCatalogItem(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px" onclick="toggleStockCatalogItem(${index})">${item.active===false?'เปิดใช้':'ปิดใช้'}</button><button class="btn btn-out" style="padding:5px 9px;font-size:11px;color:var(--r)" onclick="deleteStockCatalogItem(${index})">ลบ</button></div></div>`).join(''):'<div style="text-align:center;color:var(--g4);padding:16px">ยังไม่มีรายการหลัก</div>';
 }
 function resetStockCatalogEditor(){
-  editingStockCatalogIndex=null;['stockCatalogName','stockCatalogUnit','stockCatalogTarget'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const category=document.getElementById('stockCatalogCategory');if(category)category.value='medical';
+  editingStockCatalogIndex=null;['stockCatalogName','stockCatalogUnit','stockCatalogTarget'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const category=document.getElementById('stockCatalogCategory');if(category)category.value='medical';const flow=document.getElementById('stockCatalogFlow');if(flow)flow.value='hospital';
 }
 function editStockCatalogItem(index){
   const item=stockCatalog[index];if(!item)return;editingStockCatalogIndex=index;
-  document.getElementById('stockCatalogName').value=item.name;document.getElementById('stockCatalogCategory').value=STOCK_CATEGORY_META[item.category]?item.category:'other';document.getElementById('stockCatalogUnit').value=item.unit;document.getElementById('stockCatalogTarget').value=item.targetQty===null?'':item.targetQty;
+  document.getElementById('stockCatalogName').value=item.name;document.getElementById('stockCatalogCategory').value=STOCK_CATEGORY_META[item.category]?item.category:'other';document.getElementById('stockCatalogUnit').value=item.unit;document.getElementById('stockCatalogTarget').value=item.targetQty===null?'':item.targetQty;document.getElementById('stockCatalogFlow').value=item.flow==='admin_notice'?'admin_notice':'hospital';
   document.getElementById('stockCatalogName').focus();
 }
 async function persistStockCatalog(action,detail){
@@ -3029,9 +3103,9 @@ async function persistStockCatalog(action,detail){
 }
 async function saveStockCatalogItem(){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
-  const name=(document.getElementById('stockCatalogName')?.value||'').trim();const category=document.getElementById('stockCatalogCategory')?.value||'other';const unit=(document.getElementById('stockCatalogUnit')?.value||'ชิ้น').trim();const targetRaw=document.getElementById('stockCatalogTarget')?.value;
+  const name=(document.getElementById('stockCatalogName')?.value||'').trim();const category=document.getElementById('stockCatalogCategory')?.value||'other';const unit=(document.getElementById('stockCatalogUnit')?.value||'ชิ้น').trim();const targetRaw=document.getElementById('stockCatalogTarget')?.value;const flow=document.getElementById('stockCatalogFlow')?.value==='admin_notice'?'admin_notice':'hospital';
   if(!name)return showToast('⚠️ กรุณากรอกชื่อรายการ','warning');if(!unit)return showToast('⚠️ กรุณากรอกหน่วย','warning');
-  const oldItem=editingStockCatalogIndex===null?null:stockCatalog[editingStockCatalogIndex];const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;const item=normalizeStockCatalogItem({id:oldItem?.id||`stock-${Date.now()}`,category,categoryLabel:meta.label,icon:meta.icon,name,unit,targetQty:targetRaw===''?null:Number(targetRaw),targetLabel:targetRaw===''?'ตามความเหมาะสม':'',active:oldItem?.active!==false});
+  const oldItem=editingStockCatalogIndex===null?null:stockCatalog[editingStockCatalogIndex];const meta=STOCK_CATEGORY_META[category]||STOCK_CATEGORY_META.other;const item=normalizeStockCatalogItem({id:oldItem?.id||`stock-${Date.now()}`,category,categoryLabel:meta.label,icon:meta.icon,name,unit,targetQty:targetRaw===''?null:Number(targetRaw),targetLabel:targetRaw===''?'ตามความเหมาะสม':'',flow,active:oldItem?.active!==false});
   try{const isEdit=editingStockCatalogIndex!==null;if(isEdit)stockCatalog[editingStockCatalogIndex]=item;else stockCatalog.push(item);await persistStockCatalog(isEdit?'update':'add',`${isEdit?'แก้ไข':'เพิ่ม'}รายการเบิก ${name}`);resetStockCatalogEditor();showToast('✅ บันทึกรายการเบิกแล้ว','success');}catch(error){showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 async function toggleStockCatalogItem(index){
@@ -3137,14 +3211,15 @@ async function submitStockRequest(){
   const problemWithoutNote=stockDraftItems.find(item=>item.issueStatus!=='normal'&&!String(item.note||'').trim());if(problemWithoutNote)return showToast(`⚠️ กรุณาอธิบายปัญหา: ${problemWithoutNote.name}`,'warning');
   const incompleteExtra=stockExtraItems.find(item=>!item.name.trim()||item.currentQty==='');if(incompleteExtra)return showToast('⚠️ กรุณากรอกชื่อและจำนวนคงเหลือของรายการเพิ่มเติมให้ครบ','warning');
   const weekKey=mondayKeyFromDate(date);
-  const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
-  const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),fulfillmentStatus:item.fulfillmentStatus||(requestQty>0?'pending':'not_required'),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
-  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const hasRequestedItems=items.some(item=>Number(item.requestQty||0)>0);const now=new Date();const resetReview=Boolean(old?.ptVerdict);
-  const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleReceiveWeekday:Number.isInteger(schedule.receiveWeekday)?schedule.receiveWeekday:-1,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',procurementStage:resetReview?(hasRequestedItems?'awaiting_dispatch':'ready_for_review'):(old?.procurementStage||(hasRequestedItems?'awaiting_dispatch':'ready_for_review')),stageUpdatedAt:resetReview?now.toISOString():(old?.stageUpdatedAt||now.toISOString()),evaluationStatus:resetReview?'pending':(old?.evaluationStatus||'pending'),ptVerdict:resetReview?'':(old?.ptVerdict||''),ptReviewer:resetReview?'':(old?.ptReviewer||''),ptComment:resetReview?'':(old?.ptComment||''),ptAccuracyScore:resetReview?0:Number(old?.ptAccuracyScore||0),ptCommunicationScore:resetReview?0:Number(old?.ptCommunicationScore||0),stockScore:resetReview?0:Number(old?.stockScore||0),reviewedAt:resetReview?'':(old?.reviewedAt||''),reviewTimeDisplay:resetReview?'':(old?.reviewTimeDisplay||''),procurementUpdatedAt:resetReview?'':(old?.procurementUpdatedAt||''),procurementUpdatedBy:resetReview?'':(old?.procurementUpdatedBy||'')};
+  const normalizedBase=stockDraftItems.map(item=>{const requestQty=Number(item.requestQty||0);return{id:item.id,category:item.category,name:item.name,targetQty:item.targetQty,targetLabel:item.targetLabel||'',unit:item.unit,currentQty:item.currentQty===''?0:Number(item.currentQty),requestQty,issueStatus:item.issueStatus,note:String(item.note||'').trim(),flow:item.flow==='admin_notice'?'admin_notice':'hospital',fulfillmentStatus:item.flow==='admin_notice'?'not_required':(item.fulfillmentStatus||(requestQty>0?'pending':'not_required')),fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
+  const normalizedExtra=stockExtraItems.map((item,index)=>{const requestQty=Number(item.requestQty||0);return{id:`extra-${index+1}`,category:'extra',name:item.name.trim(),targetQty:null,targetLabel:'ตามความเหมาะสม',unit:(item.unit||'ชิ้น').trim(),currentQty:Number(item.currentQty||0),requestQty,issueStatus:'normal',note:String(item.note||'').trim(),flow:'admin_notice',fulfillmentStatus:'not_required',fulfillmentNote:String(item.fulfillmentNote||'').trim()};});
+  const items=normalizedBase.concat(normalizedExtra);const attention=items.some(item=>item.requestQty>0||item.issueStatus!=='normal');const hospitalItems=items.filter(item=>item.flow!=='admin_notice');const adminNoticeOnly=hospitalItems.length===0;const hasRequestedItems=hospitalItems.some(item=>Number(item.requestQty||0)>0);const now=new Date();const resetReview=Boolean(old?.ptVerdict);
+  const recordType=adminNoticeOnly?'admin_notice':'stock_review';const procurementStage=adminNoticeOnly?'admin_notified':(resetReview?(hasRequestedItems?'awaiting_dispatch':'ready_for_review'):(old?.recordType==='admin_notice'?'ready_for_review':old?.procurementStage||(hasRequestedItems?'awaiting_dispatch':'ready_for_review')));const evaluationStatus=adminNoticeOnly?'not_required':(resetReview?'pending':old?.evaluationStatus==='not_required'?'pending':old?.evaluationStatus||'pending');
+  const record={id:old?.id||Date.now(),date,weekKey,scheduleId:schedule.id,scheduleName:schedule.name,scheduleDay:schedule.weekday,scheduleDueTime:schedule.dueTime,scheduleReceiveWeekday:Number.isInteger(schedule.receiveWeekday)?schedule.receiveWeekday:-1,scheduleCategories:[...schedule.categories],responsible,items,overallNote,status:attention?'attention':'complete',recordType,createdAt:old?.createdAt||now.toISOString(),timeDisplay:old?.timeDisplay||getThaiTimestamp(now),updatedAt:old?now.toISOString():'',procurementStage,stageUpdatedAt:resetReview||adminNoticeOnly?now.toISOString():(old?.stageUpdatedAt||now.toISOString()),evaluationStatus,ptVerdict:resetReview||adminNoticeOnly?'':(old?.ptVerdict||''),ptReviewer:resetReview||adminNoticeOnly?'':(old?.ptReviewer||''),ptComment:resetReview||adminNoticeOnly?'':(old?.ptComment||''),ptAccuracyScore:resetReview||adminNoticeOnly?0:Number(old?.ptAccuracyScore||0),ptCommunicationScore:resetReview||adminNoticeOnly?0:Number(old?.ptCommunicationScore||0),stockScore:resetReview||adminNoticeOnly?0:Number(old?.stockScore||0),reviewedAt:resetReview||adminNoticeOnly?'':(old?.reviewedAt||''),reviewTimeDisplay:resetReview||adminNoticeOnly?'':(old?.reviewTimeDisplay||''),procurementUpdatedAt:adminNoticeOnly?now.toISOString():(resetReview?'':old?.procurementUpdatedAt||''),procurementUpdatedBy:adminNoticeOnly?responsible:(resetReview?'':old?.procurementUpdatedBy||'')};
   try{
     isSavingStockRequest=true;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=true;
     if(!window.FB?.fbSaveStockRequest)throw new Error('ยังไม่เชื่อมต่อ Firebase กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
-    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);writeLocalJSON('pt_stock_requests',stockRecords);const changeDetail=old?stockRecordChangeSummary(old,record):'';await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}${changeDetail?` — ${changeDetail}`:''}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old)openStockShare(record);
+    setSyncBadge('syncing','⏳ Saving...');await window.FB.fbSaveStockRequest(record);if(old)stockRecords=stockRecords.map(item=>Number(item.id)===Number(record.id)?record:item);else stockRecords.push(record);writeLocalJSON('pt_stock_requests',stockRecords);const changeDetail=old?stockRecordChangeSummary(old,record):'';await writeAuditLog(old?'update':'add','stock_request',`${old?'แก้ไข':'บันทึก'}${schedule.name}โดย ${responsible}${changeDetail?` — ${changeDetail}`:''}`,{actor:old?currentAdminEmail():responsible,actorRole:old?'แอดมิน':'ผู้ช่วย'});setSyncBadge('synced','🔥 Firebase');renderStockHistory();renderStockPerformancePanels();resetStockDraft(false);refreshWebAlerts(false);showToast(adminNoticeOnly?'✅ บันทึกแจ้งแอดมินจัดซื้อแล้ว — ไม่เข้าคิว PT':old?'✅ แก้ไขรายการแล้ว':'✅ บันทึกรายการแล้ว สามารถแจ้ง PT ให้ทราบก่อนเริ่มเบิก','success');if(!old&&!adminNoticeOnly)openStockShare(record);
   }catch(error){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกเบิกของไม่สำเร็จ: '+error.message,'error');}
   finally{isSavingStockRequest=false;const saveButton=document.getElementById('stockSaveBtn');if(saveButton)saveButton.disabled=false;}
 }
@@ -3158,8 +3233,12 @@ function stockRecordChangeSummary(oldRecord,newRecord){
   return(visible.join(' • ')||'ไม่พบค่าที่เปลี่ยน').slice(0,1800);
 }
 function stockSummaryMetric(label,value,color){return`<div class="stock-summary-metric"><div class="stock-summary-value" style="color:${color}">${value}</div><div class="stock-summary-label">${label}</div></div>`;}
+function stockItemNeedsAdminNotice(item){return item?.flow==='admin_notice'&&(Number(item.requestQty||0)>0||item.issueStatus!=='normal');}
+function stockRecordIsAdminNotice(record){const items=Array.isArray(record?.items)?record.items:[];return record?.recordType==='admin_notice'||(items.length>0&&items.every(item=>item?.flow==='admin_notice'));}
+function stockScoredItems(record){return(Array.isArray(record?.items)?record.items:[]).filter(item=>item?.flow!=='admin_notice');}
+function stockScoredRecords(records){return(Array.isArray(records)?records:[]).filter(record=>!stockRecordIsAdminNotice(record));}
 function stockPerformanceStats(record){
-  const items=Array.isArray(record?.items)?record.items:[];const completed=items.filter(item=>Number.isFinite(Number(item.currentQty))).length;const completionPct=items.length?Math.round(completed/items.length*100):0;
+  const items=stockScoredItems(record);const completed=items.filter(item=>Number.isFinite(Number(item.currentQty))).length;const completionPct=items.length?Math.round(completed/items.length*100):0;
   const completionScore=Math.round(completionPct*.4);const legacyAccuracy=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?15:0;const legacyCommunication=record?.ptVerdict==='pass'?30:record?.ptVerdict==='partial'?15:0;
   const accuracyScore=Object.prototype.hasOwnProperty.call(record||{},'ptAccuracyScore')?Number(record.ptAccuracyScore):legacyAccuracy;
   const communicationScore=Object.prototype.hasOwnProperty.call(record||{},'ptCommunicationScore')?Number(record.ptCommunicationScore):legacyCommunication;
@@ -3170,11 +3249,12 @@ function stockScoreBreakdown(record){
   const stats=stockPerformanceStats(record);
   return `ครบถ้วน ${stats.completionScore}/40 • จำนวนเบิก ${stats.accuracyScore}/30 • การส่งต่องาน ${stats.communicationScore}/30`;
 }
-function stockVerdictLabel(record){return record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':stockStageLabel(record);}
-function stockStage(record){return record?.ptVerdict&&pendingDeferredAlcoholItems(record).length?'reviewed_waiting_receipt':record?.ptVerdict?'reviewed':record?.procurementStage||'awaiting_dispatch';}
-function stockStageLabel(record){const stage=stockStage(record);return stage==='awaiting_dispatch'?'รอผู้ช่วยส่งเบิก':stage==='procuring'?'กำลังเบิกของ':stage==='ready_for_review'?'รับของแล้ว — รอ PT ประเมิน':stage==='reviewed_waiting_receipt'?'ประเมินแล้ว — รอรับ Alcohol วันพฤหัส':'ประเมินแล้ว';}
+function stockVerdictLabel(record){return stockRecordIsAdminNotice(record)?'แจ้งแอดมินแล้ว':record?.ptVerdict==='pass'?'ผ่าน':record?.ptVerdict==='partial'?'ต้องปรับปรุง':record?.ptVerdict==='fail'?'ไม่ผ่าน':stockStageLabel(record);}
+function stockStage(record){return stockRecordIsAdminNotice(record)?'admin_notified':record?.ptVerdict&&pendingDeferredAlcoholItems(record).length?'reviewed_waiting_receipt':record?.ptVerdict?'reviewed':record?.procurementStage||'awaiting_dispatch';}
+function stockStageLabel(record){const stage=stockStage(record);return stage==='admin_notified'?'แจ้งแอดมินจัดซื้อแล้ว':stage==='awaiting_dispatch'?'รอผู้ช่วยส่งเบิก':stage==='procuring'?'กำลังเบิกของ':stage==='ready_for_review'?'รับของแล้ว — รอ PT ประเมิน':stage==='reviewed_waiting_receipt'?'ประเมินแล้ว — รอรับ Alcohol วันพฤหัส':'ประเมินแล้ว';}
 function stockWorkflowActionButton(record){
   const stage=stockStage(record);const id=Number(record.id);
+  if(stage==='admin_notified')return'<span class="tag" style="background:#FFF4D6;color:#8A5A00">📣 แอดมินรับทราบ</span>';
   if(stage==='awaiting_dispatch')return`<button class="btn btn-pri" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'procuring')">📦 กำลังส่งเบิก</button>`;
   if(stage==='procuring')return`<button class="btn btn-suc" style="padding:4px 9px;font-size:11px" onclick="updateStockStage(${id},'ready_for_review')">✅ รับของแล้ว แจ้ง PT</button>`;
   if(stage==='ready_for_review')return`<button class="btn btn-line" style="padding:4px 9px;font-size:11px" onclick="openStockShareById(${id})">💬 แชร์ LINE ให้ PT ประเมิน</button>`;
@@ -3198,7 +3278,9 @@ function isAlcoholStockItem(item){
   return String(item?.category||'').toLowerCase()==='alcohol'||/alcohol|แอลกอฮอล์/i.test(String(item?.name||''));
 }
 function isDeferredAlcoholItem(record,item){
-  return Number(item?.requestQty||0)>0&&isAlcoholStockItem(item)&&Number(record?.scheduleReceiveWeekday)===4;
+  const requested=stockRecordItems(record).filter(entry=>Number(entry?.requestQty||0)>0);
+  const legacyMixedRound=requested.some(entry=>!isAlcoholStockItem(entry));
+  return legacyMixedRound&&Number(item?.requestQty||0)>0&&isAlcoholStockItem(item)&&Number(record?.scheduleReceiveWeekday)===4;
 }
 function pendingDeferredAlcoholItems(record){
   return stockRecordItems(record).filter(item=>isDeferredAlcoholItem(record,item)&&!STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus));
@@ -3252,7 +3334,7 @@ async function shareTextPreferNative(title,text){
 applyDeviceAwareShareLabels();
 async function shareStockToLine(){
   const record=lastStockShareRecord;if(!record)return;const ready=stockStage(record)==='ready_for_review';
-  const requested=(record.items||[]).filter(item=>Number(item.requestQty||0)>0).map(item=>`• ${item.name} ${Number(item.requestQty||0)} ${item.unit||''}`).join('\n');
+  const requested=stockScoredItems(record).filter(item=>Number(item.requestQty||0)>0).map(item=>`• ${item.name} ${Number(item.requestQty||0)} ${item.unit||''}`).join('\n');
   const heading=ready?'✅ รับของแล้ว พร้อมให้ PT ประเมินงานเบิกของ':'📦 แจ้งรายการที่กำลังจะดำเนินการเบิก';
   const action=ready?'กรุณาเปิดระบบเพื่อตรวจรายการและประเมินผล':'แจ้งให้ PT ทราบก่อน ผู้ช่วยจะดำเนินการเบิกตามรายการนี้';
   const receiveText=Number(record.scheduleReceiveWeekday)>=0?`\nคาดว่ารับของ: ${STOCK_WEEKDAY_LABELS[Number(record.scheduleReceiveWeekday)]}`:'';
@@ -3269,7 +3351,7 @@ function renderStockHistory(){
     const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const roundName=record.scheduleName||'ตรวจสต็อกประจำสัปดาห์';
     const issueHtml=issues.length?`<div class="stock-issue-list"><strong>รายการที่ต้องติดตาม</strong><br>${issues.map(item=>`• ${escapeHtml(item.name)}${Number(item.requestQty||0)>0?` — เบิก ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''}${item.issueStatus!=='normal'?' — พบปัญหา':''}${item.note?` (${escapeHtml(item.note)})`:''}${Number(item.requestQty||0)>0?` — <span style="color:${stockFulfillmentInfo(item).color}">${escapeHtml(stockFulfillmentInfo(item).label)}</span>`:''}${item.fulfillmentNote?` (${escapeHtml(item.fulfillmentNote)})`:''}`).join('<br>')}</div>`:'<div style="margin-top:8px;color:var(--g);font-size:12px;font-weight:700">✅ สต็อกเพียงพอทุกรายการ</div>';
     const manageButtons=isAdminLoggedIn?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 9px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button>`:'';
-    const reviewButton=stockStage(record)==='reviewed_waiting_receipt'?stockWorkflowActionButton(record):record.ptVerdict?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">แก้ผลและคะแนน</button>`:stockWorkflowActionButton(record);
+    const reviewButton=stockRecordIsAdminNotice(record)?stockWorkflowActionButton(record):stockStage(record)==='reviewed_waiting_receipt'?stockWorkflowActionButton(record):record.ptVerdict?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">แก้ผลและคะแนน</button>`:stockWorkflowActionButton(record);
     return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(roundName)}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">${record.ptVerdict?`ผลงาน ${stats.totalScore}%`:'รอให้คะแนน'}</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;
   }).join('');
 }
@@ -3280,12 +3362,12 @@ function editStockRecord(id){
   switchView('stock');document.getElementById('stockDate').value=record.date;const scheduleSelect=document.getElementById('stockSchedule');const scheduleId=record.scheduleId||'weekly-all';if(scheduleSelect&&!Array.from(scheduleSelect.options).some(option=>option.value===scheduleId))scheduleSelect.add(new Option(`${record.scheduleName||'รอบตรวจเดิม'} — ประวัติเดิม`,scheduleId));if(scheduleSelect)scheduleSelect.value=scheduleId;document.getElementById('stockResponsible').value=record.responsible;document.getElementById('stockOverallNote').value=record.overallNote||'';document.getElementById('stockSaveBtn').textContent='💾 บันทึกการแก้ไข';updateStockWeekBadge();renderStockGroups();renderStockExtraItems();window.scrollTo({top:0,behavior:'smooth'});
 }
 function openStockReview(id){
-  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');
+  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;if(stockRecordIsAdminNotice(record))return showToast('📣 รายการนี้แจ้งแอดมินจัดซื้อแล้ว ไม่ต้องส่ง PT ประเมิน','success');if(!record.ptVerdict&&stockStage(record)!=='ready_for_review')return showToast('⏳ ผู้ช่วยยังไม่ได้ยืนยันว่ารับของกลับมาแล้ว','warning');
   stockReviewMode=record.ptVerdict&&pendingDeferredAlcoholItems(record).length?'deferred_receipt':'evaluation';
   if(stockReviewMode==='deferred_receipt'&&!stockDeferredReceiptDue(record)&&!isAdminLoggedIn)return showToast(`⏳ รายการ Alcohol กำหนดรับวันที่ ${thaiDate(stockExpectedReceiveDate(record))}`,'warning');
   activeStockReviewId=record.id;
   document.getElementById('stockReviewTitle').textContent=`${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'} • ${thaiDate(record.date)} • ${record.responsible}`;const select=document.getElementById('stockReviewPt');select.innerHTML='<option value="">— เลือกชื่อ PT —</option>'+ptList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');select.value=record.ptReviewer||'';select.onchange=updateStockReviewReadiness;
-  stockReviewWorkflowDraftItems=(stockReviewMode==='deferred_receipt'?pendingDeferredAlcoholItems(record):(record.items||[]).filter(item=>Number(item.requestQty||0)>0)).map(item=>({...item,deferredAlcohol:isDeferredAlcoholItem(record,item),fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
+  stockReviewWorkflowDraftItems=(stockReviewMode==='deferred_receipt'?pendingDeferredAlcoholItems(record):stockScoredItems(record).filter(item=>Number(item.requestQty||0)>0)).map(item=>({...item,deferredAlcohol:isDeferredAlcoholItem(record,item),fulfillmentStatus:STOCK_REVIEW_RESULT_KEYS.includes(item.fulfillmentStatus)?item.fulfillmentStatus:'',fulfillmentNote:item.fulfillmentNote||''}));renderStockReviewWorkflowItems();
   const evaluationFields=document.getElementById('stockReviewEvaluationFields');if(evaluationFields)evaluationFields.style.display=stockReviewMode==='evaluation'?'block':'none';
   const workflowHead=document.querySelector('#stockReviewModal .stock-review-workflow-head');const workflowNote=document.querySelector('#stockReviewModal .stock-review-workflow-note');
   if(workflowHead)workflowHead.innerHTML=stockReviewMode==='deferred_receipt'?'🧴 ยืนยันผลรับ Alcohol วันพฤหัส <span class="tag tp" style="margin-left:6px">ไม่ประเมินซ้ำ</span>':'🚚 ผลที่ผู้ช่วยกลับมารายงานหลังเบิกของ <span class="tag tp" style="margin-left:6px">ไม่คิดคะแนน</span>';
@@ -3365,8 +3447,8 @@ function renderStockPerformancePanels(){
   const dashboard=document.getElementById('stockPerformanceDashboard');
   const supervisor=document.getElementById('supervisorStockPerformance');
   const admin=document.getElementById('adminStockPerformance');
-  if(dashboard)dashboard.innerHTML=stockPerformanceSummaryMarkup(stockRecords);
-  if(supervisor)supervisor.innerHTML=stockPerformanceMarkup(stockRecords,'ผลงานเบิกของและตรวจสต็อก');
+  if(dashboard)dashboard.innerHTML=stockPerformanceSummaryMarkup(stockScoredRecords(stockRecords));
+  if(supervisor)supervisor.innerHTML=stockPerformanceMarkup(stockScoredRecords(stockRecords),'ผลงานเบิกของและตรวจสต็อก');
   if(admin)admin.innerHTML=stockAdminManageMarkup(stockRecords);
 }
 function deleteStockRecord(id){
@@ -3403,11 +3485,13 @@ async function submitChecklist(){
   try{
     await window.FB.fbSaveSubmission(rec);
     submissions.push(rec);
+    lastSubmittedChecklist=rec;
     await writeAuditLog('add','system_data',`ส่ง Checklist ${rec.staffName} — ${rec.date} ${shiftLabel(rec.shift)}`,{actor:rec.staffName,actorRole:'ผู้ช่วย'});
     setSyncBadge('synced','🔥 Firebase');
     closeModal('submitModal');
     showToast('✅ บันทึกลง Firebase แล้ว','success');
     updateHistoryFilters();updateDashFilter();refreshWebAlerts(false);
+    const shareLink=document.getElementById('shareAppLink');if(shareLink)shareLink.textContent=checklistReviewShareUrl(rec);
     document.getElementById('shareModal').classList.add('open');
   }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
 }
@@ -3440,25 +3524,42 @@ function changeReviewMonth(offset){
   loadReviewView();
 }
 function setReviewCurrentMonth(){reviewMonthKey='';loadReviewView();}
+let reviewMonthLoadToken=0;
+async function ensurePublicRangeData(start,end){
+  if(!start||!end||!window.FB?.fbGetPublicHistoryRange)return;
+  const bundle=await window.FB.fbGetPublicHistoryRange(start,end);
+  submissions=mergeReportRecords(submissions,bundle.submissions);
+  stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
+  missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
+  retrospectiveChecks=mergeReportRecords(retrospectiveChecks,bundle.retrospectiveChecks);
+}
 function missedPtRecordForSubmission(submission){
   return (Array.isArray(missedEvaluations)?missedEvaluations:[]).find(record=>record&&record.date===submission.date&&(record.shift||'morning')===(submission.shift||'morning')&&Array.isArray(record.ptNames)&&record.ptNames.length);
 }
-function loadReviewView(){
-  const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
+async function loadReviewView(){
   const selectedMonth=currentReviewMonthKey();updateReviewMonthLabel();
+  const token=++reviewMonthLoadToken;
+  const pl=document.getElementById('pendingList');if(!pl)return;
+  const [year,month]=selectedMonth.split('-').map(Number);
+  const range=historyMonthRange(new Date(year,month-1,1));
+  if(window.FB?.fbGetPublicHistoryRange){
+    pl.innerHTML='<div class="card" style="text-align:center;padding:24px;color:var(--g6)">⏳ กำลังตรวจสอบงานประจำเดือน...</div>';
+    try{await ensurePublicRangeData(range.start,range.end);}catch(error){if(token===reviewMonthLoadToken)showReviewLoadError(error);return;}
+    if(token!==reviewMonthLoadToken)return;
+  }
+  const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
   const pendingInMonth=safeSubmissions.filter(s=>s.status==='pending'&&String(s.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const expired=pendingInMonth.filter(s=>getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
   const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
-  const pendingStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
-  const pl=document.getElementById('pendingList');if(!pl)return;
-  const missingMidday=getMissingMiddayRounds({monthKey:selectedMonth}).filter(item=>!item.handled);
-  const missingMiddayHtml=missingMidday.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:#9A6700">☀️ ก่อนเริ่มเวรบ่ายที่ไม่มี Checklist ${missingMidday.length} วัน</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingMidday.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel('midday')}</span></td><td>ไม่มีการส่ง Checklist รอบก่อนเริ่มเวรบ่าย</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-midday-${item.date}','midday','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div>`:'';
+  const pendingStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
+  const missingChecklist=getMissingChecklistRounds({monthKey:selectedMonth}).filter(item=>!item.handled);
+  const missingChecklistHtml=missingChecklist.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:#9A6700">⚠️ Checklist ที่ระบบตรวจไม่พบ ${missingChecklist.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel(item.shift)}</span></td><td>ไม่มีการส่ง Checklist ${shiftLabel(item.shift)}</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div>`:'';
   const expiredHtml=expired.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:var(--r)">⛔ Checklist เลยเวลาประจำเดือน ${expired.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${expired.map(s=>{const pct=calcCompletion(s);const damage=missedPtRecordForSubmission(s);const ptNames=damage?.ptNames||[];return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${ptNames.length?`<span class="tag tf">${escapeHtml(ptNames.join(', '))}</span>`:'<span class="tag tw2">รอแอดมินบันทึก</span>'}</td><td><span class="tag" style="background:#F3F4F6;color:var(--g6)">${damage?'บันทึกค่าเสียหายแล้ว':'เลยเวลา'}</span></td></tr>`;}).join('')}</tbody></table></div>`:'';
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
   const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
-  pl.innerHTML=missingMiddayHtml+checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
+  pl.innerHTML=missingChecklistHtml+checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -3721,7 +3822,14 @@ let historyMonthCursor=null;
 let currentHistoryPanel='checklist';
 function historyMonthRange(date){const year=date.getFullYear(),month=date.getMonth();return{start:`${year}-${String(month+1).padStart(2,'0')}-01`,end:localDateKey(new Date(year,month+1,0))};}
 function updateHistoryMonthLabel(){const label=document.getElementById('historyMonthLabel');if(label&&historyMonthCursor)label.textContent=historyMonthCursor.toLocaleDateString('th-TH',{month:'long',year:'numeric'});}
-function applyHistoryMonth(){if(!historyMonthCursor)return;const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
+async function applyHistoryMonth(){
+  if(!historyMonthCursor)return;
+  const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();historyVisibleCount=HISTORY_PAGE_SIZE;
+  if(window.FB?.fbGetPublicHistoryRange){
+    try{showToast('⏳ กำลังโหลดประวัติประจำเดือน...','info');await ensurePublicRangeData(range.start,range.end);}catch(error){showToast('⚠️ โหลดประวัติเดือนไม่สำเร็จ: '+friendlyErrorMessage(error),'warning');}
+  }
+  loadHistory();
+}
 function ensureHistoryMonth(){if(historyMonthCursor)return;const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();setHistoryPanel(currentHistoryPanel);}
 function changeHistoryMonth(offset){ensureHistoryMonth();historyMonthCursor=new Date(historyMonthCursor.getFullYear(),historyMonthCursor.getMonth()+offset,1);applyHistoryMonth();}
 function setHistoryCurrentMonth(){const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);applyHistoryMonth();}
@@ -3873,11 +3981,11 @@ function loadHistory(){
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   updateMissedEvalAdminPanel();renderMissedEvalSummary();renderRetrospectiveHistory();
   const missingHost=document.getElementById('historyMissingMidday');
-  let missingMidday=getMissingMiddayRounds({start:fStart,end:fEnd});
-  if(fStaff)missingMidday=missingMidday.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));
-  if(fStatus&&fStatus!=='pending')missingMidday=[];
+  let missingChecklist=getMissingChecklistRounds({start:fStart,end:fEnd});
+  if(fStaff)missingChecklist=missingChecklist.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));
+  if(fStatus&&fStatus!=='pending')missingChecklist=[];
   if(missingHost){
-    missingHost.innerHTML=missingMidday.length?`<div class="card" style="margin-bottom:14px;border-left:4px solid #F59E0B"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">☀️ ประวัติรอบก่อนเริ่มเวรบ่ายที่ขาดส่ง</h3><p style="font-size:12px;color:var(--g6)">ระบบตรวจจากวันที่มีงานเวรเช้าหรือเวรบ่ายจริง แต่ไม่พบ Checklist รอบก่อนเริ่มบ่าย</p></div><span class="tag tw2">${missingMidday.length} วัน</span></div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingMidday.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>${item.handled?'<span class="tag tp">ดำเนินการแล้ว</span>':'<span class="tag tf">ยังไม่บันทึก</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-midday-${item.date}','midday','${item.date}')">บันทึกย้อนหลัง</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></div>`:'';
+    missingHost.innerHTML=missingChecklist.length?`<div class="card" style="margin-bottom:14px;border-left:4px solid #F59E0B"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">⚠️ ประวัติ Checklist ที่ระบบตรวจไม่พบ</h3><p style="font-size:12px;color:var(--g6)">ระบบตรวจครบเวรเช้า ก่อนเริ่มบ่าย และเวรบ่ายทุกวันเปิดทำการหลังพ้นเวลา Cutoff โดยไม่ต้องรอให้มีรายการเวรอื่น</p></div><span class="tag tw2">${missingChecklist.length} รอบ</span></div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift)}</td><td>${item.handled?'<span class="tag tp">ดำเนินการแล้ว</span>':'<span class="tag tf">ยังไม่บันทึก</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></div>`:'';
   }
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
@@ -4942,17 +5050,22 @@ function showToast(msg,type){const t=document.getElementById('toast');document.g
 
 // ══ SHARE ══
 function copyAppLink() {
-  const link = 'https://ptkth14.github.io/pt-kth/';
+  const link = document.getElementById('shareAppLink')?.textContent?.trim() || 'https://ptkth14.github.io/pt-kth/';
   navigator.clipboard.writeText(link).then(() => {
     document.getElementById('copyAppLinkBtn').textContent = '✅ Copied!';
     document.getElementById('copyAppLinkBtn').classList.add('copied');
     showToast('📋 Copy ลิงก์แล้ว', 'success');
   });
 }
+function checklistReviewShareUrl(record){return`https://ptkth14.github.io/pt-kth/?review=${encodeURIComponent(record?.id||'')}`;}
+function checklistLineMessage(record){
+  const deadline=getTimeLockInfo(record?.date,record?.shift||'morning','pt').deadlineText;
+  return `🔔 Checklist รอ PT ประเมิน\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\nผู้ช่วย: ${record?.staffName||'-'}\nส่งเวลา: ${record?.submitTimeDisplay||'-'}\nกรุณาประเมินภายใน ${deadline||'-'} น.\nเปิดงานประเมิน: ${checklistReviewShareUrl(record)}`;
+}
 async function shareToLine() {
-  const link = 'https://ptkth14.github.io/pt-kth/';
-  const msg = '📋 PT KTH — ระบบงานผู้ช่วยนักกายภาพบำบัด\nมี Checklist ใหม่รอ PT ประเมิน → เปิดแอปที่หน้า "ประเมินผล" ได้เลยจ้ะ\n🔗 ' + link;
-  await shareTextPreferNative('Checklist PT KTH',msg);
+  const record=lastSubmittedChecklist;
+  if(!record)return showToast('⚠️ ไม่พบ Checklist ล่าสุด กรุณาปิดหน้าต่างแล้วเปิดรายการใหม่','warning');
+  await shareTextPreferNative('Checklist รอ PT ประเมิน',checklistLineMessage(record));
 }
 
 // ══ SUPERVISOR ══
@@ -5235,7 +5348,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260815-public-holidays-v89';
+const APP_VERSION = 'v20260818-admin-purchase-v92';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -6007,7 +6120,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const pending  = data.filter(s => s.status === 'pending');
   const reportStaff=document.getElementById('reportStaff')?.value||'all';
   const reportRange=activeReportRange||getSelectedReportRange();
-  const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>reportDateInRange(record.date,reportRange)&&(reportStaff==='all'||record.responsible===reportStaff));
+  const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>record?.recordType!=='admin_notice'&&reportDateInRange(record.date,reportRange)&&(reportStaff==='all'||record.responsible===reportStaff));
   const missedAssistantRecords=missedEvaluations.filter(record=>reportDateInRange(record.date,reportRange)&&(record.assistantNames||[]).some(name=>reportStaff==='all'||name===reportStaff));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff).length,0);
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
@@ -6248,7 +6361,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
       record.ptReviewer || '', missedPTText(record), record.ptComment || ''
     ]);
   });
-  const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>reportDateInRange(record.date,reportRange)&&(staffFilter==='all'||record.responsible===staffFilter));
+  const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>record?.recordType!=='admin_notice'&&reportDateInRange(record.date,reportRange)&&(staffFilter==='all'||record.responsible===staffFilter));
   if(monthlyStock.length){
     rows.push([],['ผลงานเบิกของและตรวจสต็อก'],['วันที่','ผู้ช่วย','สถานะรายการ','ผล PT','PT ผู้ประเมิน','คะแนนผลงาน (%)','ความคิดเห็น PT']);
     monthlyStock.slice().sort(newestRecordFirst).forEach(record=>rows.push([thaiDate(record.date),record.responsible||'',record.status==='attention'?'ต้องติดตาม':'ครบถ้วน',stockVerdictLabel(record),record.ptReviewer||'',stockPerformanceStats(record).totalScore,record.ptComment||'']));
