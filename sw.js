@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260818-admin-purchase-v92';
+const CACHE_NAME = 'pt-kth-v20260818-admin-purchase-v93';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
 
 self.addEventListener('install', event => {
@@ -24,7 +24,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request, { cache:'no-store' })
         .then(response => {
-          if(response && response.ok)caches.open(CACHE_NAME).then(cache => cache.put('./index.html',response.clone()));
+          if(response && response.ok) {
+            const cacheResponse = response.clone();
+            event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put('./index.html', cacheResponse)));
+          }
           return response;
         })
         .catch(() => caches.match('./index.html'))
@@ -35,7 +38,10 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(request).then(cached => {
       const update=fetch(request).then(response => {
-        if(response && response.ok)caches.open(CACHE_NAME).then(cache => cache.put(request,response.clone()));
+        if(response && response.ok) {
+          const cacheResponse = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, cacheResponse)));
+        }
         return response;
       }).catch(() => cached);
       return cached || update;
