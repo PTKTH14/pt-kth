@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260818-admin-purchase-v93">
+<meta name="version" content="v20260823-history-collapse-v96">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -2731,9 +2731,10 @@ function getWebAlertStatus(now){
   return{today,minutes,current,morning:buildShiftStatus('morning',getEffectiveDeadline('assistant','morning',today),getEffectiveDeadline('pt','morning',today)),midday:buildShiftStatus('midday',getEffectiveDeadline('assistant','midday',today),getEffectiveDeadline('pt','midday',today)),afternoon:buildShiftStatus('afternoon',getEffectiveDeadline('assistant','afternoon',today),getEffectiveDeadline('pt','afternoon',today))};
 }
 function getWebAlertShiftConfig(status,shift){
-  const normalizedShift=normalizeShift(shift);const isMorning=normalizedShift==='morning';const data=status[normalizedShift];const saturday=isSaturdayKey(status.today);const holiday=publicHolidayByDate(status.today);const specialDay=saturday||holiday;
+  const normalizedShift=normalizeShift(shift);const data=status[normalizedShift];const saturday=isSaturdayKey(status.today);const holiday=publicHolidayByDate(status.today);const specialDay=saturday||holiday;
   const assistantDeadline=getEffectiveDeadline('assistant',shift,status.today);const ptDeadline=getEffectiveDeadline('pt',shift,status.today);
-  return{shift:normalizedShift,data,label:specialDay&&normalizedShift!=='midday'?`${holiday?holiday.name:'วันเสาร์'} • ${isMorning?'เวรเช้า':'เวรบ่าย'}`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:specialDay&&normalizedShift!=='midday'?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${specialDay&&normalizedShift!=='midday'?'special-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${specialDay&&normalizedShift!=='midday'?'special-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
+  const specialAfternoon=specialDay&&normalizedShift==='afternoon';
+  return{shift:normalizedShift,data,label:specialAfternoon?`${holiday?holiday.name:'วันเสาร์'} • เวรบ่าย`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:specialAfternoon?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${specialAfternoon?'special-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${specialAfternoon?'special-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
 }
 function isWebAlertResolved(status,key,shift){
   return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
@@ -2995,7 +2996,7 @@ function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0
 function publicHolidayByDate(date){const key=String(date||'').slice(0,10);return publicHolidays.find(record=>record.date===key&&record.confirmed!==false)||null;}
 function isPublicHolidayKey(date){return Boolean(publicHolidayByDate(date));}
 function isSaturdayOrHolidayKey(date){return isSaturdayKey(date)||isPublicHolidayKey(date);}
-function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayOrHolidayKey(date)&&normalizedShift!=='midday')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
+function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayOrHolidayKey(date)&&normalizedShift==='afternoon')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
   const normalizedShift=normalizeShift(shift);
@@ -3005,7 +3006,7 @@ function getTimeLockInfo(date,shift,role){
   if(date<today)return{locked:true,deadlineText,message:`⛔ เลยวันที่บันทึกแล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}ย้อนหลังได้`};
   if(date>today)return{locked:false,deadlineText,message:''};
   const now=new Date();const current=now.getHours()*60+now.getMinutes();
-  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isPublicHolidayKey(date)&&normalizedShift!=='midday'?'วันหยุดราชการ':isSaturdayKey(date)&&normalizedShift!=='midday'?'วันเสาร์':shiftLabel(normalizedShift).replace(/^\S+\s/,'')}ได้`};
+  if(current>=deadline)return{locked:true,deadlineText,message:`⛔ เลยเวลา ${deadlineText} น. แล้ว — ไม่สามารถบันทึก${role==='pt'?'ผลประเมิน':'Checklist'}${isPublicHolidayKey(date)&&normalizedShift==='afternoon'?'วันหยุดราชการ':isSaturdayKey(date)&&normalizedShift==='afternoon'?'วันเสาร์':shiftLabel(normalizedShift).replace(/^\S+\s/,'')}ได้`};
   return{locked:false,deadlineText,message:''};
 }
 function getMissedEvaluationRecord(date,shift){return missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===(shift||'morning'))||null;}
@@ -3986,7 +3987,8 @@ function loadHistory(){
   if(fStaff)missingChecklist=missingChecklist.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));
   if(fStatus&&fStatus!=='pending')missingChecklist=[];
   if(missingHost){
-    missingHost.innerHTML=missingChecklist.length?`<div class="card" style="margin-bottom:14px;border-left:4px solid #F59E0B"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px"><div><h3 style="margin-bottom:3px">⚠️ ประวัติ Checklist ที่ระบบตรวจไม่พบ</h3><p style="font-size:12px;color:var(--g6)">ระบบตรวจครบเวรเช้า ก่อนเริ่มบ่าย และเวรบ่ายทุกวันเปิดทำการหลังพ้นเวลา Cutoff โดยไม่ต้องรอให้มีรายการเวรอื่น</p></div><span class="tag tw2">${missingChecklist.length} รอบ</span></div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift)}</td><td>${item.handled?'<span class="tag tp">ดำเนินการแล้ว</span>':'<span class="tag tf">ยังไม่บันทึก</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></div>`:'';
+    const missingHistoryOpen=localStorage.getItem('ptkth_missing_history_open')!=='0';
+    missingHost.innerHTML=missingChecklist.length?`<details class="card" ${missingHistoryOpen?'open':''} style="margin-bottom:14px;border-left:4px solid #F59E0B" ontoggle="this.querySelector('[data-fold-icon]').textContent=this.open?'▲':'▼';localStorage.setItem('ptkth_missing_history_open',this.open?'1':'0')"><summary style="display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;list-style:none"><div style="min-width:0"><h3 style="margin-bottom:3px">⚠️ ประวัติ Checklist ที่ระบบตรวจไม่พบ <span data-fold-icon style="font-size:12px;color:var(--bd)">${missingHistoryOpen?'▲':'▼'}</span></h3><p style="font-size:12px;color:var(--g6)">กดหัวข้อนี้เพื่อกางหรือหุบรายการ</p></div><span class="tag tw2" style="flex:none">${missingChecklist.length} รอบ</span></summary><div style="padding-top:12px"><p style="font-size:12px;color:var(--g6);margin-bottom:10px">ระบบตรวจครบเวรเช้า ก่อนเริ่มบ่าย และเวรบ่ายทุกวันเปิดทำการหลังพ้นเวลา Cutoff โดยไม่ต้องรอให้มีรายการเวรอื่น</p><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift)}</td><td>${item.handled?'<span class="tag tp">ดำเนินการแล้ว</span>':'<span class="tag tf">ยังไม่บันทึก</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></div></details>`:'';
   }
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
@@ -5349,7 +5351,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260818-historical-action-v94';
+const APP_VERSION = 'v20260823-history-collapse-v96';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
