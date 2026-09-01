@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260901-desktop-line-qr-v98">
+<meta name="version" content="v20260901-submit-fix-v99">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -2257,7 +2257,7 @@ let editingStockRecordId=null, editingStockCatalogIndex=null, editingStockSchedu
 let editingRetrospectiveId=null;
 const HISTORY_PAGE_SIZE=25;
 let historyVisibleCount=HISTORY_PAGE_SIZE;
-let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], retrospectivePhotos=[], lastRetrospectiveShareId=null, isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklistReview=false, isDeletingRetrospective=false;
+let activeRevIdx=null, reviewEvals={}, reviewPhotos=[], retrospectivePhotos=[], lastRetrospectiveShareId=null, isAdminLoggedIn=false, isSupLoggedIn=false, isSavingChecklist=false, isSavingChecklistReview=false, isDeletingRetrospective=false;
 let authUser=null, authRole='', authProfile=null;
 let lastWebAlertMinute='', activeAdminChecklistEditId=null, latestDataSyncPromise=null, lastLatestDataSyncAt=0;
 
@@ -3503,7 +3503,7 @@ async function submitChecklist(){
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
   const now=new Date();
   const rec={id:Date.now(),date,staffName:st.text,shift:currentShift,note,snap,submitTime:now.toISOString(),submitTimeDisplay:getThaiTimestamp(now),status:'pending',ptVerdict:'',ptReviewer:'',ptComment:'',ptReviewTime:'',ptEvals:{}};
-  const submitButton=document.getElementById('submitChecklistBtn');isSavingChecklist=true;if(submitButton)submitButton.disabled=true;setSyncBadge('syncing','⏳ Saving...');
+  const submitButton=document.getElementById('submitChecklistBtn');const originalButtonText=submitButton?.textContent||'✅ บันทึก & ส่ง';isSavingChecklist=true;if(submitButton){submitButton.disabled=true;submitButton.textContent='⏳ กำลังบันทึก...';}setSyncBadge('syncing','⏳ Saving...');
   try{
     await window.FB.fbSaveSubmission(rec);
     submissions.push(rec);
@@ -3517,7 +3517,7 @@ async function submitChecklist(){
     renderChecklistLineQr(rec);
     document.getElementById('shareModal').classList.add('open');
   }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
-  finally{isSavingChecklist=false;if(submitButton)submitButton.disabled=false;}
+  finally{isSavingChecklist=false;if(submitButton){submitButton.disabled=false;submitButton.textContent=originalButtonText;}}
 }
 
 // ══ REVIEW ══
@@ -5396,7 +5396,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260901-desktop-line-qr-v98';
+const APP_VERSION = 'v20260901-submit-fix-v99';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 

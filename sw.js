@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260901-desktop-line-qr-v98';
+const CACHE_NAME = 'pt-kth-v20260901-submit-fix-v99';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
