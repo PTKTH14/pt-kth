@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260823-history-collapse-v96">
+<meta name="version" content="v20260901-desktop-line-qr-v98">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -735,6 +735,11 @@ tr:hover td{background:var(--g1)}
 .link-copy{background:var(--bd);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
 .link-copy:hover{background:var(--bm)}
 .link-copy.copied{background:var(--g)}
+.desktop-line-qr{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px;border:1.5px solid #B7DFC4;border-radius:var(--r8);background:#F3FBF5}
+.desktop-line-qr-code{width:154px;height:154px;flex:0 0 154px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #DDE7E1;border-radius:8px;overflow:hidden}
+.desktop-line-qr-code svg{display:block;width:auto;height:auto;max-width:100%;max-height:100%;shape-rendering:crispEdges}
+.desktop-line-qr-copy{min-width:0;font-size:12.5px;line-height:1.55;color:#315C3E}
+.desktop-line-qr-copy strong{display:block;color:#176B38;font-size:13.5px;margin-bottom:3px}
 .loading-overlay{position:fixed;inset:0;background:linear-gradient(145deg,#F4F9FD 0%,#FFFFFF 52%,#EAF5FB 100%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
 .loading-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
 .loading-brand{width:min(360px,100%);display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -1936,7 +1941,7 @@ tr:hover td{background:var(--g1)}
     </div>
     <div class="mf">
       <button class="btn btn-out" onclick="closeModal('submitModal')">ยกเลิก</button>
-      <button class="btn btn-suc" onclick="submitChecklist()">✅ บันทึก & ส่ง</button>
+      <button class="btn btn-suc" id="submitChecklistBtn" onclick="submitChecklist()">✅ บันทึก & ส่ง</button>
     </div>
   </div>
 </div>
@@ -1953,6 +1958,10 @@ tr:hover td{background:var(--g1)}
       <div class="link-box">
         <span id="shareAppLink">https://ptkth14.github.io/pt-kth/</span>
         <button class="link-copy" id="copyAppLinkBtn" onclick="copyAppLink()">📋 Copy</button>
+      </div>
+      <div class="desktop-line-qr" id="checklistLineQrPanel" hidden>
+        <div class="desktop-line-qr-code" id="checklistLineQrCode" role="img" aria-label="QR Code สำหรับเปิดข้อความใน LINE บนมือถือ"></div>
+        <div class="desktop-line-qr-copy"><strong>📱 ใช้มือถือสแกนเพื่อแชร์ผ่าน LINE</strong>สแกนแล้วระบบจะเปิด LINE พร้อมข้อความชุดเดียวกับปุ่มแชร์ด้านล่าง จากนั้นเลือกห้องแชตและกดส่งได้เลย</div>
       </div>
     </div>
     <div class="mf">
@@ -2146,6 +2155,7 @@ tr:hover td{background:var(--g1)}
 
 <div class="toast" id="toast"><span id="toastMsg">—</span></div>
 
+<script src="qrcode.js"></script>
 <script>
 // ══ CHECKLIST DATA ══
 const CL = {
@@ -2424,7 +2434,7 @@ function hydrateCachedStartup(){
   const hasCachedStartupData=['pt_staff','pt_ptlist','pt_submissions','pt_system_settings','pt_stock_catalog','pt_stock_requests'].some(key=>localStorage.getItem(key)!==null);
   staffList=readLocalJSON('pt_staff',[]);
   ptList=readLocalJSON('pt_ptlist',[]);
-  submissions=readLocalJSON('pt_submissions',[]);
+  submissions=dedupeChecklistSubmissions(readLocalJSON('pt_submissions',[]));
   missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
   retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
   stockRecords=readLocalJSON('pt_stock_requests',[]);
@@ -2479,7 +2489,7 @@ async function syncLatestFirebaseData(options){
       staffList=Array.isArray(config.staffList)?config.staffList:staffList;ptList=Array.isArray(config.ptList)?config.ptList:ptList;applySystemSettings(config.systemSettings);
       if(Array.isArray(config.stockCatalog)&&config.stockCatalog.length)stockCatalog=config.stockCatalog.map(normalizeStockCatalogItem);
       if(config.checklistItems){['morning','midday','evening','saturdayMorning','saturdayEvening'].forEach(shift=>localStorage.setItem('custom_cl_'+shift,JSON.stringify(Array.isArray(config.checklistItems[shift])?config.checklistItems[shift]:getDefaultClItems(shift))));localStorage.setItem('custom_cl_stars',JSON.stringify(config.checklistItems.stars||{}));_applyCLCustom();}
-      submissions=Array.isArray(value(1))?value(1):submissions;missedEvaluations=Array.isArray(value(2))?value(2):missedEvaluations;stockRecords=Array.isArray(value(3))?value(3):stockRecords;retrospectiveChecks=Array.isArray(value(4))?value(4):retrospectiveChecks;
+      submissions=Array.isArray(value(1))?dedupeChecklistSubmissions(value(1)):submissions;missedEvaluations=Array.isArray(value(2))?value(2):missedEvaluations;stockRecords=Array.isArray(value(3))?value(3):stockRecords;retrospectiveChecks=Array.isArray(value(4))?value(4):retrospectiveChecks;
       results.forEach((result,index)=>{if(result.status==='rejected')console.warn(`Firebase resume sync ${index} failed:`,result.reason);});
       writeLocalJSON('pt_staff',staffList);writeLocalJSON('pt_ptlist',ptList);writeLocalJSON('pt_submissions',submissions);writeLocalJSON('pt_missed_evaluations',missedEvaluations);writeLocalJSON('pt_stock_catalog',stockCatalog);writeLocalJSON('pt_stock_requests',stockRecords);writeLocalJSON('pt_retrospective_checks',retrospectiveChecks);
       lastLatestDataSyncAt=Date.now();renderLatestSyncedState();setSyncBadge('synced','🔥 Firebase');return true;
@@ -2515,7 +2525,7 @@ async function init(){
     // Firebase โหลดไม่ได้ — ใช้ localStorage offline
     staffList=readLocalJSON('pt_staff',[]);
     ptList=readLocalJSON('pt_ptlist',[]);
-    submissions=readLocalJSON('pt_submissions',[]);
+    submissions=dedupeChecklistSubmissions(readLocalJSON('pt_submissions',[]));
     missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
     retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
     auditLogs=readLocalJSON('pt_audit_logs',[]);
@@ -2563,7 +2573,7 @@ async function init(){
       }
       _applyCLCustom();
       const subs=loaded[1].status==='fulfilled'?loaded[1].value:readLocalJSON('pt_submissions',[]);
-      submissions = Array.isArray(subs) ? subs : [];
+      submissions = Array.isArray(subs) ? dedupeChecklistSubmissions(subs) : [];
       const missed=loaded[2].status==='fulfilled'?loaded[2].value:cachedMissed;
       missedEvaluations=Array.isArray(missed)?missed:[];
       const stocks=loaded[3].status==='fulfilled'?loaded[3].value:cachedStock;
@@ -2587,7 +2597,7 @@ async function init(){
       // fallback offline
       staffList=readLocalJSON('pt_staff',[]);
       ptList=readLocalJSON('pt_ptlist',[]);
-      submissions=readLocalJSON('pt_submissions',[]);
+      submissions=dedupeChecklistSubmissions(readLocalJSON('pt_submissions',[]));
       missedEvaluations=readLocalJSON('pt_missed_evaluations',[]);
       retrospectiveChecks=readLocalJSON('pt_retrospective_checks',[]);
       auditLogs=isAdminLoggedIn?readLocalJSON('pt_audit_logs',[]):[];
@@ -2621,6 +2631,7 @@ async function init(){
   if(retrospectiveDetails&&isCompactLayout())retrospectiveDetails.open=false;
   syncRetrospectiveDisclosureLabel();
   loadHistory();
+  if(handleChecklistLineShareDeepLink())return;
   const linkedReviewId=new URLSearchParams(window.location.search).get('review');
   if(linkedReviewId){
     switchView('review',document.getElementById('nav-review'));setMobileNav('review');
@@ -2737,7 +2748,14 @@ function getWebAlertShiftConfig(status,shift){
   return{shift:normalizedShift,data,label:specialAfternoon?`${holiday?holiday.name:'วันเสาร์'} • เวรบ่าย`:shiftLabel(normalizedShift).replace(/^\S+\s/,''),icon:specialAfternoon?'🗓️':shiftIcon(normalizedShift),assistantTime:minutesToTimeText(assistantDeadline),ptTime:minutesToTimeText(ptDeadline),assistantKey:`assistant-${specialAfternoon?'special-':''}${minutesToTimeText(assistantDeadline).replace(':','')}`,ptKey:`pt-${specialAfternoon?'special-':''}${minutesToTimeText(ptDeadline).replace(':','')}`};
 }
 function isWebAlertResolved(status,key,shift){
-  return missedEvaluations.some(item=>item.date===status.today&&(item.shift||'morning')===(shift||'morning')&&(item.resolvedAlertKeys||[]).includes(key));
+  const personType=String(key||'').startsWith('pt-')?'pt':String(key||'').startsWith('assistant-')?'assistant':'';
+  return missedEvaluations.some(item=>{
+    if(item.date!==status.today||normalizeShift(item.shift)!==normalizeShift(shift))return false;
+    if((item.resolvedAlertKeys||[]).includes(key))return true;
+    if(personType==='pt')return Array.isArray(item.ptNames)&&item.ptNames.length>0;
+    if(personType==='assistant')return Array.isArray(item.assistantNames)&&item.assistantNames.length>0;
+    return false;
+  });
 }
 function getDueStockSchedules(status){
   const day=status.current.getDay();const weekKey=mondayKeyFromDate(status.today);
@@ -3477,12 +3495,15 @@ function openSubmitModal(){
 }
 
 async function submitChecklist(){
+  if(isSavingChecklist)return showToast('⏳ ระบบกำลังบันทึก กรุณารอสักครู่','warning');
   const st=getActiveStaff();const date=localDateKey(new Date());syncLockedOperationDates();const note=document.getElementById('m_note').value.trim();
+  const duplicate=submissions.find(item=>item&&item.date===date&&normalizeShift(item.shift)===normalizeShift(currentShift)&&String(item.staffName||'')===String(st.text||''));
+  if(duplicate)return showToast('⚠️ วันนี้ผู้ช่วยคนนี้ส่ง Checklist รอบนี้แล้ว ระบบไม่บันทึกซ้ำ','warning');
   const snap={};
   Object.keys(CL).filter(g=>CL[g].shifts.includes(currentShift)).forEach(g=>{checklistItemsForGroup(g,date).forEach((text,i)=>{snap[`${g}-${i}`]={text,status:checkState[`${g}-${i}`]||''};});});
   const now=new Date();
   const rec={id:Date.now(),date,staffName:st.text,shift:currentShift,note,snap,submitTime:now.toISOString(),submitTimeDisplay:getThaiTimestamp(now),status:'pending',ptVerdict:'',ptReviewer:'',ptComment:'',ptReviewTime:'',ptEvals:{}};
-  setSyncBadge('syncing','⏳ Saving...');
+  const submitButton=document.getElementById('submitChecklistBtn');isSavingChecklist=true;if(submitButton)submitButton.disabled=true;setSyncBadge('syncing','⏳ Saving...');
   try{
     await window.FB.fbSaveSubmission(rec);
     submissions.push(rec);
@@ -3493,8 +3514,10 @@ async function submitChecklist(){
     showToast('✅ บันทึกลง Firebase แล้ว','success');
     updateHistoryFilters();updateDashFilter();refreshWebAlerts(false);
     const shareLink=document.getElementById('shareAppLink');if(shareLink)shareLink.textContent=checklistReviewShareUrl(rec);
+    renderChecklistLineQr(rec);
     document.getElementById('shareModal').classList.add('open');
   }catch(e){setSyncBadge('error','⚠️ Error');showToast('❌ บันทึกไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
+  finally{isSavingChecklist=false;if(submitButton)submitButton.disabled=false;}
 }
 
 // ══ REVIEW ══
@@ -3529,7 +3552,7 @@ let reviewMonthLoadToken=0;
 async function ensurePublicRangeData(start,end){
   if(!start||!end||!window.FB?.fbGetPublicHistoryRange)return;
   const bundle=await window.FB.fbGetPublicHistoryRange(start,end);
-  submissions=mergeReportRecords(submissions,bundle.submissions);
+  submissions=dedupeChecklistSubmissions(mergeReportRecords(submissions,bundle.submissions));
   stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
   missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
   retrospectiveChecks=mergeReportRecords(retrospectiveChecks,bundle.retrospectiveChecks);
@@ -3554,7 +3577,7 @@ async function loadReviewView(){
   const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
   const pendingStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const missingChecklist=getMissingChecklistRounds({monthKey:selectedMonth}).filter(item=>!item.handled);
-  const missingChecklistHtml=missingChecklist.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:#9A6700">⚠️ Checklist ที่ระบบตรวจไม่พบ ${missingChecklist.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel(item.shift)}</span></td><td>ไม่มีการส่ง Checklist ${shiftLabel(item.shift)}</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div>`:'';
+  const missingChecklistHtml=missingChecklist.length?`<details class="card" style="margin:18px 0 0;padding:0;border-left:4px solid var(--o)"><summary style="cursor:pointer;list-style:none;padding:14px 16px;font-size:13.5px;font-weight:700;color:#9A6700;display:flex;align-items:center;justify-content:space-between;gap:12px"><span>⚠️ Checklist ที่ระบบตรวจไม่พบ ${missingChecklist.length} รอบ</span><span aria-hidden="true">▼</span></summary><div class="tw" style="overflow-x:auto;margin:0 12px 12px"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel(item.shift)}</span></td><td>ไม่มีการส่ง Checklist ${shiftLabel(item.shift)}</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div></details>`:'';
   const expiredHtml=expired.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px;color:var(--r)">⛔ Checklist เลยเวลาประจำเดือน ${expired.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${expired.map(s=>{const pct=calcCompletion(s);const damage=missedPtRecordForSubmission(s);const ptNames=damage?.ptNames||[];return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${ptNames.length?`<span class="tag tf">${escapeHtml(ptNames.join(', '))}</span>`:'<span class="tag tw2">รอแอดมินบันทึก</span>'}</td><td><span class="tag" style="background:#F3F4F6;color:var(--g6)">${damage?'บันทึกค่าเสียหายแล้ว':'เลยเวลา'}</span></td></tr>`;}).join('')}</tbody></table></div>`:'';
   const checklistHtml=pending.length?`<div style="font-size:13.5px;font-weight:700;margin-bottom:10px">🔔 Checklist รอ PT ประเมิน ${pending.length} รายการ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วย</th><th>สมบูรณ์</th><th>เวลาส่ง</th><th>PT ไม่ประเมิน</th><th></th></tr></thead><tbody>${pending.map(s=>{const pct=calcCompletion(s);const idx=submissions.indexOf(s);const ptLock=getTimeLockInfo(s.date,s.shift||'morning','pt');const disabled=ptLock.locked?' disabled title="'+escapeHtml(ptLock.message)+'"':'';const btnText=ptLock.locked?'⛔ เลยเวลา':'🔍 ประเมิน';return`<tr><td>${thaiDate(s.date)}</td><td><span class="tag" style="background:${s.shift==='morning'?'#FFF3E0':'#E3F2FD'};color:${s.shift==='morning'?'#E65100':'#1565C0'}">${shiftLabel(s.shift)}</span></td><td>${escapeHtml(s.staffName)}</td><td><span style="font-weight:700;color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(s.submitTimeDisplay||'')}</td><td>${missedPTBadge(s)}</td><td><button class="btn ${ptLock.locked?'btn-out':'btn-pri'}" style="padding:5px 13px;font-size:12px" onclick="openReview(${idx})"${disabled}>${btnText}</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1)"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มี Checklist ที่รอ PT ประเมิน</div></div>`;
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
@@ -3846,7 +3869,7 @@ async function searchHistory(){
       showToast('⏳ กำลังค้นข้อมูลตามช่วงวันที่...','info');
       const rangeStart=start<=end?start:end;const rangeEnd=start<=end?end:start;
       const bundle=await window.FB.fbGetPublicHistoryRange(rangeStart,rangeEnd);
-      submissions=mergeReportRecords(submissions,bundle.submissions);
+      submissions=dedupeChecklistSubmissions(mergeReportRecords(submissions,bundle.submissions));
       stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
       missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
       retrospectiveChecks=mergeReportRecords(retrospectiveChecks,bundle.retrospectiveChecks);
@@ -3898,9 +3921,9 @@ function resetMissedEvalForm(clearPending){
 }
 function loadMissedEvalForEdit(id){
   if(!isAdminLoggedIn)return showToast('⛔ ต้อง login แอดมินก่อน','error');
-  const record=missedEvaluations.find(item=>item.id===id);if(!record)return;
+  const record=missedEvaluations.find(item=>String(item.id)===String(id));if(!record)return;
   clearPendingMissedAlertAction();
-  editingMissedEvaluationId=id;
+  editingMissedEvaluationId=record.id;
   setMissedEvalDateValue(record.date);
   document.getElementById('missedEvalShift').value=record.shift||'morning';
   document.getElementById('missedEvalPersonType').value='both';
@@ -3914,8 +3937,7 @@ function loadMissedEvalForEdit(id){
 function mergeMissedEvaluationSelection(old,personType,selectedAssistantNames,selectedPtNames,alertKey){
   const assistantNames=personType==='pt'?[...(old?.assistantNames||[])]:selectedAssistantNames;
   const ptNames=personType==='assistant'?[...(old?.ptNames||[])]:selectedPtNames;
-  const assistantAlertKeys=['assistant-0830','assistant-1920','assistant-2000'];const ptAlertKeys=['pt-0930','pt-2000','pt-2030'];
-  let resolvedAlertKeys=[...(old?.resolvedAlertKeys||[])].filter(key=>!assistantAlertKeys.includes(key)||assistantNames.length).filter(key=>!ptAlertKeys.includes(key)||ptNames.length);
+  let resolvedAlertKeys=[...(old?.resolvedAlertKeys||[])].filter(key=>!String(key).startsWith('assistant-')||assistantNames.length).filter(key=>!String(key).startsWith('pt-')||ptNames.length);
   if(alertKey)resolvedAlertKeys=[...new Set([...resolvedAlertKeys,alertKey])];
   return{assistantNames,ptNames,resolvedAlertKeys};
 }
@@ -3926,7 +3948,7 @@ async function saveMissedEvaluation(){
   const selectedAssistantNames=checkedMissedValues('missedAssistant');const selectedPtNames=checkedMissedValues('missedPT');
   const maxPT=shift==='afternoon'?2:1;
   if(!date)return showToast('⚠️ กรุณาเลือกวันที่','warning');
-  const old=missedEvaluations.find(item=>item.id===editingMissedEvaluationId)||missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===shift);
+  const old=missedEvaluations.find(item=>String(item.id)===String(editingMissedEvaluationId))||missedEvaluations.find(item=>item.date===date&&(item.shift||'morning')===shift);
   const mergedSelection=mergeMissedEvaluationSelection(old,personType,selectedAssistantNames,selectedPtNames,activeMissedAlertKey);
   const assistantNames=mergedSelection.assistantNames;const ptNames=mergedSelection.ptNames;
   if(personType==='assistant'&&!selectedAssistantNames.length)return showToast('⚠️ กรุณาเลือกชื่อผู้ช่วยอย่างน้อย 1 คน','warning');
@@ -3938,7 +3960,7 @@ async function saveMissedEvaluation(){
   const record={id:old?.id||Date.now(),date,shift,assistantNames,ptNames,amount:(assistantNames.length+ptNames.length)*10,resolvedAlertKeys,updatedAt:now.toISOString(),updatedAtDisplay:getThaiTimestamp(now)};
   try{
     if(window.FB)await window.FB.fbSaveMissedEvaluation(record);
-    missedEvaluations=missedEvaluations.filter(item=>item.id!==record.id);missedEvaluations.push(record);
+    missedEvaluations=missedEvaluations.filter(item=>String(item.id)!==String(record.id));missedEvaluations.push(record);
     writeLocalJSON('pt_missed_evaluations',missedEvaluations);
     const peopleSummary=[assistantNames.length?`ผู้ช่วย ${assistantNames.length} คน`:null,ptNames.length?`PT ${ptNames.length} คน`:null].filter(Boolean).join(', ');
     await writeAuditLog(old?'update':'add','missed_evaluation',`${old?'แก้ไข':'เพิ่ม'}ค่าเสียหาย ${date} ${shiftLabel(shift)} — ${peopleSummary}, ${record.amount} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
@@ -3953,9 +3975,9 @@ async function deleteMissedEvaluation(id){
   showConfirm('ลบรายการผู้ไม่ปฏิบัติงานตามกำหนดนี้ใช่หรือไม่?',async()=>{
     try{
       if(window.FB)await window.FB.fbDeleteMissedEvaluation(id);
-      missedEvaluations=missedEvaluations.filter(item=>item.id!==id);writeLocalJSON('pt_missed_evaluations',missedEvaluations);
+      missedEvaluations=missedEvaluations.filter(item=>String(item.id)!==String(id));writeLocalJSON('pt_missed_evaluations',missedEvaluations);
       if(deletedRecord)await writeAuditLog('delete','missed_evaluation',`ลบค่าเสียหาย ${deletedRecord.date} ${shiftLabel(deletedRecord.shift||'morning')} — ${deletedRecord.amount||0} บาท`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
-      if(editingMissedEvaluationId===id)resetMissedEvalForm();renderMissedEvalSummary();loadHistory();loadReviewView();renderAdminTable();if(isSupLoggedIn&&document.getElementById('view-supervisor')?.classList.contains('active'))loadSupervisor();refreshWebAlerts(false);showToast('🗑️ ลบรายการแล้ว','success');
+      if(String(editingMissedEvaluationId)===String(id))resetMissedEvalForm();renderMissedEvalSummary();loadHistory();loadReviewView();renderAdminTable();if(isSupLoggedIn&&document.getElementById('view-supervisor')?.classList.contains('active'))loadSupervisor();refreshWebAlerts(false);showToast('🗑️ ลบรายการแล้ว','success');
     }catch(e){showToast('❌ ลบไม่สำเร็จ: '+friendlyErrorMessage(e),'error');}
   });
 }
@@ -3970,11 +3992,14 @@ function renderMissedEvalSummary(){
   const summary=document.getElementById('missedEvalSummary');const list=document.getElementById('missedEvalList');if(!summary||!list)return;
   const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;
   const records=[...missedEvaluations].filter(item=>isDateInRange(item.date,fStart,fEnd)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const staffCount=records.reduce((sum,item)=>sum+(item.assistantNames||[]).length,0);const ptCount=records.reduce((sum,item)=>sum+(item.ptNames||[]).length,0);const missedAmount=records.reduce((sum,item)=>sum+(Number(item.amount)||((item.assistantNames||[]).length+(item.ptNames||[]).length)*10),0);const retrospectiveAmount=retrospectiveChecks.filter(item=>isDateInRange(item.date,fStart,fEnd)).reduce((sum,item)=>sum+(Number(item.amount)||0),0);const amount=missedAmount+retrospectiveAmount;
+  const retrospectiveRecords=[...retrospectiveChecks].filter(item=>isDateInRange(item.date,fStart,fEnd)).sort(newestRecordFirst);
+  const staffCount=records.reduce((sum,item)=>sum+(item.assistantNames||[]).length,0);const ptCount=records.reduce((sum,item)=>sum+(item.ptNames||[]).length,0);const missedAmount=records.reduce((sum,item)=>sum+(Number(item.amount)||((item.assistantNames||[]).length+(item.ptNames||[]).length)*10),0);const retrospectiveAmount=retrospectiveRecords.reduce((sum,item)=>sum+(Number(item.amount)||0),0);const amount=missedAmount+retrospectiveAmount;
   const box=(label,value,color)=>`<div style="background:${color.bg};border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:${color.text}">${value}</div><div style="font-size:11.5px;color:var(--g6)">${label}</div></div>`;
   summary.innerHTML=box('ผู้ช่วยไม่บันทึก Checklist',staffCount,{bg:'#FFF3E0',text:'#E65100'})+box('PT ไม่ประเมิน',ptCount,{bg:'#E3F2FD',text:'#1565C0'})+box('ค่าเสียหายรวมทุกประเภท',amount.toLocaleString('th-TH')+' บาท',{bg:'#F8D7DA',text:'#B02A37'});
-  if(!records.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการไม่ได้ประเมินตามช่วงวันที่</div>';return;}
-  list.innerHTML=`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วยไม่บันทึก Checklist</th><th>PT ไม่ประเมิน</th><th>ค่าเสียหาย</th>${isAdminLoggedIn?'<th>จัดการ</th>':''}</tr></thead><tbody>${records.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift||'morning')}</td><td>${(item.assistantNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td>${(item.ptNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td style="font-weight:800;color:#B02A37">${Number(item.amount)||0} บาท</td>${isAdminLoggedIn?`<td style="white-space:nowrap"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="loadMissedEvalForEdit(${item.id})">แก้ไข</button> <button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteMissedEvaluation(${item.id})">ลบ</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  if(!records.length&&!retrospectiveRecords.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการค่าเสียหายตามช่วงวันที่</div>';return;}
+  const missedHtml=records.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เวร</th><th>ผู้ช่วยไม่บันทึก Checklist</th><th>PT ไม่ประเมิน</th><th>ค่าเสียหาย</th>${isAdminLoggedIn?'<th>จัดการ</th>':''}</tr></thead><tbody>${records.map(item=>`<tr><td style="white-space:nowrap">${escapeHtml(thaiDate(item.date))}</td><td>${shiftLabel(item.shift||'morning')}</td><td>${(item.assistantNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td>${(item.ptNames||[]).map(escapeHtml).join('<br>')||'—'}</td><td style="font-weight:800;color:#B02A37">${Number(item.amount)||0} บาท</td>${isAdminLoggedIn?`<td style="white-space:nowrap"><button class="btn btn-out" style="padding:4px 8px;font-size:12px" onclick="loadMissedEvalForEdit('${String(item.id)}')">แก้ไข</button> <button class="btn btn-out" style="padding:4px 8px;font-size:12px;color:var(--r)" onclick="deleteMissedEvaluation('${String(item.id)}')">ลบ</button></td>`:''}</tr>`).join('')}</tbody></table></div>`:'';
+  const retrospectiveHtml=retrospectiveRecords.length?`<div style="font-size:13.5px;font-weight:800;margin:18px 0 8px;color:var(--p)">🔎 รายการตรวจสอบย้อนหลัง ${retrospectiveRecords.length} รายการ</div><div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>เวร</th><th>หัวข้อ</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${retrospectiveRecords.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}</td><td data-label="เวร">${shiftLabel(item.shift||'morning')}</td><td data-label="หัวข้อ"><strong>${escapeHtml(item.itemText||'ตรวจสอบย้อนหลัง')}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details||'')}</span></td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td></tr>`).join('')}</tbody></table></div>`:'';
+  list.innerHTML=missedHtml+retrospectiveHtml;
 }
 function loadHistory(){
   renderStockPerformancePanels();
@@ -4143,7 +4168,7 @@ function updateDashFilter() {
 function refreshDashboard() {
   setSyncBadge('syncing','⏳ Loading...');
   window.FB.fbGetRecentSubmissions(500).then(subs => {
-    submissions = Array.isArray(subs) ? subs : [];
+    submissions = Array.isArray(subs) ? dedupeChecklistSubmissions(subs) : [];
     setSyncBadge('synced','🔥 Firebase');
     loadDashboard();
     showToast('🔄 โหลดข้อมูลใหม่แล้ว','success');
@@ -4963,7 +4988,7 @@ async function prepareFirebaseRestore(event){
 }
 async function reloadFirebaseStateAfterRestore(){
   const results=await Promise.all([window.FB.fbGetConfig(),window.FB.fbGetSubmissions(),window.FB.fbGetAssistantEvaluations(),window.FB.fbGetSupervisorNotes(),window.FB.fbGetMissedEvaluations(),window.FB.fbGetAuditLogs(),window.FB.fbGetStockRequests(),window.FB.fbGetRetrospectiveChecks()]);
-  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?results[1]:[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];retrospectiveChecks=Array.isArray(results[7])?results[7]:[];
+  const config=results[0]||{};staffList=Array.isArray(config.staffList)?config.staffList:[];ptList=Array.isArray(config.ptList)?config.ptList:[];stockCatalog=Array.isArray(config.stockCatalog)&&config.stockCatalog.length?config.stockCatalog.map(normalizeStockCatalogItem):DEFAULT_STOCK_CATALOG.map(item=>({...item}));applySystemSettings(config.systemSettings);submissions=Array.isArray(results[1])?dedupeChecklistSubmissions(results[1]):[];evaluationRecords=Array.isArray(results[2])?results[2]:[];supervisorNotes=Array.isArray(results[3])?results[3]:[];missedEvaluations=Array.isArray(results[4])?results[4]:[];auditLogs=Array.isArray(results[5])?results[5]:[];stockRecords=Array.isArray(results[6])?results[6]:[];retrospectiveChecks=Array.isArray(results[7])?results[7]:[];
   localStorage.setItem('pt_staff',JSON.stringify(staffList));localStorage.setItem('pt_ptlist',JSON.stringify(ptList));localStorage.setItem('pt_stock_catalog',JSON.stringify(stockCatalog));localStorage.setItem('pt_submissions',JSON.stringify(submissions));localStorage.removeItem('assistant_evaluations');localStorage.setItem('pt_missed_evaluations',JSON.stringify(missedEvaluations));localStorage.setItem('pt_audit_logs',JSON.stringify(auditLogs));localStorage.setItem('pt_stock_requests',JSON.stringify(stockRecords));localStorage.setItem('pt_retrospective_checks',JSON.stringify(retrospectiveChecks));
   updateStaffDropdown();updatePTDropdown();updateEvaluationDropdowns();updateHistoryFilters();updateDashFilter();renderSettings();renderPublicHolidaysAdmin();renderAdminTable();renderMissedEvalSummary();renderRetrospectiveHistory();renderRetrospectiveAdmin();renderStockHistory();loadHistory();loadDashboard();loadAdminEvaluationReports();refreshWebAlerts(false);renderBackupPanelSummary();
 }
@@ -5061,9 +5086,29 @@ function copyAppLink() {
   });
 }
 function checklistReviewShareUrl(record){return`https://ptkth14.github.io/pt-kth/?review=${encodeURIComponent(record?.id||'')}`;}
+function checklistMobileLineShareUrl(record){return`https://ptkth14.github.io/pt-kth/?lineShareChecklist=${encodeURIComponent(record?.id||'')}`;}
 function checklistLineMessage(record){
   const deadline=getTimeLockInfo(record?.date,record?.shift||'morning','pt').deadlineText;
   return `🔔 Checklist รอ PT ประเมิน\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\nผู้ช่วย: ${record?.staffName||'-'}\nส่งเวลา: ${record?.submitTimeDisplay||'-'}\nกรุณาประเมินภายใน ${deadline||'-'} น.\nเปิดงานประเมิน: ${checklistReviewShareUrl(record)}`;
+}
+let checklistLineDeepLinkHandled=false;
+function handleChecklistLineShareDeepLink(){
+  const id=new URLSearchParams(window.location.search).get('lineShareChecklist');
+  if(!id||checklistLineDeepLinkHandled)return false;
+  const record=submissions.find(item=>String(item.id)===String(id));
+  if(!record){showToast('⚠️ ไม่พบ Checklist สำหรับแชร์ LINE กรุณาเปิดรายการใหม่','warning');return false;}
+  checklistLineDeepLinkHandled=true;setLoadingDetail('กำลังเปิด LINE พร้อมข้อความ Checklist...');
+  setTimeout(()=>window.location.replace(lineShareUrl(checklistLineMessage(record))),180);
+  return true;
+}
+function renderChecklistLineQr(record){
+  const panel=document.getElementById('checklistLineQrPanel');const holder=document.getElementById('checklistLineQrCode');
+  if(!panel||!holder)return;
+  panel.hidden=isTouchShareDevice();holder.innerHTML='';
+  if(panel.hidden)return;
+  if(typeof qrcode!=='function'){panel.hidden=true;return;}
+  try{const qr=qrcode(0,'M');qr.addData(checklistMobileLineShareUrl(record));qr.make();holder.innerHTML=qr.createSvgTag({cellSize:3,margin:12,scalable:false});}
+  catch(error){panel.hidden=true;console.warn('Checklist LINE QR render failed:',error);}
 }
 async function shareToLine() {
   const record=lastSubmittedChecklist;
@@ -5351,7 +5396,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260823-history-collapse-v96';
+const APP_VERSION = 'v20260901-desktop-line-qr-v98';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -6022,13 +6067,26 @@ function mergeReportRecords(current,incoming) {
   (incoming||[]).forEach(record=>map.set(String(record.id||`${record.date}|${record.staffName||record.responsible||record.assistantName||''}|${record.createdAt||''}`),record));
   return Array.from(map.values());
 }
+function checklistSubmissionKey(record){
+  return [String(record?.date||''),normalizeShift(record?.shift||'morning'),String(record?.staffName||'').trim()].join('|');
+}
+function checklistSubmissionPriority(record){
+  const reviewed=record?.status&&record.status!=='pending'||record?.ptVerdict?1:0;
+  const time=Date.parse(record?.ptReviewTime||record?.updatedAt||record?.submitTime||record?.createdAt||'')||Number(record?.id)||0;
+  return reviewed*1e15+time;
+}
+function dedupeChecklistSubmissions(records){
+  const selected=new Map();
+  (Array.isArray(records)?records:[]).forEach(record=>{if(!record||typeof record!=='object')return;const key=checklistSubmissionKey(record);const current=selected.get(key);if(!current||checklistSubmissionPriority(record)>=checklistSubmissionPriority(current))selected.set(key,record);});
+  return Array.from(selected.values());
+}
 async function ensureReportRangeData(range) {
   if(!range?.start||!range?.end)throw new Error('กรุณาเลือกช่วงวันที่ให้ครบ');
   const key=`${range.start}|${range.end}`;
   if(reportRangeLoadKey===key)return;
   if(!window.FB?.fbGetReportRange)return;
   const bundle=await window.FB.fbGetReportRange(range.start,range.end);
-  submissions=mergeReportRecords(submissions,bundle.submissions);
+  submissions=dedupeChecklistSubmissions(mergeReportRecords(submissions,bundle.submissions));
   stockRecords=mergeReportRecords(stockRecords,bundle.stockRequests);
   missedEvaluations=mergeReportRecords(missedEvaluations,bundle.missedEvaluations);
   evaluationRecords=mergeReportRecords(evaluationRecords,bundle.assistantEvaluations);

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'pt-kth-v20260823-history-collapse-v96';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
+const CACHE_NAME = 'pt-kth-v20260901-desktop-line-qr-v98';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
