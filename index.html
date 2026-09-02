@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260901-submit-fix-v99">
+<meta name="version" content="v20260902-direct-line-qr-v100">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -736,7 +736,7 @@ tr:hover td{background:var(--g1)}
 .link-copy:hover{background:var(--bm)}
 .link-copy.copied{background:var(--g)}
 .desktop-line-qr{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px;border:1.5px solid #B7DFC4;border-radius:var(--r8);background:#F3FBF5}
-.desktop-line-qr-code{width:154px;height:154px;flex:0 0 154px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #DDE7E1;border-radius:8px;overflow:hidden}
+.desktop-line-qr-code{width:186px;height:186px;flex:0 0 186px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #DDE7E1;border-radius:8px;overflow:hidden}
 .desktop-line-qr-code svg{display:block;width:auto;height:auto;max-width:100%;max-height:100%;shape-rendering:crispEdges}
 .desktop-line-qr-copy{min-width:0;font-size:12.5px;line-height:1.55;color:#315C3E}
 .desktop-line-qr-copy strong{display:block;color:#176B38;font-size:13.5px;margin-bottom:3px}
@@ -1961,7 +1961,7 @@ tr:hover td{background:var(--g1)}
       </div>
       <div class="desktop-line-qr" id="checklistLineQrPanel" hidden>
         <div class="desktop-line-qr-code" id="checklistLineQrCode" role="img" aria-label="QR Code สำหรับเปิดข้อความใน LINE บนมือถือ"></div>
-        <div class="desktop-line-qr-copy"><strong>📱 ใช้มือถือสแกนเพื่อแชร์ผ่าน LINE</strong>สแกนแล้วระบบจะเปิด LINE พร้อมข้อความชุดเดียวกับปุ่มแชร์ด้านล่าง จากนั้นเลือกห้องแชตและกดส่งได้เลย</div>
+        <div class="desktop-line-qr-copy"><strong>📱 ใช้มือถือสแกนเพื่อแชร์ผ่าน LINE</strong>QR นี้เปิดหน้าเลือกห้องแชตใน LINE โดยตรง พร้อมข้อความและลิงก์งานประเมิน จากนั้นกดส่งได้เลย</div>
       </div>
     </div>
     <div class="mf">
@@ -5086,10 +5086,11 @@ function copyAppLink() {
   });
 }
 function checklistReviewShareUrl(record){return`https://ptkth14.github.io/pt-kth/?review=${encodeURIComponent(record?.id||'')}`;}
-function checklistMobileLineShareUrl(record){return`https://ptkth14.github.io/pt-kth/?lineShareChecklist=${encodeURIComponent(record?.id||'')}`;}
+function checklistMobileLineShareUrl(record){return lineShareUrl(checklistLineMessage(record));}
 function checklistLineMessage(record){
   const deadline=getTimeLockInfo(record?.date,record?.shift||'morning','pt').deadlineText;
-  return `🔔 Checklist รอ PT ประเมิน\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\nผู้ช่วย: ${record?.staffName||'-'}\nส่งเวลา: ${record?.submitTimeDisplay||'-'}\nกรุณาประเมินภายใน ${deadline||'-'} น.\nเปิดงานประเมิน: ${checklistReviewShareUrl(record)}`;
+  const submittedTime=String(record?.submitTimeDisplay||'-').split(' ').pop();
+  return `🔔 รอประเมิน Checklist\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\n${record?.staffName||'-'} • ส่ง ${submittedTime} • ภายใน ${deadline||'-'} น.\n${checklistReviewShareUrl(record)}`;
 }
 let checklistLineDeepLinkHandled=false;
 function handleChecklistLineShareDeepLink(){
@@ -5107,7 +5108,7 @@ function renderChecklistLineQr(record){
   panel.hidden=isTouchShareDevice();holder.innerHTML='';
   if(panel.hidden)return;
   if(typeof qrcode!=='function'){panel.hidden=true;return;}
-  try{const qr=qrcode(0,'M');qr.addData(checklistMobileLineShareUrl(record));qr.make();holder.innerHTML=qr.createSvgTag({cellSize:3,margin:12,scalable:false});}
+  try{const qr=qrcode(0,'L');qr.addData(checklistMobileLineShareUrl(record));qr.make();const modules=qr.getModuleCount();const cellSize=modules<=65?3:2;holder.innerHTML=qr.createSvgTag({cellSize,margin:10,scalable:false});}
   catch(error){panel.hidden=true;console.warn('Checklist LINE QR render failed:',error);}
 }
 async function shareToLine() {
@@ -5396,7 +5397,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260901-submit-fix-v99';
+const APP_VERSION = 'v20260902-direct-line-qr-v100';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
