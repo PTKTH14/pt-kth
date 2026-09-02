@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260902-direct-line-qr-v100';
+const CACHE_NAME = 'pt-kth-v20260902-all-na-excluded-v101';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {

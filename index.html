@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260902-direct-line-qr-v100">
+<meta name="version" content="v20260902-all-na-excluded-v101">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -3488,8 +3488,9 @@ function openSubmitModal(){
   document.getElementById('m_staff').value=st.text;
   document.getElementById('m_date').value=thaiDate(date)+' | '+shiftLabel(currentShift);
   const actualTotal=Math.max(0,tAll-tNA);
-  const actualPct=actualTotal>0?Math.round(tDone/actualTotal*100):100;
-  document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: <strong>${actualPct}%</strong> <span style="color:var(--g6);font-size:12px">(คิดจากรายการที่ต้องทำ ${actualTotal} รายการ)</span>`;
+  const actualPct=actualTotal>0?Math.round(tDone/actualTotal*100):null;
+  const completionSummary=actualPct===null?'<strong style="color:var(--g6)">ไม่มีรายการที่ใช้ประเมิน</strong> <span style="color:var(--g6);font-size:12px">(รอบนี้ไม่นำไปคิดคะแนนและ Ranking)</span>':`<strong>${actualPct}%</strong> <span style="color:var(--g6);font-size:12px">(คิดจากรายการที่ต้องทำ ${actualTotal} รายการ)</span>`;
+  document.getElementById('m_summary').innerHTML=`✅ ดำเนินการแล้ว: <strong>${tDone}</strong>&nbsp;&nbsp;— N/A: <strong>${tNA}</strong>&nbsp;&nbsp;❌ ยังไม่ได้ทำ: <strong style="color:var(--r)">${tMiss}</strong><br>📊 ความสมบูรณ์: ${completionSummary}`;
   document.getElementById('m_note').value='';
   document.getElementById('submitModal').classList.add('open');
 }
@@ -3596,7 +3597,7 @@ function openReview(idx){
   document.getElementById('rvShiftChip').textContent=shiftLabel(rec.shift);
   document.getElementById('rvShiftChip').className='shift-chip '+(rec.shift==='morning'?'sc-morning':rec.shift==='midday'?'sc-midday':'sc-afternoon');
   const stats=submissionCompletionStats(rec);
-  document.getElementById('rvProg').textContent=`ความครบถ้วนตอนส่ง: ${calcSubmissionCompletion(rec)}% (${stats.done}/${stats.total})`;
+  document.getElementById('rvProg').textContent=isAllNaSubmission(rec)?'ความครบถ้วนตอนส่ง: ไม่มีรายการที่ใช้ประเมิน (ไม่นำไปคิดคะแนน)':`ความครบถ้วนตอนส่ง: ${calcSubmissionCompletion(rec)}% (${stats.done}/${stats.total})`;
   const container=document.getElementById('reviewGroups');container.innerHTML='';
   Object.keys(CL).filter(g=>CL[g].shifts.includes(rec.shift)).forEach(g=>{
     const info=CL[g];const gDiv=document.createElement('div');gDiv.className='cg';
@@ -4027,14 +4028,14 @@ function loadHistory(){
     const stTag=s.status==='pending'?'<span class="tag tw2">รอ PT ประเมิน</span>':s.status==='pass'?'<span class="tag tp">ผ่าน</span>':s.status==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':'<span class="tag tf">ไม่ผ่าน</span>';
     const vrTag=s.ptVerdict==='pass'?'<span class="tag tp">ผ่าน</span>':s.ptVerdict==='partial'?'<span class="tag tw2">ผ่านบางส่วน</span>':s.ptVerdict==='fail'?'<span class="tag tf">ไม่ผ่าน</span>':'<span class="tag td0">—</span>';
     const timePart=(s.submitTimeDisplay||'').split(' ')[1]||s.submitTimeDisplay||'';
-    return`<tr><td>${escapeHtml(thaiDate(s.date))}</td><td><span style="font-size:12px">${shiftLabel(s.shift||'morning')}</span></td><td>${escapeHtml(s.staffName)}</td><td><strong style="color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(timePart)}</td><td>${stTag}</td><td>${vrTag}</td><td>${missedPTBadge(s)}</td><td><button class="btn btn-out" style="padding:4px 9px;font-size:12px" onclick="showDetail(${s.id})">👁</button></td></tr>`;
+    return`<tr><td>${escapeHtml(thaiDate(s.date))}</td><td><span style="font-size:12px">${shiftLabel(s.shift||'morning')}</span></td><td>${escapeHtml(s.staffName)}</td><td>${completionValueMarkup(s)}</td><td style="font-size:12px;color:var(--g6)">${escapeHtml(timePart)}</td><td>${stTag}</td><td>${vrTag}</td><td>${missedPTBadge(s)}</td><td><button class="btn btn-out" style="padding:4px 9px;font-size:12px" onclick="showDetail(${s.id})">👁</button></td></tr>`;
   }).join('');
 }
 
 async function showDetail(id){
   const s=submissions.find(x=>x.id===id);if(!s)return;
   document.getElementById('detailTitle').textContent=`📋 ${s.staffName} — ${thaiDate(s.date)}`;
-  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${calcCompletion(s)}%</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div><div style="grid-column:1/-1"><strong>PT ที่แอดมินระบุว่าไม่ประเมิน:</strong> <span style="color:${getMissedPTNames(s).length?'var(--r)':'var(--g4)'}">${escapeHtml(missedPTText(s))}</span></div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px"><div><strong>เวร:</strong> ${shiftLabel(s.shift||'morning')}</div><div><strong>ส่งเมื่อ:</strong> ${escapeHtml(s.submitTimeDisplay||'')}</div><div><strong>ความสมบูรณ์:</strong> ${completionValueText(s)}</div><div><strong>PT ประเมินเมื่อ:</strong> ${escapeHtml(s.ptReviewTimeDisplay||'—')}</div><div style="grid-column:1/-1"><strong>PT ที่แอดมินระบุว่าไม่ประเมิน:</strong> <span style="color:${getMissedPTNames(s).length?'var(--r)':'var(--g4)'}">${escapeHtml(missedPTText(s))}</span></div>${s.ptComment?`<div style="grid-column:1/-1"><strong>ความเห็น PT:</strong> ${escapeHtml(s.ptComment)}</div>`:''}${s.note?`<div style="grid-column:1/-1"><strong>หมายเหตุ:</strong> ${escapeHtml(s.note)}</div>`:''}</div>`;
   html+=`<div style="margin:-6px 0 14px;padding:9px 12px;border-radius:8px;background:${s.ptLineShared?'#E8F8EE':'#FFF8E1'};color:${s.ptLineShared?'#1E7E34':'#8A5A00'};font-size:13px;font-weight:700">${s.ptLineShared?'✅ ส่งรูปเข้า LINE แล้ว':'⚠️ ยังไม่ได้ติ๊กว่าส่งรูปเข้า LINE'}</div>`;
   const detailPhotos=await getReviewPhotosForRecord(s);
   if(detailPhotos.length){
@@ -4113,7 +4114,7 @@ function exportCSV(){
   let data=[...submissions].sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if(fStaff)data=data.filter(s=>s.staffName===fStaff);if(fStatus)data=data.filter(s=>s.status===fStatus);
   const rows=[['วันที่','เวร','ผู้ช่วย','ความสมบูรณ์%','สถานะ','PT ประเมิน','PT ไม่ประเมิน','ผลประเมิน','ความเห็น PT']];
-  data.forEach(s=>{rows.push([thaiDate(s.date),shiftLabel(s.shift||'morning'),s.staffName,calcCompletion(s),s.status,s.ptReviewer||'—',missedPTText(s),s.ptVerdict||'—',s.ptComment||'']);});
+  data.forEach(s=>{rows.push([thaiDate(s.date),shiftLabel(s.shift||'morning'),s.staffName,completionValueText(s),s.status,s.ptReviewer||'—',missedPTText(s),s.ptVerdict||'—',s.ptComment||'']);});
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PT_KTH.csv';a.click();showToast('📥 Export CSV สำเร็จ','success');
 }
@@ -4180,12 +4181,28 @@ function refreshDashboard() {
 
 function calcSubmissionCompletion(s) {
   const stats=submissionCompletionStats(s);
-  return stats.total > 0 ? Math.round(stats.done/stats.total*100) : 100;
+  return stats.total > 0 ? Math.round(stats.done/stats.total*100) : 0;
 }
 function submissionCompletionStats(s){
-  const values=Object.values(s?.snap||{}).filter(v=>(v?.status||'')!=='na');
+  const allValues=Object.values(s?.snap||{});
+  const values=allValues.filter(v=>(v?.status||'')!=='na');
   const done=values.filter(v=>v.status==='done').length;
-  return{total:values.length,done,na:Object.values(s?.snap||{}).filter(v=>v?.status==='na').length};
+  return{all:allValues.length,total:values.length,done,na:allValues.filter(v=>v?.status==='na').length};
+}
+function isAllNaSubmission(s){
+  const stats=submissionCompletionStats(s);
+  return stats.all>0&&stats.total===0&&stats.na===stats.all;
+}
+function isScoreEligibleSubmission(s){
+  return !isAllNaSubmission(s);
+}
+function completionValueText(s){
+  return isAllNaSubmission(s)?'ไม่มีรายการที่ใช้ประเมิน':`${calcCompletion(s)}%`;
+}
+function completionValueMarkup(s){
+  if(isAllNaSubmission(s))return'<span class="tag td0" title="ไม่นำรอบนี้ไปคิดคะแนนและ Ranking">ไม่มีรายการที่ใช้ประเมิน</span>';
+  const pct=calcCompletion(s);
+  return`<strong style="color:${pct>=80?'var(--g)':pct>=60?'var(--o)':'var(--r)'}">${pct}%</strong>`;
 }
 function ptEvaluationStats(s){
   const evals=Object.values(s?.ptEvals||{}).filter(value=>value==='pass'||value==='fail');
@@ -4199,7 +4216,7 @@ function calcCompletion(s){
   return legacyScore===null?calcSubmissionCompletion(s):legacyScore;
 }
 function averagePtScore(records){
-  const reviewed=(records||[]).filter(record=>ptVerdictScore(record)!==null);
+  const reviewed=(records||[]).filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record));
   return reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+calcCompletion(record),0)/reviewed.length):0;
 }
 
@@ -4208,7 +4225,7 @@ function ptVerdictScore(record){
 }
 function buildAssistantRanking(records){
   const byStaff={};
-  (records||[]).filter(record=>ptVerdictScore(record)!==null).forEach(record=>{
+  (records||[]).filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record)).forEach(record=>{
     const name=record.staffName||'ไม่ระบุชื่อ';
     if(!byStaff[name])byStaff[name]={name,total:0,pass:0,partial:0,fail:0,ptSum:0,compSum:0};
     const item=byStaff[name];
@@ -4250,17 +4267,17 @@ function renderExecutiveDashboard(data,targetId){
   const monthPrefix=today.slice(0,7);
   const todayData=records.filter(s=>s.date===today);
   const monthData=records.filter(s=>String(s.date||'').startsWith(monthPrefix));
-  const reviewedMonth=monthData.filter(s=>s.status!=='pending');
+  const reviewedMonth=monthData.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
   const failedMonth=monthData.filter(s=>s.status==='fail');
   const pendingMonth=monthData.filter(s=>s.status==='pending');
-  const monthPassRate=reviewedMonth.length?Math.round(monthData.filter(s=>s.status==='pass'||s.status==='partial').length/reviewedMonth.length*100):0;
+  const monthPassRate=reviewedMonth.length?Math.round(reviewedMonth.filter(s=>s.status==='pass'||s.status==='partial').length/reviewedMonth.length*100):0;
   const issueTop=topIssueText(records);
   const morning=records.filter(s=>s.shift==='morning');
   const evening=records.filter(s=>s.shift!=='morning');
-  const mReviewed=morning.filter(s=>s.status!=='pending');
-  const eReviewed=evening.filter(s=>s.status!=='pending');
-  const mPass=mReviewed.length?Math.round(morning.filter(s=>s.status==='pass'||s.status==='partial').length/mReviewed.length*100):0;
-  const ePass=eReviewed.length?Math.round(evening.filter(s=>s.status==='pass'||s.status==='partial').length/eReviewed.length*100):0;
+  const mReviewed=morning.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
+  const eReviewed=evening.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
+  const mPass=mReviewed.length?Math.round(mReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/mReviewed.length*100):0;
+  const ePass=eReviewed.length?Math.round(eReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/eReviewed.length*100):0;
   const mAvg=averagePtScore(morning);
   const eAvg=averagePtScore(evening);
   const watchShift=mPass===ePass?(mAvg<=eAvg?'เวรเช้า':'เวรบ่าย'):(mPass<ePass?'เวรเช้า':'เวรบ่าย');
@@ -4303,9 +4320,9 @@ function loadDashboard() {
   if(stockDashboard)stockDashboard.innerHTML=stockPerformanceSummaryMarkup(dashboardStock);
 
   // ══ KPI ══
-  const reviewed = data.filter(s => s.status !== 'pending');
-  const passed   = data.filter(s => s.status === 'pass' || s.status === 'partial');
-  const failed   = data.filter(s => s.status === 'fail');
+  const reviewed = data.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const passed   = reviewed.filter(s => s.status === 'pass' || s.status === 'partial');
+  const failed   = reviewed.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
   const avgComp  = averagePtScore(data);
   const passRate = reviewed.length > 0 ? Math.round(passed.length / reviewed.length * 100) : 0;
@@ -4322,12 +4339,12 @@ function loadDashboard() {
   const morning = data.filter(s => s.shift === 'morning');
   const midday = data.filter(s => s.shift === 'midday');
   const evening = data.filter(s => s.shift === 'afternoon');
-  const mReviewed = morning.filter(s => s.status !== 'pending');
-  const dReviewed = midday.filter(s => s.status !== 'pending');
-  const ePassed   = evening.filter(s => s.status === 'pass' || s.status === 'partial');
-  const dPassed   = midday.filter(s => s.status === 'pass' || s.status === 'partial');
-  const mPassed   = morning.filter(s => s.status === 'pass' || s.status === 'partial');
-  const eReviewed = evening.filter(s => s.status !== 'pending');
+  const mReviewed = morning.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const dReviewed = midday.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const eReviewed = evening.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const ePassed   = eReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
+  const dPassed   = dReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
+  const mPassed   = mReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
   const mAvg = averagePtScore(morning);
   const dAvg = averagePtScore(midday);
   const eAvg = averagePtScore(evening);
@@ -4426,11 +4443,11 @@ function loadDashboard() {
   const byMonth = {};
   data.forEach(s => {
     const m = s.date.slice(0,7);
-    if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, compSum:0 };
+    if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, scored:0, compSum:0 };
     byMonth[m].total++;
-    if(s.status==='pass'||s.status==='partial') byMonth[m].pass++;
+    if(isScoreEligibleSubmission(s)&&(s.status==='pass'||s.status==='partial')) byMonth[m].pass++;
     if(s.status==='pending') byMonth[m].pending++;
-    if(s.status!=='pending')byMonth[m].compSum += calcCompletion(s);
+    if(s.status!=='pending'&&isScoreEligibleSubmission(s)){byMonth[m].scored++;byMonth[m].compSum += calcCompletion(s);}
   });
   const months = Object.entries(byMonth).sort((a,b) => b[0] > a[0] ? 1 : -1).slice(0,6);
   const mt = document.getElementById('monthlyTable');
@@ -4440,9 +4457,9 @@ function loadDashboard() {
     } else {
       mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>คะแนนหลัง PT ตรวจ</th><th>รอ PT ประเมิน</th><th>ผ่าน/ต้องปรับปรุง</th><th>อัตราผ่าน/ปรับปรุง</th></tr></thead><tbody>
       ${months.map(([m, d]) => {
-        const reviewed = d.total - d.pending;
+        const reviewed = d.scored;
         const rate = reviewed > 0 ? Math.round(d.pass/reviewed*100) : 0;
-        const avg  = d.total > 0 ? Math.round(d.compSum/d.total) : 0;
+        const avg  = reviewed > 0 ? Math.round(d.compSum/reviewed) : 0;
         const [y,mo] = m.split('-');
         const thYear = parseInt(y)+543;
         const moNames = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -5254,7 +5271,7 @@ function loadSupDaily(data) {
   }
   tb.innerHTML = data.map(s => {
     const pct = calcCompletion(s);
-    const bar = `<div style="display:flex;align-items:center;gap:6px">
+    const bar = isAllNaSubmission(s)?completionValueMarkup(s):`<div style="display:flex;align-items:center;gap:6px">
       <div style="width:60px;height:6px;background:var(--g2);border-radius:3px;overflow:hidden">
         <div style="width:${pct}%;height:100%;background:${pct>=80?'var(--g)':pct>=60?'var(--y)':'var(--r)'};border-radius:3px"></div>
       </div>
@@ -5297,17 +5314,18 @@ function loadSupPerson(data) {
 
   wrap.innerHTML = Object.entries(byStaff).map(([name, records]) => {
     const total    = records.length;
-    const reviewed = records.filter(s => s.status !== 'pending').length;
-    const passed   = records.filter(s => s.status === 'pass' || s.status === 'partial').length;
-    const failed   = records.filter(s => s.status === 'fail').length;
+    const scoredRecords = records.filter(s => isScoreEligibleSubmission(s));
+    const reviewed = scoredRecords.filter(s => s.status !== 'pending').length;
+    const passed   = scoredRecords.filter(s => s.status === 'pass' || s.status === 'partial').length;
+    const failed   = scoredRecords.filter(s => s.status === 'fail').length;
     const pending  = records.filter(s => s.status === 'pending').length;
     const passRate = reviewed > 0 ? Math.round(passed/reviewed*100) : 0;
 
     // เฉลี่ยความสมบูรณ์
     const avgComplete = Math.round(
-      records.reduce((sum, s) => {
+      scoredRecords.reduce((sum, s) => {
         return sum + calcCompletion(s);
-      }, 0) / total
+      }, 0) / Math.max(1,scoredRecords.length)
     );
 
     // รายการที่มีปัญหาบ่อย
@@ -5397,7 +5415,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260902-direct-line-qr-v100';
+const APP_VERSION = 'v20260902-all-na-excluded-v101';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -6174,11 +6192,11 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   data=attachSupervisorNotes(data);
   const privateEvaluations=Array.isArray(privateRecords)?privateRecords:[];
   const supervisorNotes=data.filter(record=>record.ptSupervisorNote&&String(record.ptSupervisorNote).trim());
-  const reviewed = data.filter(s => s.status !== 'pending');
-  const passed   = data.filter(s => s.status === 'pass');
-  const needs    = data.filter(s => s.status === 'partial');
-  const successful = data.filter(s => s.status === 'pass' || s.status === 'partial');
-  const failed   = data.filter(s => s.status === 'fail');
+  const reviewed = data.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const passed   = reviewed.filter(s => s.status === 'pass');
+  const needs    = reviewed.filter(s => s.status === 'partial');
+  const successful = reviewed.filter(s => s.status === 'pass' || s.status === 'partial');
+  const failed   = reviewed.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
   const reportStaff=document.getElementById('reportStaff')?.value||'all';
   const reportRange=activeReportRange||getSelectedReportRange();
@@ -6247,11 +6265,11 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
     <!-- รายงานรายคน -->
     <div style="font-size:14px;font-weight:800;color:#343A40;margin-bottom:12px">👤 รายละเอียดรายบุคคล</div>
     ${Object.entries(byStaff).map(([name, records]) => {
-      const rev  = records.filter(r => r.status !== 'pending');
-      const pass = records.filter(r => r.status==='pass');
-      const improve = records.filter(r => r.status==='partial');
-      const successful = records.filter(r => r.status==='pass'||r.status==='partial');
-      const fail = records.filter(r => r.status==='fail');
+      const rev  = records.filter(r => r.status !== 'pending'&&isScoreEligibleSubmission(r));
+      const pass = rev.filter(r => r.status==='pass');
+      const improve = rev.filter(r => r.status==='partial');
+      const successful = rev.filter(r => r.status==='pass'||r.status==='partial');
+      const fail = rev.filter(r => r.status==='fail');
       const pend = records.filter(r => r.status==='pending');
       const rate = rev.length > 0 ? Math.round(successful.length/rev.length*100) : 0;
       const avg  = averagePtScore(records);
@@ -6297,7 +6315,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
                 return `<tr style="border-bottom:1px solid #F8F9FA">
                   <td style="padding:4px 8px">${dayTh}. ${escapeHtml(thaiDate(r.date))}</td>
                   <td style="padding:4px 8px">${r.shift==='morning'?'🌅 เช้า':'🌙 บ่าย'}</td>
-                  <td style="padding:4px 8px;text-align:center;font-weight:700;color:${pct>=80?'#28A745':pct>=60?'#FD7E14':'#DC3545'}">${pct}%</td>
+                  <td style="padding:4px 8px;text-align:center;font-weight:700;color:${isAllNaSubmission(r)?'#6C757D':pct>=80?'#28A745':pct>=60?'#FD7E14':'#DC3545'}">${completionValueText(r)}</td>
                   <td style="padding:4px 8px;text-align:center;color:${vColor};font-weight:600">${vLabel}</td>
                   <td style="padding:4px 8px">${escapeHtml(r.ptReviewer||'—')}</td>
                   <td style="padding:4px 8px;color:${getMissedPTNames(r).length?'#B02A37':'#9CA3AF'};font-weight:${getMissedPTNames(r).length?'700':'400'}">${escapeHtml(missedPTText(r))}</td>
@@ -6381,11 +6399,11 @@ async function generateMonthlyPDF() {
 
 function monthlyExcelRows(month, yearBE, data, privateRecords) {
   data=attachSupervisorNotes(data);
-  const reviewed = data.filter(s => s.status !== 'pending');
-  const passed = data.filter(s => s.status === 'pass');
-  const needs = data.filter(s => s.status === 'partial');
-  const successful = data.filter(s => s.status === 'pass' || s.status === 'partial');
-  const failed = data.filter(s => s.status === 'fail');
+  const reviewed = data.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
+  const passed = reviewed.filter(s => s.status === 'pass');
+  const needs = reviewed.filter(s => s.status === 'partial');
+  const successful = reviewed.filter(s => s.status === 'pass' || s.status === 'partial');
+  const failed = reviewed.filter(s => s.status === 'fail');
   const pending = data.filter(s => s.status === 'pending');
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
@@ -6418,7 +6436,7 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
   ];
   data.slice().sort(newestRecordFirst).forEach(function(record) {
     rows.push([
-      record.staffName || '', thaiDate(record.date), shiftLabel(record.shift || 'morning'), calcCompletion(record),
+      record.staffName || '', thaiDate(record.date), shiftLabel(record.shift || 'morning'), completionValueText(record),
       record.status === 'pending' ? 'รอ PT ประเมิน' : 'ประเมินแล้ว', reportVerdictLabel(record.ptVerdict, record.status),
       record.ptReviewer || '', missedPTText(record), record.ptComment || ''
     ]);
