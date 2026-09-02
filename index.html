@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260902-all-na-excluded-v101">
+<meta name="version" content="v20260902-line-message-layout-v102">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -5106,8 +5106,8 @@ function checklistReviewShareUrl(record){return`https://ptkth14.github.io/pt-kth
 function checklistMobileLineShareUrl(record){return lineShareUrl(checklistLineMessage(record));}
 function checklistLineMessage(record){
   const deadline=getTimeLockInfo(record?.date,record?.shift||'morning','pt').deadlineText;
-  const submittedTime=String(record?.submitTimeDisplay||'-').split(' ').pop();
-  return `🔔 รอประเมิน Checklist\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\n${record?.staffName||'-'} • ส่ง ${submittedTime} • ภายใน ${deadline||'-'} น.\n${checklistReviewShareUrl(record)}`;
+  const submittedAt=String(record?.submitTimeDisplay||'').trim()||`${thaiDate(record?.date)} -`;
+  return `🔔 Checklist รอ PT ประเมิน\n${shiftLabel(record?.shift||'morning')} • ${thaiDate(record?.date)}\nผู้ช่วย: ${record?.staffName||'-'}\nส่งเวลา: ${submittedAt}\nกรุณาประเมินภายใน ${deadline||'-'} น.\nเปิดงานประเมิน: ${checklistReviewShareUrl(record)}`;
 }
 let checklistLineDeepLinkHandled=false;
 function handleChecklistLineShareDeepLink(){
@@ -5415,7 +5415,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260902-all-na-excluded-v101';
+const APP_VERSION = 'v20260902-line-message-layout-v102';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
