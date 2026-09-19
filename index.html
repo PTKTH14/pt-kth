@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20260902-line-message-layout-v102">
+<meta name="version" content="v20260919-retrospective-three-person-damage-v106">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1664,9 +1664,11 @@ tr:hover td{background:var(--g1)}
         <div class="fg"><label>หัวข้อที่พบข้อบกพร่อง *</label><select id="retroItemSelect"><option value="">— เลือก Checklist ต้นทางก่อน —</option></select></div>
         <div class="fg"><label>รายละเอียด *</label><textarea id="retroDetails" rows="3" placeholder="อธิบายข้อบกพร่องที่ตรวจพบจริง"></textarea></div>
         <div class="form-grid">
-          <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="pt">PT</option><option value="both">ทั้งสองฝ่าย</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
-          <div class="fg"><label>ค่าเสียหายผู้ช่วย (บาท)</label><input type="number" min="0" step="1" id="retroAssistantAmount" value="10"></div>
-          <div class="fg"><label>ค่าเสียหาย PT (บาท)</label><input type="number" min="0" step="1" id="retroPtAmount" value="0"></div>
+          <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="pt">PT ทั้งสองคน</option><option value="both">ทั้งสามคน</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
+          <div class="fg"><label>PT ผู้รับผิดชอบเพิ่มเติม</label><select id="retroAdditionalPtName"><option value="">— เลือกชื่อ PT อีกคน —</option></select><small style="display:block;margin-top:5px;color:var(--g5)">แยกจาก PT ผู้ประเมิน Checklist เดิม</small></div>
+          <div class="fg"><label>ค่าเสียหายผู้ช่วย (บาท)</label><input type="number" id="retroAssistantAmount" value="10" readonly></div>
+          <div class="fg"><label>ค่าเสียหาย PT ผู้ประเมิน (บาท)</label><input type="number" id="retroPtReviewerAmount" value="0" readonly></div>
+          <div class="fg"><label>ค่าเสียหาย PT เพิ่มเติม (บาท)</label><input type="number" id="retroAdditionalPtAmount" value="0" readonly></div>
         </div>
         <div style="padding:10px 12px;background:#FFF7E6;border-radius:8px;color:#8A5700;font-size:12.5px;line-height:1.7;margin-bottom:14px">ระบบจะเปลี่ยนหัวข้อนี้เป็น “ไม่ผ่าน” และคำนวณผลรวมใหม่ แต่เก็บผลประเมินเดิมของ PT ไว้เป็นหลักฐาน</div>
         <div class="fg">
@@ -3573,7 +3575,7 @@ async function loadReviewView(){
     if(token!==reviewMonthLoadToken)return;
   }
   const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
-  const pendingInMonth=safeSubmissions.filter(s=>s.status==='pending'&&String(s.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
+  const pendingInMonth=safeSubmissions.filter(s=>isChecklistPendingReview(s)&&String(s.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const expired=pendingInMonth.filter(s=>getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
   const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
   const pendingStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
@@ -4563,7 +4565,7 @@ function updateStaffDropdown(){
   [document.getElementById('staffSelect'),document.getElementById('staffSelectMobile')].forEach(sel=>{if(!sel)return;const cur=sel.value;const placeholder=sel.id==='staffSelectMobile'?'— เลือกชื่อผู้ช่วย —':'— เลือกชื่อ —';sel.innerHTML=`<option value="">${placeholder}</option>`+staffList.map((n,i)=>`<option value="s${i}"${cur===`s${i}`?' selected':''}>${escapeHtml(n)}</option>`).join('');});
   const stockSel=document.getElementById('stockResponsible');if(stockSel){const current=stockSel.value;stockSel.innerHTML='<option value="">— เลือกชื่อผู้ช่วย —</option>'+staffList.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');stockSel.value=[...stockSel.options].some(option=>option.value===current)?current:'';}
 }
-function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');if(!sel)return;sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+ptList.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');}
+function updatePTDropdown(){const sel=document.getElementById('ptReviewerSel');if(sel)sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+ptList.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');updateRetrospectivePtOptions();}
 function updateEvaluationDropdowns(){
   const assistantSel=document.getElementById('evaluationAssistantSel');
   const reportSel=document.getElementById('reportStaff');
@@ -4624,54 +4626,78 @@ function rebuildRetrospectiveSubmission(submission,checks){
   });
 }
 function retrospectiveResponsibilityLabel(value){
-  return {assistant:'ผู้ช่วย',pt:'PT',both:'ทั้งสองฝ่าย',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
+  return {assistant:'ผู้ช่วย',pt:'PT ทั้งสองคน',both:'ทั้งสามคน',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
+}
+function retrospectiveAmounts(record){
+  const assistant=Math.max(0,Number(record?.assistantAmount)||0);
+  const hasDetailedPt=Object.prototype.hasOwnProperty.call(record||{},'ptReviewerAmount')||Object.prototype.hasOwnProperty.call(record||{},'additionalPtAmount');
+  const reviewer=hasDetailedPt?Math.max(0,Number(record?.ptReviewerAmount)||0):Math.max(0,Number(record?.ptAmount)||0);
+  const additional=hasDetailedPt?Math.max(0,Number(record?.additionalPtAmount)||0):0;
+  const calculated=assistant+reviewer+additional;
+  return{assistant,reviewer,additional,total:calculated||Math.max(0,Number(record?.amount)||0)};
 }
 function retrospectiveDamageHtml(record){
-  const assistant=Math.max(0,Number(record?.assistantAmount)||0);
-  const pt=Math.max(0,Number(record?.ptAmount)||0);
-  const total=assistant+pt;
+  const {assistant,reviewer,additional,total}=retrospectiveAmounts(record);
   if(!total)return'<span style="color:var(--g5);font-weight:700">0 บาท</span><small>บันทึกข้อมูลเท่านั้น</small>';
   const parts=[];
   if(assistant)parts.push(`ผู้ช่วย ${assistant.toLocaleString('th-TH')} บาท`);
-  if(pt)parts.push(`PT ${pt.toLocaleString('th-TH')} บาท`);
+  if(reviewer)parts.push(`PT ผู้ประเมิน ${reviewer.toLocaleString('th-TH')} บาท`);
+  if(additional)parts.push(`PT เพิ่มเติม ${additional.toLocaleString('th-TH')} บาท`);
   return`${total.toLocaleString('th-TH')} บาท<small>${parts.join(' • ')}</small>`;
 }
 function retrospectiveShareUrl(recordOrId){
   const id=typeof recordOrId==='object'?recordOrId?.id:recordOrId;
   return`https://ptkth14.github.io/pt-kth/?retrospective=${encodeURIComponent(id||'')}`;
 }
+function retrospectiveDamageLineText(record){
+  const {assistant,reviewer,additional,total}=retrospectiveAmounts(record);
+  if(!total)return'ไม่คิดค่าเสียหาย';
+  const parts=[];
+  if(assistant)parts.push(`ผู้ช่วย ${assistant.toLocaleString('th-TH')} บาท`);
+  if(reviewer)parts.push(`PT ผู้ประเมิน ${reviewer.toLocaleString('th-TH')} บาท`);
+  if(additional)parts.push(`PT เพิ่มเติม ${additional.toLocaleString('th-TH')} บาท`);
+  return`คิด ${total.toLocaleString('th-TH')} บาท${parts.length?` (${parts.join(' • ')})`:''}`;
+}
 function retrospectiveLineMessage(record){
-  return `🔎 แจ้งผลตรวจสอบย้อนหลังโดยแอดมิน
-พบข้อบกพร่องใน Checklist วันที่ ${thaiDate(record.date)} ${shiftLabel(record.shift)}
+  const damageText=retrospectiveDamageLineText(record);
+  const charged=!damageText.startsWith('ไม่คิด');
+  const additionalPt=String(record.additionalPtName||'').trim();
+  return `🔎 ผลตรวจสอบย้อนหลัง
+📅 ${thaiDate(record.date)} • ${shiftLabel(record.shift)}
 ผู้ช่วย: ${record.staffName||'-'}
 PT ผู้ประเมิน: ${record.ptReviewer||'ยังไม่มีผู้ประเมิน'}
-หัวข้อ: ${record.itemText}
+${additionalPt?`PT ผู้รับผิดชอบเพิ่มเติม: ${additionalPt}\n`:''}
+
+⚠️ หัวข้อ: ${record.itemText}
 รายละเอียด: ${record.details}
 ผู้รับผิดชอบ: ${retrospectiveResponsibilityLabel(record.responsibility)}
-การดำเนินการ: ปรับคะแนนและบันทึกค่าเสียหายเรียบร้อย
-ผู้ส่งข้อมูลจากระบบ: แอดมิน
-เปิดดูประวัติ: ${retrospectiveShareUrl(record)}`;
+
+📊 ผลคะแนน: ปรับคะแนนตามผลตรวจย้อนหลัง
+💰 ค่าเสียหาย: ${damageText}
+${charged?'✅ บันทึกค่าเสียหายเรียบร้อย':'ℹ️ หักเฉพาะคะแนน ไม่คิดเงิน'}
+บันทึกโดย: แอดมิน
+
+🔗 เปิดดูประวัติ: ${retrospectiveShareUrl(record)}`;
 }
 function retrospectiveDraft(){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
   const itemKey=document.getElementById('retroItemSelect')?.value||'';
   const item=retrospectiveItems(submission).find(entry=>entry.key===itemKey);
   const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
+  const additionalPtName=String(document.getElementById('retroAdditionalPtName')?.value||'').trim();
   const assistantAmount=['assistant','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAssistantAmount')?.value)||0):0;
-  const ptAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroPtAmount')?.value)||0):0;
-  return {submission,itemKey,item,responsibility,assistantAmount,ptAmount,details:String(document.getElementById('retroDetails')?.value||'').trim()};
+  const ptReviewerAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroPtReviewerAmount')?.value)||0):0;
+  const additionalPtAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAdditionalPtAmount')?.value)||0):0;
+  return {submission,itemKey,item,responsibility,additionalPtName,assistantAmount,ptReviewerAmount,additionalPtAmount,ptAmount:ptReviewerAmount+additionalPtAmount,details:String(document.getElementById('retroDetails')?.value||'').trim()};
 }
 function updateRetrospectiveAmountFields(){
   const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
-  const assistant=document.getElementById('retroAssistantAmount');const pt=document.getElementById('retroPtAmount');
+  const assistant=document.getElementById('retroAssistantAmount');const reviewer=document.getElementById('retroPtReviewerAmount');const additional=document.getElementById('retroAdditionalPtAmount');
   if(assistant){
     assistant.disabled=!['assistant','both'].includes(responsibility);
-    assistant.value=assistant.disabled?0:(Number(assistant.value)||10);
+    assistant.value=assistant.disabled?0:10;
   }
-  if(pt){
-    pt.disabled=!['pt','both'].includes(responsibility);
-    pt.value=pt.disabled?0:(Number(pt.value)||10);
-  }
+  [reviewer,additional].forEach(input=>{if(!input)return;input.disabled=!['pt','both'].includes(responsibility);input.value=input.disabled?0:10;});
 }
 function updateRetrospectiveItemOptions(selectedKey){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
@@ -4679,13 +4705,25 @@ function updateRetrospectiveItemOptions(selectedKey){
   const items=retrospectiveItems(submission);
   select.innerHTML='<option value="">— เลือกหัวข้อ —</option>'+items.map(item=>`<option value="${escapeHtml(item.key)}">${escapeHtml(item.text)}</option>`).join('');
   if(selectedKey)select.value=selectedKey;
+  updateRetrospectivePtOptions();
+}
+function updateRetrospectivePtOptions(selectedName){
+  const select=document.getElementById('retroAdditionalPtName');if(!select)return;
+  const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
+  const reviewer=String(submission?.ptReviewer||'').trim();
+  const current=selectedName===undefined?select.value:selectedName;
+  const names=(Array.isArray(ptList)?ptList:[]).filter(name=>String(name||'').trim()&&String(name).trim()!==reviewer);
+  select.innerHTML='<option value="">— เลือกชื่อ PT อีกคน —</option>'+names.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+  select.value=names.includes(current)?current:'';
 }
 function resetRetrospectiveForm(preservePhotos=false){
   editingRetrospectiveId=null;
   const ids=['retroSubmissionSelect','retroItemSelect','retroDetails'];ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const responsibility=document.getElementById('retroResponsibility');if(responsibility)responsibility.value='assistant';
   const assistant=document.getElementById('retroAssistantAmount');if(assistant)assistant.value=10;
-  const pt=document.getElementById('retroPtAmount');if(pt)pt.value=0;
+  const reviewerAmount=document.getElementById('retroPtReviewerAmount');if(reviewerAmount)reviewerAmount.value=0;
+  const additionalAmount=document.getElementById('retroAdditionalPtAmount');if(additionalAmount)additionalAmount.value=0;
+  updateRetrospectivePtOptions('');
   const save=document.getElementById('saveRetrospectiveBtn');if(save)save.textContent='💾 บันทึกผลตรวจสอบ';
   const cancel=document.getElementById('cancelRetrospectiveBtn');if(cancel)cancel.style.display='none';
   if(!preservePhotos){lastRetrospectiveShareId=null;clearRetrospectivePhotos();}
@@ -4702,7 +4740,7 @@ function renderRetrospectiveAdmin(){
   const list=document.getElementById('retrospectiveAdminList');if(!list)return;
   const rows=[...retrospectiveChecks].sort(newestRecordFirst);
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีรายการ</div>';return;}
-  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
+  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>Checklist</th><th>รายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="Checklist"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:11.5px;color:var(--g5)">${escapeHtml(item.staffName||'—')} • PT ผู้ประเมิน ${escapeHtml(item.ptReviewer||'—')}${item.additionalPtName?`<br>PT เพิ่มเติม ${escapeHtml(item.additionalPtName)}`:''}</span></td><td data-label="รายละเอียด">${escapeHtml(item.details)}</td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td><td data-label="จัดการ"><div class="retro-actions"><button class="btn btn-out" onclick="editRetrospectiveCheck('${item.id}')">แก้ไข</button><button class="btn" style="background:var(--r);color:#fff" onclick="confirmDeleteRetrospectiveCheck('${item.id}')">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`;
 }
 function syncRetrospectiveDisclosureLabel(){
   const details=document.getElementById('retrospectivePublicDetails');
@@ -4715,7 +4753,7 @@ function renderRetrospectiveHistory(){
   const rows=[...retrospectiveChecks].filter(item=>isDateInRange(item.date,start,end)).sort(newestRecordFirst);
   const amount=rows.reduce((sum,item)=>sum+(Number(item.amount)||0),0);if(total)total.textContent=amount.toLocaleString('th-TH')+' บาท';if(count)count.textContent=rows.length.toLocaleString('th-TH')+' รายการ';
   if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีรายการตามช่วงวันที่</div>';return;}
-  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="ผู้ช่วย / PT">${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ${escapeHtml(item.ptReviewer||'—')}</span></td><td data-label="หัวข้อ"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td></tr>`).join('')}</tbody></table></div>`;
+  list.innerHTML=`<div class="tw retro-table"><table><thead><tr><th>วันที่</th><th>ผู้ช่วย / PT</th><th>หัวข้อและรายละเอียด</th><th>ผู้รับผิดชอบ</th><th>ค่าเสียหาย</th></tr></thead><tbody>${rows.map(item=>`<tr><td data-label="วันที่">${escapeHtml(thaiDate(item.date))}<br><span style="font-size:11px;color:var(--g5)">${shiftLabel(item.shift)}</span></td><td data-label="ผู้ช่วย / PT">${escapeHtml(item.staffName||'—')}<br><span style="font-size:11.5px;color:var(--g5)">PT ผู้ประเมิน ${escapeHtml(item.ptReviewer||'—')}${item.additionalPtName?`<br>PT เพิ่มเติม ${escapeHtml(item.additionalPtName)}`:''}</span></td><td data-label="หัวข้อ"><strong>${escapeHtml(item.itemText)}</strong><br><span style="font-size:12px;color:var(--g6)">${escapeHtml(item.details)}</span></td><td data-label="ผู้รับผิดชอบ">${retrospectiveResponsibilityLabel(item.responsibility)}</td><td data-label="ค่าเสียหาย" class="retro-damage">${retrospectiveDamageHtml(item)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function shareRetrospectiveToLine(){
   const id=editingRetrospectiveId||lastRetrospectiveShareId;
@@ -4790,12 +4828,14 @@ async function saveRetrospectiveCheck(){
   if(!isAdminLoggedIn)return showToast('🔒 เฉพาะแอดมินเท่านั้น','error');
   const draft=retrospectiveDraft();
   if(!draft.submission||!draft.item||!draft.details)return showToast('⚠️ กรุณาเลือก Checklist หัวข้อ และกรอกรายละเอียด','warning');
+  if(['pt','both'].includes(draft.responsibility)&&!draft.additionalPtName)return showToast('⚠️ กรุณาเลือก PT ผู้รับผิดชอบเพิ่มเติม','warning');
   const now=new Date();const existing=retrospectiveChecks.find(item=>String(item.id)===String(editingRetrospectiveId));
   const record={
     id:existing?.id||Date.now(),submissionId:String(draft.submission.id),date:draft.submission.date,shift:draft.submission.shift||'morning',
     staffName:draft.submission.staffName||'',ptReviewer:draft.submission.ptReviewer||'',itemKey:draft.itemKey,itemText:draft.item.text,
-    details:draft.details,responsibility:draft.responsibility,assistantAmount:draft.assistantAmount,ptAmount:draft.ptAmount,
-    amount:draft.assistantAmount+draft.ptAmount,originalVerdict:existing?.originalVerdict||draft.submission.retrospectiveBase?.ptVerdict||draft.submission.ptVerdict||draft.submission.status||'pending',
+    details:draft.details,responsibility:draft.responsibility,additionalPtName:draft.additionalPtName,assistantAmount:draft.assistantAmount,
+    ptReviewerAmount:draft.ptReviewerAmount,additionalPtAmount:draft.additionalPtAmount,ptAmount:draft.ptAmount,
+    amount:draft.assistantAmount+draft.ptReviewerAmount+draft.additionalPtAmount,originalVerdict:existing?.originalVerdict||draft.submission.retrospectiveBase?.ptVerdict||draft.submission.ptVerdict||draft.submission.status||'pending',
     createdAt:existing?.createdAt||now.toISOString(),updatedAt:now.toISOString(),timeDisplay:getThaiTimestamp(now),createdByRole:'admin'
   };
   const nextChecks=retrospectiveChecks.filter(item=>String(item.id)!==String(record.id)).concat(record);
@@ -4816,7 +4856,8 @@ function editRetrospectiveCheck(id){
   editingRetrospectiveId=record.id;renderRetrospectiveAdmin();
   document.getElementById('retroSubmissionSelect').value=String(record.submissionId);updateRetrospectiveItemOptions(record.itemKey);
   document.getElementById('retroDetails').value=record.details||'';document.getElementById('retroResponsibility').value=record.responsibility||'assistant';
-  document.getElementById('retroAssistantAmount').value=Number(record.assistantAmount)||0;document.getElementById('retroPtAmount').value=Number(record.ptAmount)||0;
+  updateRetrospectivePtOptions(record.additionalPtName||'');
+  const amounts=retrospectiveAmounts(record);document.getElementById('retroAssistantAmount').value=amounts.assistant;document.getElementById('retroPtReviewerAmount').value=amounts.reviewer;document.getElementById('retroAdditionalPtAmount').value=amounts.additional;
   updateRetrospectiveAmountFields();document.getElementById('saveRetrospectiveBtn').textContent='💾 บันทึกการแก้ไข';document.getElementById('cancelRetrospectiveBtn').style.display='';
   document.getElementById('adminPanel-retrospective')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -5415,7 +5456,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20260902-line-message-layout-v102';
+const APP_VERSION = 'v20260919-retrospective-three-person-damage-v106';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -6089,8 +6130,15 @@ function mergeReportRecords(current,incoming) {
 function checklistSubmissionKey(record){
   return [String(record?.date||''),normalizeShift(record?.shift||'morning'),String(record?.staffName||'').trim()].join('|');
 }
+function isChecklistPendingReview(record){
+  if(!record||typeof record!=='object')return false;
+  const status=String(record.status||'').trim().toLowerCase();
+  const hasReview=Boolean(String(record.ptVerdict||'').trim()||String(record.ptReviewTime||'').trim()||Object.keys(record.ptEvals&&typeof record.ptEvals==='object'?record.ptEvals:{}).length);
+  if(hasReview)return false;
+  return !status||status==='pending';
+}
 function checklistSubmissionPriority(record){
-  const reviewed=record?.status&&record.status!=='pending'||record?.ptVerdict?1:0;
+  const reviewed=isChecklistPendingReview(record)?0:1;
   const time=Date.parse(record?.ptReviewTime||record?.updatedAt||record?.submitTime||record?.createdAt||'')||Number(record?.id)||0;
   return reviewed*1e15+time;
 }
