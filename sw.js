@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20260919-retrospective-three-person-damage-v106';
+const CACHE_NAME = 'pt-kth-v20261004-missing-stock-weekly-damage-v108';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
