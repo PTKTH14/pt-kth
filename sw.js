@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261004-missing-stock-weekly-damage-v108';
+const CACHE_NAME = 'pt-kth-v20261004-holiday-import-ocr-v110';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
