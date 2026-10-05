@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261004-holiday-import-ocr-v110">
+<meta name="version" content="v20261005-missing-checklist-score-v112">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -986,6 +986,8 @@ tr:hover td{background:var(--g1)}
   .trend-head h3{width:100%;white-space:normal;overflow-wrap:anywhere}
   .trend-scroll{width:100%;box-sizing:border-box}
 }
+.history-mode-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:768px){.history-mode-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}#stockHistoryPanelSummary{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 </head>
 <body>
@@ -1143,7 +1145,7 @@ tr:hover td{background:var(--g1)}
     <div class="act-row" style="margin-top:0;padding-top:4px"><button id="stockSaveBtn" class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อกล่าสุด</h3><div style="font-size:11.5px;color:var(--g6)">แสดงเพียง 5 รายการล่าสุด ส่วนประวัติทั้งหมดอยู่หน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="switchView('history',document.getElementById('nav-history'));setMobileNav('history')">ดูประวัติทั้งหมด</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อกล่าสุด</h3><div style="font-size:11.5px;color:var(--g6)">แสดงเพียง 5 รายการล่าสุด ส่วนประวัติทั้งหมดอยู่หน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="openStockHistoryPanel()">ดูประวัติทั้งหมด</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
     <div id="stockHistorySummary" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="stockHistoryList" class="stock-history-list"><div style="text-align:center;color:var(--g4);padding:20px">ยังไม่มีประวัติ</div></div>
   </div>
@@ -1251,7 +1253,7 @@ tr:hover td{background:var(--g1)}
   <!-- KPI ROW 1: ภาพรวม -->
   <div class="dashboard-kpi-grid">
     <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
-    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 คะแนนหลัง PT ตรวจ <button type="button" class="help-tip" aria-label="คำอธิบายคะแนนหลัง PT ตรวจ" data-help="จำนวนหัวข้อที่ PT ให้ผ่าน เทียบกับหัวข้อที่ PT ตรวจทั้งหมด โดยไม่นับ N/A และยังไม่รวมรายการที่รอประเมิน">i</button></div></div>
+    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 คะแนนเฉลี่ยผลงาน <button type="button" class="help-tip" aria-label="คำอธิบายคะแนนผลงาน" data-help="เฉลี่ยคะแนนแต่ละรอบที่ PT ตรวจจริง รวมรอบขาดส่งที่แอดมินยืนยันผู้รับผิดชอบเป็น 0 คะแนน ไม่นับรอบยกเว้น N/A ทั้งหมด หรือรอ PT ประเมิน การคิดค่าเสียหายแยกจากคะแนน">i</button></div><div class="kl" id="kpiMissedScore">ขาดส่ง 0 รอบ</div></div>
     <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอ PT ประเมิน</div></div>
     <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">✅ ผ่าน/ต้องปรับปรุง</div></div>
     <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">❌ ไม่ผ่าน</div></div>
@@ -1306,7 +1308,7 @@ tr:hover td{background:var(--g1)}
 
   <!-- RANKING -->
   <div class="card" style="margin-bottom:16px">
-    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="เรียงจากค่าเฉลี่ยจำนวนหัวข้อที่ PT ให้ผ่าน เทียบกับหัวข้อที่ PT ตรวจทั้งหมด ไม่รวม N/A และไม่แสดงชื่อ PT ต้องมีอย่างน้อย 3 รอบจึงเป็นอันดับทางการ">i</button></h3>
+    <h3>🏆 Ranking ผู้ช่วยนักกายภาพ <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย Ranking" data-help="เรียงคะแนนเฉลี่ยแต่ละรอบจากผลตรวจ PT รวมขาดส่งที่แอดมินยืนยันเป็น 0 คะแนน ไม่นับรอบยกเว้น N/A ทั้งหมด หรือรอ PT ตรวจ ต้องมีผล PT อย่างน้อย 3 รอบจึงเป็นอันดับทางการ">i</button></h3>
     <div id="rankTable" class="tw dashboard-table-scroll"></div>
   </div>
 
@@ -1347,6 +1349,7 @@ tr:hover td{background:var(--g1)}
   </div>
   <div class="history-mode-tabs" role="tablist" aria-label="ประเภทประวัติ">
     <button id="historyMode-checklist" class="history-mode-button active" type="button" onclick="setHistoryPanel('checklist')">📋 Checklist</button>
+    <button id="historyMode-stock" class="history-mode-button" type="button" onclick="setHistoryPanel('stock')">📦 สต็อกและการเบิก</button>
     <button id="historyMode-damage" class="history-mode-button" type="button" onclick="setHistoryPanel('damage')">💰 ค่าเสียหาย</button>
     <button id="historyMode-retrospective" class="history-mode-button" type="button" onclick="setHistoryPanel('retrospective')">🔎 ตรวจย้อนหลัง</button>
   </div>
@@ -1370,6 +1373,14 @@ tr:hover td{background:var(--g1)}
    </div>
   </div>
   </details>
+  <section class="card" data-history-panel="stock" style="display:none;margin-bottom:16px;border-left:4px solid #7C3AED">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+      <div><h3 style="margin-bottom:3px;color:#5B21B6">📦 ประวัติสต็อกและการเบิกของ</h3><p style="font-size:12px;color:var(--g6)">รวมรอบที่บันทึกแล้ว รอบที่ระบบไม่พบ และสถานะค่าเสียหายในเดือนที่เลือก</p></div>
+      <span class="tag" id="stockHistoryPanelCount">0 รอบ</span>
+    </div>
+    <div id="stockHistoryPanelSummary" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px"></div>
+    <div id="stockHistoryPanelBody"><div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีข้อมูลสต็อกในเดือนนี้</div></div>
+  </section>
   <div class="card" data-history-panel="damage" style="display:none;margin-bottom:16px;border-left:4px solid #DC3545">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div>
@@ -2853,6 +2864,7 @@ function showWebAlertDemo(){
   modal.classList.add('open');
 }
 function refreshWebAlerts(showPopup){
+  if(typeof currentHistoryPanel==='string'&&currentHistoryPanel==='stock')renderStockHistoryPanel();
   const status=getWebAlertStatus(new Date());const alerts=getActiveWebAlerts(status);const count=alerts.reduce((sum,alert)=>sum+(alert.count||1),0);
   updateWebAlertBadges(count);renderWebAlerts(status,alerts);if(showPopup!==false)maybeShowWebAlertPopup(status,alerts);return{status,alerts,count};
 }
@@ -3411,6 +3423,7 @@ async function shareStockToLine(){
   await shareTextPreferNative('งานเบิกของ PT KTH',msg);
 }
 function renderStockHistory(){
+  if(currentHistoryPanel==='stock')renderStockHistoryPanel();
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
   const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(record=>record.status==='attention').length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
   if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=stockSummaryMetric('รอบที่บันทึก',sorted.length,'var(--bd)')+stockSummaryMetric('รอติดตาม',attentionCount,'var(--r)')+stockSummaryMetric('รวมจำนวนเบิก',requestedTotal,'#9A6700');
@@ -3422,6 +3435,54 @@ function renderStockHistory(){
     const reviewButton=stockRecordIsAdminNotice(record)?stockWorkflowActionButton(record):stockStage(record)==='reviewed_waiting_receipt'?stockWorkflowActionButton(record):record.ptVerdict?`<button class="btn btn-out" style="padding:4px 9px;font-size:11px" onclick="openStockReview(${Number(record.id)})">แก้ผลและคะแนน</button>`:stockWorkflowActionButton(record);
     return`<div class="stock-history-card ${issues.length?'attention':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong style="color:var(--bd)">${escapeHtml(roundName)}</strong><div class="stock-history-meta"><span>📅 ${escapeHtml(thaiDate(record.date))}</span><span>👤 ${escapeHtml(record.responsible||'—')}</span><span>🕒 ${escapeHtml(record.timeDisplay||'—')}</span><span>📦 ${items.length} รายการ</span></div></div><div style="display:flex;gap:5px;flex-wrap:wrap">${reviewButton}${manageButtons}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><span class="tag ${record.ptVerdict==='fail'?'tf':record.ptVerdict==='partial'?'tw2':record.ptVerdict==='pass'?'tp':'td0'}">${escapeHtml(stockVerdictLabel(record))}</span><span class="tag" style="background:#EAF6FF;color:var(--bd)">${record.ptVerdict?`ผลงาน ${stats.totalScore}%`:'รอให้คะแนน'}</span>${record.ptReviewer?`<span class="tag">PT ${escapeHtml(record.ptReviewer)}</span>`:''}</div>${issueHtml}${record.overallNote?`<div style="margin-top:8px;font-size:12px;color:var(--g6)"><strong>หมายเหตุ:</strong> ${escapeHtml(record.overallNote)}</div>`:''}${record.ptComment?`<div style="margin-top:8px;padding:8px 10px;background:#F3E5F5;border-radius:8px;font-size:12px"><strong>ความเห็น PT:</strong> ${escapeHtml(record.ptComment)}</div>`:''}<details style="margin-top:9px"><summary style="cursor:pointer;color:var(--bd);font-size:11.5px;font-weight:700">ดูจำนวนคงเหลือทั้งหมด</summary><div style="margin-top:7px;font-size:11.5px;line-height:1.8;color:var(--g6)">${items.map(item=>`${escapeHtml(item.name)}: ${Number(item.currentQty||0)} ${escapeHtml(item.unit||'')}`).join('<br>')}</div></details></div>`;
   }).join('');
+}
+function openStockHistoryPanel(){
+  switchView('history',document.getElementById('nav-history'));setMobileNav('history');ensureHistoryMonth();setHistoryPanel('stock');
+}
+function stockHistoryRows(start,end){
+  const records=stockRecords.filter(record=>isDateInRange(record.date,start,end)).map(record=>({date:record.date,name:record.scheduleName||'ตรวจสต็อกประจำสัปดาห์',record}));
+  const missing=getMissingStockRounds({start:start||STOCK_TRACKING_START_DATE,end:end||localDateKey(new Date())}).map(round=>({date:round.date,name:round.scheduleName,round}));
+  const keys=new Set(missing.map(row=>`${row.round.scheduleId}|${row.round.weekKey}`));
+  const handled=missedEvaluations.filter(record=>record.kind==='stock'&&isDateInRange(record.date,start,end)&&!keys.has(`${record.stockScheduleId}|${record.weekKey}`)).map(damage=>({date:damage.date,name:damage.stockScheduleName||'ตรวจสต็อกประจำสัปดาห์',round:{date:damage.date,scheduleId:damage.stockScheduleId,weekKey:damage.weekKey,handled:true,damage}}));
+  return [...records,...missing,...handled].sort((first,second)=>String(second.date||'').localeCompare(String(first.date||''))||first.name.localeCompare(second.name,'th'));
+}
+function renderStockHistoryPanel(){
+  const host=document.getElementById('stockHistoryPanelBody');if(!host)return;
+  const rows=stockHistoryRows(document.getElementById('hisStartDate')?.value,document.getElementById('hisEndDate')?.value);
+  const missing=rows.filter(row=>row.round&&!row.round.handled);const charged=rows.filter(row=>row.round?.handled&&Number(row.round.damage?.amount)>0);const waived=rows.filter(row=>row.round?.handled&&Number(row.round.damage?.amount)===0);
+  document.getElementById('stockHistoryPanelCount').textContent=`${rows.length} รายการ`;
+  document.getElementById('stockHistoryPanelSummary').innerHTML=stockSummaryMetric('บันทึกแล้ว',rows.filter(row=>row.record).length,'var(--g)')+stockSummaryMetric('ยังไม่ตรวจ',missing.length,'var(--r)')+stockSummaryMetric('บันทึกค่าเสียหายแล้ว',charged.length,'#7C3AED')+stockSummaryMetric('ไม่คิดค่าเสียหาย',waived.length,'var(--g6)');
+  if(!rows.length){host.innerHTML='<div style="text-align:center;color:var(--g4);padding:18px">ยังไม่มีข้อมูลสต็อกในเดือนนี้</div>';return;}
+  host.innerHTML=`<div class="tw"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้รับผิดชอบ</th><th>สถานะ</th><th>คะแนน / ค่าเสียหาย</th><th>จัดการ</th></tr></thead><tbody>${rows.map(row=>{
+    const record=row.record;const round=row.round;const damage=round?.damage;const responsible=record?.responsible||(damage?.assistantNames||[]).join(', ')||'รอแอดมินเลือกชื่อ';
+    const status=record?stockVerdictLabel(record):round.handled?(Number(damage.amount)>0?'บันทึกค่าเสียหายแล้ว':'ไม่คิดค่าเสียหาย'):'ไม่พบการตรวจ';
+    const detail=record?(record.ptVerdict?`${stockPerformanceStats(record).totalScore}%`:'ยังไม่มีคะแนน'):round.handled?`${Number(damage.amount)||0} บาท`:`กำหนด ${round.dueTime} น.`;
+    const stockArguments=round?[round.scheduleId,round.weekKey,round.date].map(value=>escapeHtml(JSON.stringify(String(value)))).join(','):'';
+    const actions=record?`<button class="btn btn-out" onclick="showStockHistoryRecord(${Number(record.id)})">ดูรายละเอียด</button>`:isAdminLoggedIn?(round.handled?(damage.exempted?`<button class="btn btn-out" onclick="deleteMissedEvaluation(${escapeHtml(JSON.stringify(String(damage.id)))})">คืนเป็นรายการค้าง</button>`:`<button class="btn btn-out" onclick="loadMissedEvalForEdit(${escapeHtml(JSON.stringify(String(damage.id)))})">แก้ไขค่าเสียหาย</button>`):`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-pri" onclick="startStockHistoryDamage(${stockArguments})">เลือกผู้รับผิดชอบ</button><button class="btn btn-out" onclick="exemptStockHistoryRound(${stockArguments})">ยกเว้นรอบ</button></div>`):'แจ้งแอดมิน';
+    return `<tr><td>${escapeHtml(thaiDate(row.date))}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(responsible)}</td><td><span class="tag ${record?'td0':round.handled?'tw2':'tf'}">${escapeHtml(status)}</span></td><td>${escapeHtml(detail)}</td><td>${actions}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function showStockHistoryRecord(id){
+  const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
+  document.getElementById('detailTitle').textContent=`📦 ${record.scheduleName||'ตรวจสต็อก'} — ${thaiDate(record.date)}`;
+  document.getElementById('detailBody').innerHTML=`<p>${escapeHtml(record.responsible||'—')} • ${escapeHtml(stockVerdictLabel(record))}</p><div class="tw"><table><thead><tr><th>รายการ</th><th>คงเหลือ</th><th>จำนวนเบิก</th><th>หมายเหตุ</th></tr></thead><tbody>${(record.items||[]).map(item=>`<tr><td>${escapeHtml(item.name)}</td><td>${Number(item.currentQty)||0} ${escapeHtml(item.unit||'')}</td><td>${Number(item.requestQty)||0} ${escapeHtml(item.unit||'')}</td><td>${escapeHtml(item.note||'—')}</td></tr>`).join('')}</tbody></table></div><p style="margin-top:12px">${escapeHtml(record.overallNote||'')}</p><p>${escapeHtml(record.ptComment||'')}</p>`;
+  document.getElementById('detailModal').classList.add('open');
+}
+function startStockHistoryDamage(scheduleId,weekKey,date){startMissedEvaluationForDate('stock',`stock-history-${scheduleId}-${weekKey}`,'stock',date,scheduleId,weekKey);}
+let savingStockExemption=false;
+function exemptStockHistoryRound(scheduleId,weekKey,date){
+  if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');
+  const round=getMissingStockRounds({start:date,end:date}).find(item=>item.scheduleId===scheduleId&&item.weekKey===weekKey&&!item.handled);if(!round)return showToast('⚠️ รายการนี้ดำเนินการแล้ว กรุณาโหลดข้อมูลล่าสุด','warning');
+  showConfirm('ยกเว้นรอบตรวจนี้ใช่หรือไม่? ระบบจะหยุดแจ้งค้าง ไม่คิดค่าเสียหายและไม่หักคะแนน เก็บประวัติไว้ และคืนเป็นรายการค้างได้',async()=>{
+    if(savingStockExemption)return;savingStockExemption=true;
+    try{
+      if(!window.FB?.fbSaveMissedEvaluation)throw new Error('ยังไม่เชื่อมต่อ Firebase');
+      const now=new Date();const record={id:`stock-exempt-${scheduleId}-${weekKey}`,kind:'stock',shift:'stock',date,stockScheduleId:scheduleId,stockScheduleName:round.scheduleName,weekKey,assistantNames:[],ptNames:[],assistantRate:0,ptRate:0,assistantAmount:0,ptAmount:0,amount:0,exempted:true,resolvedAlertKeys:[],updatedAt:now.toISOString(),updatedAtDisplay:getThaiTimestamp(now)};
+      await window.FB.fbSaveMissedEvaluation(record);missedEvaluations.push(record);writeLocalJSON('pt_missed_evaluations',missedEvaluations);
+      await writeAuditLog('add','missed_evaluation',`ยกเว้นรอบตรวจสต็อก ${date} ${round.scheduleName} — ไม่คิดค่าเสียหายและไม่หักคะแนน`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+      loadHistory();refreshWebAlerts(false);showToast('✅ ยกเว้นรอบแล้ว เก็บประวัติไว้ให้ตรวจสอบ','success');
+    }catch(error){showToast('❌ ยกเว้นไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{savingStockExemption=false;}
+  });
 }
 function editStockRecord(id){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const record=stockRecords.find(item=>Number(item.id)===Number(id));if(!record)return;
@@ -3915,7 +3976,7 @@ async function applyHistoryMonth(){
 function ensureHistoryMonth(){if(historyMonthCursor)return;const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);updateHistoryMonthLabel();setHistoryPanel(currentHistoryPanel);}
 function changeHistoryMonth(offset){ensureHistoryMonth();historyMonthCursor=new Date(historyMonthCursor.getFullYear(),historyMonthCursor.getMonth()+offset,1);applyHistoryMonth();}
 function setHistoryCurrentMonth(){const now=new Date();historyMonthCursor=new Date(now.getFullYear(),now.getMonth(),1);applyHistoryMonth();}
-function setHistoryPanel(name){currentHistoryPanel=['checklist','damage','retrospective'].includes(name)?name:'checklist';document.querySelectorAll('[data-history-panel]').forEach(node=>{const active=node.dataset.historyPanel===currentHistoryPanel;if(node.id==='historyLoadMoreWrap'){if(!active)node.style.display='none';return;}node.style.display=active?(node.tagName==='DETAILS'?'block':''): 'none';});document.querySelectorAll('.history-mode-button').forEach(button=>button.classList.toggle('active',button.id===`historyMode-${currentHistoryPanel}`));if(currentHistoryPanel==='damage')renderMissedEvalSummary();if(currentHistoryPanel==='retrospective')renderRetrospectiveHistory();}
+function setHistoryPanel(name){currentHistoryPanel=['checklist','stock','damage','retrospective'].includes(name)?name:'checklist';document.querySelectorAll('[data-history-panel]').forEach(node=>{const active=node.dataset.historyPanel===currentHistoryPanel;if(node.id==='historyLoadMoreWrap'){if(!active)node.style.display='none';return;}node.style.display=active?(node.tagName==='DETAILS'?'block':''): 'none';});document.querySelectorAll('.history-mode-button').forEach(button=>button.classList.toggle('active',button.id===`historyMode-${currentHistoryPanel}`));if(currentHistoryPanel==='stock')renderStockHistoryPanel();if(currentHistoryPanel==='damage')renderMissedEvalSummary();if(currentHistoryPanel==='retrospective')renderRetrospectiveHistory();}
 function resetHisFilter(){ensureHistoryMonth();const range=historyMonthRange(historyMonthCursor);setThaiDateValue('hisStartDate',range.start);setThaiDateValue('hisEndDate',range.end);document.getElementById('hisFilterStaff').value='';document.getElementById('hisFilterStatus').value='';historyVisibleCount=HISTORY_PAGE_SIZE;loadHistory();}
 async function searchHistory(){
   historyVisibleCount=HISTORY_PAGE_SIZE;
@@ -3984,6 +4045,7 @@ function resetMissedEvalForm(clearPending){
 function loadMissedEvalForEdit(id){
   if(!isAdminLoggedIn)return showToast('⛔ ต้อง login แอดมินก่อน','error');
   const record=missedEvaluations.find(item=>String(item.id)===String(id));if(!record)return;
+  setHistoryPanel('damage');
   clearPendingMissedAlertAction();
   editingMissedEvaluationId=record.id;
   activeMissedStockContext=record.kind==='stock'?{stockScheduleId:record.stockScheduleId,stockScheduleName:record.stockScheduleName,weekKey:record.weekKey}:null;
@@ -4066,6 +4128,7 @@ function renderMissedEvalSummary(){
   list.innerHTML=missedHtml+retrospectiveHtml;
 }
 function loadHistory(){
+  renderStockHistoryPanel();
   renderStockPerformancePanels();
   const fStart=document.getElementById('hisStartDate')?.value;const fEnd=document.getElementById('hisEndDate')?.value;const fStaff=document.getElementById('hisFilterStaff')?.value;const fStatus=document.getElementById('hisFilterStatus')?.value;
   let data=[...submissions].sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
@@ -4081,7 +4144,7 @@ function loadHistory(){
     let missingStock=getMissingStockRounds({start:fStart||STOCK_TRACKING_START_DATE,end:fEnd||localDateKey(new Date())});if(fStaff)missingStock=missingStock.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));if(fStatus&&fStatus!=='pending')missingStock=[];
     const stockOpen=localStorage.getItem('ptkth_missing_stock_history_open')!=='0';
     const stockMissingHtml=missingStock.length?`<details class="card" ${stockOpen?'open':''} style="margin-bottom:14px;border-left:4px solid #7C3AED" ontoggle="localStorage.setItem('ptkth_missing_stock_history_open',this.open?'1':'0')"><summary style="display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;list-style:none"><div><h3 style="margin-bottom:3px">📦 ประวัติรอบตรวจสต็อกที่ระบบไม่พบ</h3><p style="font-size:12px;color:var(--g6)">ตรวจตามรอบสัปดาห์ที่แอดมินตั้งไว้</p></div><span class="tag tw2">${missingStock.length} รอบ</span></summary><div class="tw" style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>วันที่กำหนด</th><th>รอบตรวจ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingStock.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>📦 ${escapeHtml(item.scheduleName)}<br><small>ก่อน ${escapeHtml(item.dueTime)} น.</small></td><td>${item.handled?'<span class="tag tp">บันทึกค่าเสียหายแล้ว</span>':'<span class="tag tf">ไม่พบการตรวจ</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('stock','stock-history-${item.scheduleId}-${item.weekKey}','stock','${item.date}','${item.scheduleId}','${item.weekKey}')">บันทึก 10 บาท</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></details>`:'';
-    missingHost.innerHTML=checklistMissingHtml+stockMissingHtml;
+    missingHost.innerHTML=checklistMissingHtml;
   }
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
@@ -4277,26 +4340,29 @@ function ptEvaluationStats(s){
   return{total:evals.length,passed,failed:evals.length-passed};
 }
 function calcCompletion(s){
+  if(s?._confirmedMissing)return 0;
   const stats=ptEvaluationStats(s);
   if(stats.total>0)return Math.round(stats.passed/stats.total*100);
   const legacyScore=ptVerdictScore(s);
   return legacyScore===null?calcSubmissionCompletion(s):legacyScore;
 }
 function averagePtScore(records){
-  const reviewed=(records||[]).filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record));
+  const reviewed=assistantScoreRecords(records,arguments[1]);
   return reviewed.length?Math.round(reviewed.reduce((sum,record)=>sum+calcCompletion(record),0)/reviewed.length):0;
 }
 
 function ptVerdictScore(record){
+  if(record?._confirmedMissing)return 0;
   return record?.status==='pass'?100:record?.status==='partial'?70:record?.status==='fail'?0:null;
 }
 function buildAssistantRanking(records){
   const byStaff={};
-  (records||[]).filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record)).forEach(record=>{
+  assistantScoreRecords(records,arguments[1]).forEach(record=>{
     const name=record.staffName||'ไม่ระบุชื่อ';
-    if(!byStaff[name])byStaff[name]={name,total:0,pass:0,partial:0,fail:0,ptSum:0,compSum:0};
+    if(!byStaff[name])byStaff[name]={name,total:0,pass:0,partial:0,fail:0,missed:0,reviewed:0,ptSum:0,compSum:0};
     const item=byStaff[name];
     item.total++;
+    if(!record._confirmedMissing)item.reviewed++;
     item[record.status]=(item[record.status]||0)+1;
     item.ptSum+=ptVerdictScore(record);
     item.compSum+=calcCompletion(record);
@@ -4305,8 +4371,25 @@ function buildAssistantRanking(records){
     const ptAvg=Math.round(item.ptSum/item.total*10)/10;
     const avgComp=Math.round(item.compSum/item.total*10)/10;
     const rankScore=avgComp;
-    return{...item,ptAvg,avgComp,rankScore,official:item.total>=3};
+    return{...item,ptAvg,avgComp,rankScore,official:item.reviewed>=3};
   }).sort((a,b)=>Number(b.official)-Number(a.official)||b.rankScore-a.rankScore||b.total-a.total||a.name.localeCompare(b.name,'th'));
+}
+function assistantScoreRecords(records,scope){
+  const actual=Array.isArray(records)?records:[];const scored=actual.filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record));
+  if(!scope)return scored;
+  const allActual=typeof submissions==='undefined'?actual:submissions;
+  const existing=new Set(allActual.map(record=>`${record.date}|${record.shift||'morning'}|${record.staffName}`));
+  const used=new Set(scored.filter(record=>record._confirmedMissing).map(record=>`${record.date}|${record.shift}|${record.staffName}`));
+  const confirmed=typeof missedEvaluations==='undefined'?[]:missedEvaluations;
+  confirmed.forEach(record=>{
+    if(record.kind==='stock'||record.shift==='stock'||record.exempted||record.scoreExempted||!isDateInRange(record.date,scope.start,scope.end)||(scope.shift&&record.shift!==scope.shift))return;
+    (record.assistantNames||[]).forEach(name=>{
+      if(scope.staff&&scope.staff!=='all'&&name!==scope.staff)return;
+      const key=`${record.date}|${record.shift||'morning'}|${name}`;if(existing.has(key)||used.has(key))return;used.add(key);
+      scored.push({id:`missing-score-${record.id}-${name}`,date:record.date,shift:record.shift||'morning',staffName:name,status:'missed',_confirmedMissing:true,snap:{},ptEvals:{},sourceMissedId:record.id});
+    });
+  });
+  return scored;
 }
 
 function executiveMetric(title,value,detail,color){
@@ -4327,7 +4410,7 @@ function topIssueText(records){
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
   return top?{text:top[0],count:top[1]}:{text:'ยังไม่พบปัญหา',count:0};
 }
-function renderExecutiveDashboard(data,targetId){
+function renderExecutiveDashboard(data,targetId,scoreScope){
   const execEl=document.getElementById(targetId);if(!execEl)return;
   const records=Array.isArray(data)?data:[];
   const today=fmtDate(new Date());
@@ -4345,8 +4428,8 @@ function renderExecutiveDashboard(data,targetId){
   const eReviewed=evening.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
   const mPass=mReviewed.length?Math.round(mReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/mReviewed.length*100):0;
   const ePass=eReviewed.length?Math.round(eReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/eReviewed.length*100):0;
-  const mAvg=averagePtScore(morning);
-  const eAvg=averagePtScore(evening);
+  const mAvg=averagePtScore(morning,{...scoreScope,shift:'morning'});
+  const eAvg=averagePtScore(evening,{...scoreScope,shift:'afternoon'});
   const watchShift=mPass===ePass?(mAvg<=eAvg?'เวรเช้า':'เวรบ่าย'):(mPass<ePass?'เวรเช้า':'เวรบ่าย');
   execEl.innerHTML=[
     executiveMetric('วันนี้',`${todayData.length} รายการ`,`รอประเมิน ${todayData.filter(s=>s.status==='pending').length} รายการ`,'#0F4C81'),
@@ -4367,9 +4450,9 @@ function showTrendPoint(index){
   document.querySelectorAll('.trend-point').forEach((element,pointIndex)=>element.classList.toggle('active',pointIndex===index));
   const shift=shiftLabel(point.record.shift).replace(/^\S+\s/,'');
   const verdict=point.record.ptVerdict||point.record.status||'pending';
-  const verdictInfo=verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
+  const verdictInfo=point.record._confirmedMissing?{label:'ขาดส่ง Checklist (แอดมินยืนยัน)',className:'tf'}:verdict==='pass'?{label:'ผ่าน',className:'tp'}:verdict==='partial'?{label:'ต้องปรับปรุง',className:'tw2'}:verdict==='fail'?{label:'ไม่ผ่าน',className:'tf'}:{label:'รอ PT ประเมิน',className:'td0'};
   const comment=point.record.ptComment?`<div style="font-size:11px;color:var(--g6);margin-top:4px;max-width:360px">“${escapeHtml(point.record.ptComment)}”</div>`:'';
-  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">ผลตรวจจาก PT <button type="button" class="help-tip tip-down" aria-label="คำอธิบายเกณฑ์ผลตรวจจาก PT" data-help="คะแนน = จำนวนหัวข้อที่ PT ให้ผ่าน ÷ จำนวนหัวข้อที่ PT ตรวจทั้งหมด × 100 โดยไม่นับ N/A • 80–100% ผ่าน • 60–79% ต้องปรับปรุง • ต่ำกว่า 60% ไม่ผ่าน">i</button></div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label} · ${point.pct}%</span></div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>คะแนนหลัง PT ตรวจ</div></div>`;
+  detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">${point.record._confirmedMissing?'สถานะการส่ง Checklist':'ผลตรวจจาก PT'} <button type="button" class="help-tip tip-down" aria-label="คำอธิบายเกณฑ์คะแนน" data-help="คะแนน = จำนวนหัวข้อที่ PT ให้ผ่าน ÷ จำนวนหัวข้อที่ PT ตรวจทั้งหมด × 100 โดยไม่นับ N/A • ขาดส่งและแอดมินยืนยันผู้รับผิดชอบ = 0 คะแนน • 80–100% ผ่าน • 60–79% ต้องปรับปรุง • ต่ำกว่า 60% ไม่ผ่าน">i</button></div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label} · ${point.pct}%</span></div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>${point.record._confirmedMissing?'คะแนนขาดส่ง Checklist':'คะแนนหลัง PT ตรวจ'}</div></div>`;
 }
 
 function loadDashboard() {
@@ -4383,6 +4466,8 @@ function loadDashboard() {
   let data = submissions.filter(s => isDateInRange(s.date, fStart, fEnd));
   if(f !== 'all') data = data.filter(s => s.staffName === f);
   const dashboardStock=stockRecords.filter(record=>isDateInRange(record.date,fStart,fEnd)&&(f==='all'||record.responsible===f));
+  const scoreScope={start:fStart,end:fEnd,staff:f};
+  const scoreRecords=assistantScoreRecords(data,scoreScope);
   const stockDashboard=document.getElementById('stockPerformanceDashboard');
   if(stockDashboard)stockDashboard.innerHTML=stockPerformanceSummaryMarkup(dashboardStock);
 
@@ -4391,8 +4476,8 @@ function loadDashboard() {
   const passed   = reviewed.filter(s => s.status === 'pass' || s.status === 'partial');
   const failed   = reviewed.filter(s => s.status === 'fail');
   const pending  = data.filter(s => s.status === 'pending');
-  const avgComp  = averagePtScore(data);
-  const passRate = reviewed.length > 0 ? Math.round(passed.length / reviewed.length * 100) : 0;
+  const avgComp  = averagePtScore(data,scoreScope);
+  const passRate = scoreRecords.length > 0 ? Math.round(passed.length / scoreRecords.length * 100) : 0;
 
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('kpiTotal',    data.length);
@@ -4400,6 +4485,7 @@ function loadDashboard() {
   set('kpiPend',     pending.length);
   set('kpiFail',     failed.length);
   set('kpiAvg',      avgComp + '%');
+  set('kpiMissedScore',`ขาดส่ง ${scoreRecords.filter(record=>record._confirmedMissing).length} รอบ · รอบละ 0 คะแนน`);
   set('kpiPassRate', passRate + '%');
 
   // ══ เวรเช้า / ก่อนเริ่มเวรบ่าย / เวรบ่าย ══
@@ -4412,12 +4498,15 @@ function loadDashboard() {
   const ePassed   = eReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
   const dPassed   = dReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
   const mPassed   = mReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
-  const mAvg = averagePtScore(morning);
-  const dAvg = averagePtScore(midday);
-  const eAvg = averagePtScore(evening);
-  const mPass = mReviewed.length > 0 ? Math.round(mPassed.length/mReviewed.length*100) : 0;
-  const dPass = dReviewed.length > 0 ? Math.round(dPassed.length/dReviewed.length*100) : 0;
-  const ePass = eReviewed.length > 0 ? Math.round(ePassed.length/eReviewed.length*100) : 0;
+  const mAvg = averagePtScore(morning,{...scoreScope,shift:'morning'});
+  const dAvg = averagePtScore(midday,{...scoreScope,shift:'midday'});
+  const eAvg = averagePtScore(evening,{...scoreScope,shift:'afternoon'});
+  const mRounds=scoreRecords.filter(record=>record.shift==='morning').length;
+  const dRounds=scoreRecords.filter(record=>record.shift==='midday').length;
+  const eRounds=scoreRecords.filter(record=>record.shift==='afternoon').length;
+  const mPass = mRounds ? Math.round(mPassed.length/mRounds*100) : 0;
+  const dPass = dRounds ? Math.round(dPassed.length/dRounds*100) : 0;
+  const ePass = eRounds ? Math.round(ePassed.length/eRounds*100) : 0;
 
   set('shiftMorningCount', morning.length);
   set('shiftMorningPass',  mPass + '%');
@@ -4430,7 +4519,7 @@ function loadDashboard() {
   set('shiftEveningAvg',   eAvg + '%');
 
   // ══ TREND CHART ══
-  const recent = [...reviewed].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
+  const recent = [...scoreRecords].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
   const barWrap = document.getElementById('barChart');
   const labelWrap = document.getElementById('barChartLabels');
   const trendSummary = document.getElementById('trendSummary');
@@ -4489,18 +4578,18 @@ function loadDashboard() {
   }
 
   // ══ RANKING ══
-  const ranked = buildAssistantRanking(data);
+  const ranked = buildAssistantRanking(data,scoreScope);
   const rt = document.getElementById('rankTable');
   if(rt) {
     if(ranked.length === 0) {
       rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
     } else {
-      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ผลการประเมิน</th><th>คะแนนเฉลี่ยหลัง PT ตรวจ</th></tr></thead><tbody>
+      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ผลการประเมิน</th><th>คะแนนเฉลี่ยผลงาน (รวมขาดส่ง 0)</th></tr></thead><tbody>
       ${ranked.map((d,i) => `<tr>
         <td><strong style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</strong></td>
         <td style="font-weight:600">${d.name}</td>
-        <td>${d.total}${d.official?'':' <small style="color:var(--o)">(ข้อมูลยังน้อย)</small>'}</td>
-        <td><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน</div></td>
+        <td>${d.reviewed}${d.official?'':' <small style="color:var(--o)">(ข้อมูลยังน้อย)</small>'}</td>
+        <td><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน • ${d.missed} ขาดส่ง (0 คะแนน)</div></td>
         <td><span class="tag ${d.rankScore>=80?'tp':d.rankScore>=60?'tw2':'tf'}">${d.rankScore}%</span></td>
       </tr>`).join('')}</tbody></table>`;
     }
@@ -4508,7 +4597,7 @@ function loadDashboard() {
 
   // ══ สรุปรายเดือน ══
   const byMonth = {};
-  data.forEach(s => {
+  [...data,...scoreRecords.filter(record=>record._confirmedMissing)].forEach(s => {
     const m = s.date.slice(0,7);
     if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, scored:0, compSum:0 };
     byMonth[m].total++;
@@ -5363,9 +5452,10 @@ async function loadSupervisor() {
   let data=attachSupervisorNotes(submissions).sort(newestRecordFirst).filter(s=>isDateInRange(s.date,fStart,fEnd));
   if (fStaff !== 'all') data = data.filter(s => s.staffName === fStaff);
 
-  renderExecutiveDashboard(data,'supervisorExecutiveDashboard');
+  const scoreScope={start:fStart,end:fEnd,staff:fStaff};
+  renderExecutiveDashboard(data,'supervisorExecutiveDashboard',scoreScope);
   if (currentSupTab === 'daily') loadSupDaily(data);
-  else loadSupPerson(data);
+  else loadSupPerson(data,scoreScope);
   loadSupervisorEvaluations(fStart, fEnd, fStaff);
 }
 
@@ -5424,7 +5514,7 @@ function loadSupDaily(data) {
   }).join('');
 }
 
-function loadSupPerson(data) {
+function loadSupPerson(data,scoreScope) {
   const wrap = document.getElementById('supPersonCards');
   if (!wrap) return;
 
@@ -5434,6 +5524,7 @@ function loadSupPerson(data) {
     if (!byStaff[s.staffName]) byStaff[s.staffName] = [];
     byStaff[s.staffName].push(s);
   });
+  assistantScoreRecords(data,scoreScope).forEach(record=>{if(!byStaff[record.staffName])byStaff[record.staffName]=[];});
 
   if (Object.keys(byStaff).length === 0) {
     wrap.innerHTML = '<div style="text-align:center;color:var(--g4);padding:40px;font-size:14px">ไม่พบข้อมูล</div>';
@@ -5447,14 +5538,12 @@ function loadSupPerson(data) {
     const passed   = scoredRecords.filter(s => s.status === 'pass' || s.status === 'partial').length;
     const failed   = scoredRecords.filter(s => s.status === 'fail').length;
     const pending  = records.filter(s => s.status === 'pending').length;
-    const passRate = reviewed > 0 ? Math.round(passed/reviewed*100) : 0;
+    const personScores=assistantScoreRecords(records,{...scoreScope,staff:name});
+    const missedCount=personScores.filter(record=>record._confirmedMissing).length;
+    const passRate = personScores.length ? Math.round(passed/personScores.length*100) : 0;
 
     // เฉลี่ยความสมบูรณ์
-    const avgComplete = Math.round(
-      scoredRecords.reduce((sum, s) => {
-        return sum + calcCompletion(s);
-      }, 0) / Math.max(1,scoredRecords.length)
-    );
+    const avgComplete = averagePtScore(records,{...scoreScope,staff:name});
 
     // รายการที่มีปัญหาบ่อย
     const issueCounts = {};
@@ -5483,7 +5572,7 @@ function loadSupPerson(data) {
           <div style="width:44px;height:44px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>
           <div>
             <div style="font-size:16px;font-weight:800;color:var(--bd)">${escapeHtml(name)}</div>
-            <div style="font-size:12px;color:var(--g6)">ส่ง Checklist ทั้งหมด ${total} ครั้ง</div>
+            <div style="font-size:12px;color:var(--g6)">ส่ง Checklist ${total} ครั้ง • ขาดส่ง ${missedCount} รอบ (0 คะแนน)</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -5495,7 +5584,7 @@ function loadSupPerson(data) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px">
         <div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:20px;font-weight:800;color:var(--bd)">${avgComplete}%</div>
-          <div style="font-size:11px;color:var(--g6)">คะแนนเฉลี่ยหลัง PT ตรวจ</div>
+          <div style="font-size:11px;color:var(--g6)">คะแนนเฉลี่ยผลงาน (รวมขาดส่ง 0)</div>
         </div>
         <div style="background:var(--yb);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:20px;font-weight:800;color:#856404">${pending}</div>
@@ -5543,7 +5632,7 @@ function loadSupPerson(data) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261004-holiday-import-ocr-v110';
+const APP_VERSION = 'v20261005-missing-checklist-score-v112';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
@@ -6304,7 +6393,7 @@ async function previewMonthlyReport() {
   if(token!==monthlyReportPreviewToken)return;
   monthlyReportPrivateRecords=privateResult.records;
   const hasMonthlyStock=stockRecords.some(record=>reportDateInRange(record.date,report));
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!hasMonthlyStock) {
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!hasMonthlyStock&&!assistantScoreRecords(data,{start:report.start,end:report.end,staff:document.getElementById('reportStaff')?.value||'all'}).length) {
     el.innerHTML = `<div style="text-align:center;color:var(--g4);padding:40px">ไม่พบข้อมูลใน${escapeHtml(report.label)}</div>`;
     if(pdfButton)pdfButton.disabled=false;if(excelButton)excelButton.disabled=false;
     return;
@@ -6335,14 +6424,16 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
   const pending  = data.filter(s => s.status === 'pending');
   const reportStaff=document.getElementById('reportStaff')?.value||'all';
   const reportRange=activeReportRange||getSelectedReportRange();
+  const reportScoreScope={start:reportRange.start,end:reportRange.end,staff:reportStaff};
   const monthlyStockRecords=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>record?.recordType!=='admin_notice'&&reportDateInRange(record.date,reportRange)&&(reportStaff==='all'||record.responsible===reportStaff));
   const missedAssistantRecords=missedEvaluations.filter(record=>reportDateInRange(record.date,reportRange)&&(record.assistantNames||[]).some(name=>reportStaff==='all'||name===reportStaff));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff).length,0);
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
   const missedPtTotal=missedPtRecords.reduce((sum,record)=>sum+(record.ptNames||[]).length,0);
-  const passRate = reviewed.length > 0 ? Math.round(successful.length/reviewed.length*100) : 0;
-  const avgComp  = averagePtScore(data);
+  const scoreRoundCount=assistantScoreRecords(data,reportScoreScope).length;
+  const passRate = scoreRoundCount > 0 ? Math.round(successful.length/scoreRoundCount*100) : 0;
+  const avgComp  = averagePtScore(data,reportScoreScope);
 
   // จัดกลุ่มรายคน
   const byStaff = {};
@@ -6350,6 +6441,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
     if(!byStaff[s.staffName]) byStaff[s.staffName] = [];
     byStaff[s.staffName].push(s);
   });
+  assistantScoreRecords(data,reportScoreScope).forEach(record=>{if(!byStaff[record.staffName])byStaff[record.staffName]=[];});
 
   const px = isPreview ? 'px' : 'pt';
   const s = isPreview ? '' : 'print-';
@@ -6373,7 +6465,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
         </div>
         <div style="text-align:center;background:#fff;border-radius:6px;padding:10px">
           <div style="font-size:24px;font-weight:800;color:#9C27B0">${avgComp}%</div>
-        <div style="font-size:11px;color:#6C757D">คะแนนเฉลี่ยหลัง PT ตรวจ</div>
+        <div style="font-size:11px;color:#6C757D">คะแนนเฉลี่ยผลงาน (รวมขาดส่ง 0)</div>
         </div>
         <div style="text-align:center;background:#fff;border-radius:6px;padding:10px">
           <div style="font-size:24px;font-weight:800;color:#28A745">${passRate}%</div>
@@ -6406,8 +6498,9 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
       const successful = rev.filter(r => r.status==='pass'||r.status==='partial');
       const fail = rev.filter(r => r.status==='fail');
       const pend = records.filter(r => r.status==='pending');
-      const rate = rev.length > 0 ? Math.round(successful.length/rev.length*100) : 0;
-      const avg  = averagePtScore(records);
+      const personScores=assistantScoreRecords(records,{...reportScoreScope,staff:name});
+      const rate = personScores.length ? Math.round(successful.length/personScores.length*100) : 0;
+      const avg  = averagePtScore(records,{...reportScoreScope,staff:name});
       const rateColor = rate>=80?'#28A745':rate>=60?'#FD7E14':'#DC3545';
 
       return `
@@ -6472,7 +6565,7 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
       <div style="font-size:14px;font-weight:800;color:#B04A00;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #F0A45C">📋 ผู้ช่วยที่ไม่ดำเนินการ Checklist/ตรวจสต็อกตามกำหนด</div>
       ${missedAssistantRecords.slice().sort(newestRecordFirst).map(record=>{const names=(record.assistantNames||[]).filter(name=>reportStaff==='all'||name===reportStaff);return`<div style="border:1px solid #FFD0A8;border-left:4px solid #F57C00;border-radius:8px;background:#FFFAF5;padding:10px 12px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid">
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong style="color:#9A4100">${names.map(escapeHtml).join(', ')}</strong><span style="font-size:11.5px;color:#8A5A35">${escapeHtml(thaiDate(record.date))} • ${escapeHtml(shiftLabel(record.shift||'morning'))}</span></div>
-        <div style="font-size:11.5px;color:#8A5A35;margin-top:4px">${record.kind==='stock'?'รอบตรวจ '+escapeHtml(record.stockScheduleName||'สต็อกประจำสัปดาห์')+' • ':''}ค่าเสียหายผู้ช่วย ${missedAssistantAmount(record,names)} บาท</div>
+        <div style="font-size:11.5px;color:#8A5A35;margin-top:4px">${record.kind==='stock'?'รอบตรวจ '+escapeHtml(record.stockScheduleName||'สต็อกประจำสัปดาห์')+' • ':''}ค่าเสียหายผู้ช่วย ${missedAssistantAmount(record,names)} บาท ${record.kind==='stock'?'':'• ขาดส่ง Checklist: 0 คะแนนเมื่อไม่มีบันทึกจริง'}</div>
       </div>`;}).join('')}
     </section>`:''}
 
@@ -6503,12 +6596,12 @@ function buildReportHTML(month, yearBE, data, isPreview, privateRecords) {
     <!-- Ranking -->
     <div style="background:#F8F9FA;border-radius:8px;padding:14px;margin-top:16px">
       <div style="font-size:13px;font-weight:800;margin-bottom:10px">🏆 Ranking ช่วงรายงาน</div>
-      ${buildAssistantRanking(data)
+      ${buildAssistantRanking(data,reportScoreScope)
         .map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #E9ECEF;font-size:13px">
           <span style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</span>
           <span style="flex:1;font-weight:600">${d.name}${d.official?'':' <small style="color:#A36500">ข้อมูลยังน้อย</small>'}</span>
           <span style="color:${d.rankScore>=80?'#28A745':d.rankScore>=60?'#FD7E14':'#DC3545'};font-weight:700">${d.rankScore}%</span>
-          <span style="color:#9CA3AF;font-size:12px">PT ${d.ptAvg}% • ${d.total} รอบ</span>
+          <span style="color:#9CA3AF;font-size:12px">PT ตรวจ ${d.reviewed} รอบ • ขาดส่ง ${d.missed} รอบ (0 คะแนน)</span>
         </div>`).join('')}
     </div>
 
@@ -6525,7 +6618,7 @@ async function generateMonthlyPDF() {
   try{await ensureReportRangeData(report);report=getReportData();monthlyReportPrivateRecords=(await getPrivateMonthlyRecords()).records;}
   catch(error){return showToast(`❌ ${error.message||'โหลดข้อมูลรายงานไม่สำเร็จ'}`,'error');}
   const { month, yearBE, data } = report;
-  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report))) return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
+  if(data.length === 0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report))&&!assistantScoreRecords(data,{start:report.start,end:report.end,staff:document.getElementById('reportStaff')?.value||'all'}).length) return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
   const reportHTML = buildReportHTML(month, yearBE, data, false, monthlyReportPrivateRecords);
   const filename='PT_KTH_Report_' + report.fileKey + '.pdf';
   if(openPrintableReport(reportHTML,filename,'landscape'))showToast('🖨️ ในหน้าต่างพิมพ์ เลือกเครื่องพิมพ์ “บันทึกเป็น PDF”','success');
@@ -6543,10 +6636,11 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
   const reportKeys=new Set(data.map(record=>`${record.date}|${record.shift||'morning'}`));
   const missedPtRecords=missedEvaluations.filter(record=>reportKeys.has(`${record.date}|${record.shift||'morning'}`)&&(record.ptNames||[]).length);
   const missedPtTotal=missedPtRecords.reduce((sum,record)=>sum+(record.ptNames||[]).length,0);
-  const avgCompletion = reviewed.length ? Math.round(reviewed.reduce((sum,record)=>sum+calcCompletion(record),0)/reviewed.length) : 0;
-  const successRate = reviewed.length ? Math.round(successful.length/reviewed.length*100) : 0;
   const staffFilter = document.getElementById('reportStaff')?.value || 'all';
   const reportRange=activeReportRange||getSelectedReportRange();
+  const avgCompletion=averagePtScore(data,{start:reportRange.start,end:reportRange.end,staff:staffFilter});
+  const scoreRoundCount=assistantScoreRecords(data,{start:reportRange.start,end:reportRange.end,staff:staffFilter}).length;
+  const successRate=scoreRoundCount?Math.round(successful.length/scoreRoundCount*100):0;
   const missedAssistantRecords=missedEvaluations.filter(record=>reportDateInRange(record.date,reportRange)&&(record.assistantNames||[]).some(name=>staffFilter==='all'||name===staffFilter));
   const missedAssistantTotal=missedAssistantRecords.reduce((sum,record)=>sum+(record.assistantNames||[]).filter(name=>staffFilter==='all'||name===staffFilter).length,0);
   const rows = [
@@ -6556,7 +6650,9 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
     [],
     ['สรุปผล', 'ค่า'],
     ['ทั้งหมด', data.length],
-    ['คะแนนเฉลี่ยหลัง PT ตรวจ (%)', avgCompletion],
+    ['คะแนนเฉลี่ยผลงาน รวมขาดส่ง 0 คะแนน (%)', avgCompletion],
+    ['เกณฑ์คะแนน','เฉลี่ยคะแนน PT รวมขาดส่งที่แอดมินยืนยันเป็น 0; ยกเว้น N/A ทั้งหมด และรอ PT ตรวจไม่นับ'],
+    ['รอบขาดส่งที่นับ 0 คะแนน',scoreRoundCount-reviewed.length],
     ['รอ PT ประเมิน', pending.length],
     ['ผู้ช่วยไม่ดำเนินการ Checklist/ตรวจสต็อก (คน/ครั้ง)', missedAssistantTotal],
     ['PT ไม่ประเมิน (คน/ครั้ง)', missedPtTotal],
@@ -6576,6 +6672,11 @@ function monthlyExcelRows(month, yearBE, data, privateRecords) {
       record.ptReviewer || '', missedPTText(record), record.ptComment || ''
     ]);
   });
+  const missingScoreRecords=assistantScoreRecords(data,{start:reportRange.start,end:reportRange.end,staff:staffFilter}).filter(record=>record._confirmedMissing);
+  if(missingScoreRecords.length){
+    rows.push([],['ขาดส่ง Checklist ที่นับ 0 คะแนน'],['วันที่','ผู้ช่วย','เวร','คะแนน','สถานะ']);
+    missingScoreRecords.sort(newestRecordFirst).forEach(record=>rows.push([thaiDate(record.date),record.staffName,shiftLabel(record.shift),0,'แอดมินยืนยันผู้รับผิดชอบแล้ว']));
+  }
   const monthlyStock=(typeof stockRecords==='undefined'?[]:stockRecords).filter(record=>record?.recordType!=='admin_notice'&&reportDateInRange(record.date,reportRange)&&(staffFilter==='all'||record.responsible===staffFilter));
   if(monthlyStock.length){
     rows.push([],['ผลงานเบิกของและตรวจสต็อก'],['วันที่','ผู้ช่วย','สถานะรายการ','ผล PT','PT ผู้ประเมิน','คะแนนผลงาน (%)','ความคิดเห็น PT']);
@@ -6611,7 +6712,7 @@ async function generateMonthlyExcel() {
     await ensureReportRangeData(report);
     report=getReportData();
     monthlyReportPrivateRecords=(await getPrivateMonthlyRecords()).records;
-    if(report.data.length===0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report)))return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
+    if(report.data.length===0&&monthlyReportPrivateRecords.length===0&&!stockRecords.some(record=>reportDateInRange(record.date,report))&&!assistantScoreRecords(report.data,{start:report.start,end:report.end,staff:document.getElementById('reportStaff')?.value||'all'}).length)return showToast('⚠️ ไม่มีข้อมูลในช่วงที่เลือก','warning');
     downloadRowsAsExcel('PT_KTH_Report_' + report.fileKey + '.xlsx', monthlyExcelRows(report.month, report.yearBE, report.data, monthlyReportPrivateRecords));
     showToast('✅ ดาวน์โหลดไฟล์ Excel .xlsx เรียบร้อย','success');
   }
