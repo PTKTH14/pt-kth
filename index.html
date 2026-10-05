@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261005-missing-checklist-score-v112">
+<meta name="version" content="v20261005-score-scope-audit-v113">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -662,10 +662,10 @@ img,svg,canvas{max-width:100%}
 .help-tip:hover,.help-tip:focus{background:#EDF4F8;border-color:#6F879A;color:#34566F;opacity:1;z-index:80}
 .help-tip::after{content:attr(data-help);position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%) translateY(4px);width:250px;max-width:calc(100vw - 32px);padding:10px 12px;border:1px solid #D7E0E7;border-radius:8px;background:#fff;color:#314657;box-shadow:0 10px 28px rgba(31,52,70,.18);font-family:'Sarabun',sans-serif;font-size:11.5px;font-weight:500;line-height:1.55;text-align:left;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:999}
 .help-tip::before{content:'';position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%) translateY(4px);border:6px solid transparent;border-top-color:#D7E0E7;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:1000}
-.help-tip:hover::after,.help-tip:focus::after,.help-tip.is-open::after,.help-tip:hover::before,.help-tip:focus::before,.help-tip.is-open::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.help-tip.is-open::after,.help-tip.is-open::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
 .help-tip.tip-down::after{top:calc(100% + 10px);bottom:auto;transform:translateX(-50%) translateY(-4px)}
 .help-tip.tip-down::before{top:calc(100% + 3px);bottom:auto;border-top-color:transparent;border-bottom-color:#D7E0E7;transform:translateX(-50%) translateY(-4px)}
-.help-tip.tip-down:hover::after,.help-tip.tip-down:focus::after,.help-tip.tip-down.is-open::after,.help-tip.tip-down:hover::before,.help-tip.tip-down:focus::before,.help-tip.tip-down.is-open::before{transform:translateX(-50%) translateY(0)}
+.help-tip.tip-down.is-open::after,.help-tip.tip-down.is-open::before{transform:translateX(-50%) translateY(0)}
 .help-tip.tip-left::after{left:auto;right:-8px;transform:translateY(4px)}
 .help-tip.tip-left::before{left:auto;right:3px;transform:translateY(4px)}
 .help-tip.tip-right::after{left:-8px;right:auto;transform:translateY(4px)}
@@ -2243,9 +2243,11 @@ let checkState={}, currentShift='morning', submissions=[], staffList=[], ptList=
 document.addEventListener('click',event=>{
   const tip=event.target.closest?.('.help-tip');
   const wasOpen=tip?.classList.contains('is-open');
-  document.querySelectorAll('.help-tip.is-open').forEach(element=>element.classList.remove('is-open'));
-  if(tip&&!wasOpen){event.preventDefault();tip.classList.add('is-open');}
-  if(tip)tip.blur();
+  document.querySelectorAll('.help-tip.is-open').forEach(element=>{element.classList.remove('is-open');element.setAttribute('aria-expanded','false');});
+  if(tip&&!wasOpen){event.preventDefault();tip.classList.add('is-open');tip.setAttribute('aria-expanded','true');}
+});
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape')document.querySelectorAll('.help-tip.is-open').forEach(element=>{element.classList.remove('is-open');element.setAttribute('aria-expanded','false');});
 });
 function readLocalJSON(key,fallback){
   try{const value=localStorage.getItem(key);return value===null?fallback:JSON.parse(value);}
@@ -4375,7 +4377,7 @@ function buildAssistantRanking(records){
   }).sort((a,b)=>Number(b.official)-Number(a.official)||b.rankScore-a.rankScore||b.total-a.total||a.name.localeCompare(b.name,'th'));
 }
 function assistantScoreRecords(records,scope){
-  const actual=Array.isArray(records)?records:[];const scored=actual.filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record));
+  const actual=Array.isArray(records)?records:[];const scored=actual.filter(record=>ptVerdictScore(record)!==null&&isScoreEligibleSubmission(record)&&(!scope||(isDateInRange(record.date,scope.start,scope.end)&&(!scope.shift||record.shift===scope.shift)&&(!scope.staff||scope.staff==='all'||record.staffName===scope.staff))));
   if(!scope)return scored;
   const allActual=typeof submissions==='undefined'?actual:submissions;
   const existing=new Set(allActual.map(record=>`${record.date}|${record.shift||'morning'}|${record.staffName}`));
@@ -4420,23 +4422,32 @@ function renderExecutiveDashboard(data,targetId,scoreScope){
   const reviewedMonth=monthData.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
   const failedMonth=monthData.filter(s=>s.status==='fail');
   const pendingMonth=monthData.filter(s=>s.status==='pending');
-  const monthPassRate=reviewedMonth.length?Math.round(reviewedMonth.filter(s=>s.status==='pass'||s.status==='partial').length/reviewedMonth.length*100):0;
+  const monthScores=assistantScoreRecords(monthData,{...scoreScope,start:`${monthPrefix}-01`,end:localDateKey(new Date(Number(monthPrefix.slice(0,4)),Number(monthPrefix.slice(5,7)),0))});
+  const monthPassRate=monthScores.length?Math.round(reviewedMonth.filter(s=>s.status==='pass'||s.status==='partial').length/monthScores.length*100):0;
   const issueTop=topIssueText(records);
   const morning=records.filter(s=>s.shift==='morning');
-  const evening=records.filter(s=>s.shift!=='morning');
+  const midday=records.filter(s=>s.shift==='midday');
+  const evening=records.filter(s=>s.shift==='afternoon');
   const mReviewed=morning.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
   const eReviewed=evening.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
-  const mPass=mReviewed.length?Math.round(mReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/mReviewed.length*100):0;
-  const ePass=eReviewed.length?Math.round(eReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/eReviewed.length*100):0;
+  const dReviewed=midday.filter(s=>s.status!=='pending'&&isScoreEligibleSubmission(s));
+  const mRounds=assistantScoreRecords(morning,{...scoreScope,shift:'morning'}).length;
+  const dRounds=assistantScoreRecords(midday,{...scoreScope,shift:'midday'}).length;
+  const eRounds=assistantScoreRecords(evening,{...scoreScope,shift:'afternoon'}).length;
+  const mPass=mRounds?Math.round(mReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/mRounds*100):0;
+  const dPass=dRounds?Math.round(dReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/dRounds*100):0;
+  const ePass=eRounds?Math.round(eReviewed.filter(s=>s.status==='pass'||s.status==='partial').length/eRounds*100):0;
   const mAvg=averagePtScore(morning,{...scoreScope,shift:'morning'});
   const eAvg=averagePtScore(evening,{...scoreScope,shift:'afternoon'});
-  const watchShift=mPass===ePass?(mAvg<=eAvg?'เวรเช้า':'เวรบ่าย'):(mPass<ePass?'เวรเช้า':'เวรบ่าย');
+  const dAvg=averagePtScore(midday,{...scoreScope,shift:'midday'});
+  const shiftMetrics=[{name:'เวรเช้า',rounds:mRounds,pass:mPass,average:mAvg},{name:'ก่อนเริ่มบ่าย',rounds:dRounds,pass:dPass,average:dAvg},{name:'เวรบ่าย',rounds:eRounds,pass:ePass,average:eAvg}].filter(item=>item.rounds>0).sort((first,second)=>first.pass-second.pass||first.average-second.average);
+  const watchShift=shiftMetrics[0]?.name||'ยังไม่มีข้อมูล';
   execEl.innerHTML=[
     executiveMetric('วันนี้',`${todayData.length} รายการ`,`รอประเมิน ${todayData.filter(s=>s.status==='pending').length} รายการ`,'#0F4C81'),
-    executiveMetric('เดือนนี้',`${monthData.length} รายการ`,`ผ่าน/ปรับปรุง ${monthPassRate}% • ไม่ผ่าน ${failedMonth.length}`,'#2E7D32'),
+    executiveMetric('เดือนนี้',`${monthData.length} รายการ`,`ผ่าน/ปรับปรุง ${monthPassRate}% • ไม่ผ่าน ${failedMonth.length} • ขาดส่ง ${monthScores.filter(record=>record._confirmedMissing).length}`,'#2E7D32'),
     executiveMetric('งานค้าง',`${pendingMonth.length} รายการ`,'ควรให้ PT เคลียร์ก่อนหมดเวลา','#E65100'),
     executiveMetric('จุดที่เจอบ่อย',issueTop.text,issueTop.count?`${issueTop.count} ครั้งในช่วงที่เลือก`:'ยังไม่พบปัญหา','#C62828'),
-    executiveMetric('เวรที่ควรจับตา',watchShift,`เช้า ${mPass}% / บ่าย ${ePass}%`,'#6A1B9A')
+    executiveMetric('เวรที่ควรจับตา',watchShift,`เช้า ${mPass}% / ก่อนบ่าย ${dPass}% / บ่าย ${ePass}%`,'#6A1B9A')
   ].join('');
 }
 
@@ -5632,7 +5643,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261005-missing-checklist-score-v112';
+const APP_VERSION = 'v20261005-score-scope-audit-v113';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
