@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261005-score-scope-audit-v113';
+const CACHE_NAME = 'pt-kth-v20261006-pt-damage-count-v114';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {

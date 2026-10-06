@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261005-score-scope-audit-v113">
+<meta name="version" content="v20261006-pt-damage-count-v114">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1436,7 +1436,7 @@ tr:hover td{background:var(--g1)}
       </div>
       <div id="missedEvalEditLabel" style="font-size:12px;color:#6A1B9A;margin:4px 0 10px"></div>
       <div class="missed-form-actions">
-        <div class="missed-form-hint">ระบบคำนวณค่าเสียหายอัตโนมัติ คนละ 10 บาท รวมกรณีไม่ตรวจสต็อกตามรอบสัปดาห์</div>
+        <div class="missed-form-hint">ผู้ช่วยคิดตามอัตราที่ตั้งไว้ • เลือก PT 1 คน ใช้อัตราคนเดียว (เริ่มต้น 10 บาท) • เลือก PT 2 คน ใช้อัตราแบ่งต่อคน (เริ่มต้นคนละ 5 บาท)</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-out" onclick="resetMissedEvalForm()">ล้างฟอร์ม</button>
           <button class="btn" style="background:#DC3545;color:#fff;border:none" onclick="saveMissedEvaluation()">💾 บันทึกรายการ</button>
@@ -1678,7 +1678,7 @@ tr:hover td{background:var(--g1)}
         <div class="fg"><label>รายละเอียด *</label><textarea id="retroDetails" rows="3" placeholder="อธิบายข้อบกพร่องที่ตรวจพบจริง"></textarea></div>
         <div class="form-grid">
           <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="pt">PT ทั้งสองคน</option><option value="both">ทั้งสามคน</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
-          <div class="fg"><label>PT ผู้รับผิดชอบเพิ่มเติม</label><select id="retroAdditionalPtName"><option value="">— เลือกชื่อ PT อีกคน —</option></select><small style="display:block;margin-top:5px;color:var(--g5)">แยกจาก PT ผู้ประเมิน Checklist เดิม</small></div>
+          <div class="fg"><label>PT ผู้รับผิดชอบเพิ่มเติม</label><select id="retroAdditionalPtName" onchange="updateRetrospectiveAmountFields()"><option value="">— เลือกชื่อ PT อีกคน —</option></select><small style="display:block;margin-top:5px;color:var(--g5)">แยกจาก PT ผู้ประเมิน Checklist เดิม</small></div>
           <div class="fg"><label>ค่าเสียหายผู้ช่วย (บาท)</label><input type="number" id="retroAssistantAmount" value="10" readonly></div>
           <div class="fg"><label>ค่าเสียหาย PT ผู้ประเมิน (บาท)</label><input type="number" id="retroPtReviewerAmount" value="0" readonly></div>
           <div class="fg"><label>ค่าเสียหาย PT เพิ่มเติม (บาท)</label><input type="number" id="retroAdditionalPtAmount" value="0" readonly></div>
@@ -1751,7 +1751,8 @@ tr:hover td{background:var(--g1)}
           <div class="fg system-field"><label>PT วันเสาร์/วันหยุด</label><input class="system-input" type="time" id="cutoffPtSaturday"></div>
           <div class="fg system-field"><label>แจ้งงานเบิกค้างเกินกำหนด</label><input class="system-input" type="number" id="stockOverdueDays" min="1" max="30" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">จำนวนวันที่อยู่สถานะ “กำลังเบิกของ” ก่อนขึ้นกระดิ่ง</div></div>
           <div class="fg system-field"><label>ค่าเสียหายผู้ช่วยต่อคน (บาท)</label><input class="system-input" type="number" id="damageRateAssistant" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">ใช้กับผลตรวจย้อนหลังรายการใหม่</div></div>
-          <div class="fg system-field"><label>ค่าเสียหาย PT ต่อคน (บาท)</label><input class="system-input" type="number" id="damageRatePt" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">คิดแยก PT ผู้ประเมินและ PT เพิ่มเติม</div></div>
+          <div class="fg system-field"><label>ค่าเสียหายเมื่อเลือก PT 1 คน (บาท)</label><input class="system-input" type="number" id="damageRatePtSingle" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">อัตราสำหรับ PT ผู้รับผิดชอบคนเดียว</div></div>
+          <div class="fg system-field"><label>ค่าเสียหาย PT ต่อคน เมื่อเลือก 2 คน (บาท)</label><input class="system-input" type="number" id="damageRatePt" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">เลือก 2 คน คิดแยกคนละอัตรานี้</div></div>
           <div class="fg system-field" style="justify-content:center"><label style="display:flex;align-items:center;gap:9px;min-height:44px;cursor:pointer"><input type="checkbox" id="saturdayMiddayEnabled" style="width:20px;height:20px"> เปิดใช้ Checklist ก่อนบ่ายในวันเสาร์</label><div style="font-size:11px;color:var(--g6);margin-top:4px">ปิดแล้วระบบจะซ่อนรอบนี้ และไม่แจ้งค้างหรือคิดค่าเสียหาย</div></div>
         </div>
         <div class="act-row" style="margin-top:10px">
@@ -3041,7 +3042,7 @@ const DEFAULT_SHIFT_DEADLINES = {
   assistant: { morning: 8*60+30, midday: 13*60+30, afternoon: 20*60, saturday: 16*60 },
   pt: { morning: 9*60+30, midday: 14*60, afternoon: 20*60+30, saturday: 16*60+30 }
 };
-const DEFAULT_DAMAGE_RATES={assistant:10,pt:5};
+const DEFAULT_DAMAGE_RATES={assistant:10,pt:5,ptSingle:10};
 let SHIFT_DEADLINES = cloneShiftDeadlines(DEFAULT_SHIFT_DEADLINES);
 let DAMAGE_RATES={...DEFAULT_DAMAGE_RATES};
 let saturdayMiddayEnabled=false;
@@ -3063,7 +3064,8 @@ function cloneStockSchedules(source){
   return rows;
 }
 function normalizePublicHolidays(records){const seen=new Set();return(Array.isArray(records)?records:[]).map(record=>({date:String(record?.date||'').slice(0,10),name:String(record?.name||'วันหยุดราชการ').trim()||'วันหยุดราชการ',confirmed:record?.confirmed!==false})).filter(record=>/^\d{4}-\d{2}-\d{2}$/.test(record.date)&&!seen.has(record.date)&&seen.add(record.date)).sort((a,b)=>a.date.localeCompare(b.date));}
-function normalizeDamageRates(rates){const assistant=Math.round(Number(rates?.assistant));const pt=Math.round(Number(rates?.pt));return{assistant:Number.isFinite(assistant)&&assistant>=0&&assistant<=1000?assistant:DEFAULT_DAMAGE_RATES.assistant,pt:Number.isFinite(pt)&&pt>=0&&pt<=1000?pt:DEFAULT_DAMAGE_RATES.pt};}
+function normalizeDamageRates(rates){const assistant=Math.round(Number(rates?.assistant));const pt=Math.round(Number(rates?.pt));const ptSingle=Math.round(Number(rates?.ptSingle));return{assistant:Number.isFinite(assistant)&&assistant>=0&&assistant<=1000?assistant:DEFAULT_DAMAGE_RATES.assistant,pt:Number.isFinite(pt)&&pt>=0&&pt<=1000?pt:DEFAULT_DAMAGE_RATES.pt,ptSingle:Number.isFinite(ptSingle)&&ptSingle>=0&&ptSingle<=1000?ptSingle:DEFAULT_DAMAGE_RATES.ptSingle};}
+function ptDamagePerPerson(count,rates){const configured=normalizeDamageRates(rates||DAMAGE_RATES);return count===1?configured.ptSingle:count>1?configured.pt:0;}
 function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3,publicHolidays:normalizePublicHolidays(settings?.publicHolidays),damageRates:normalizeDamageRates(settings?.damageRates),saturdayMiddayEnabled:settings?.saturdayMiddayEnabled===true};}
 function applySystemSettings(settings){const normalized=normalizeSystemSettings(settings);SHIFT_DEADLINES=cloneShiftDeadlines(normalized.deadlines);stockSchedules=cloneStockSchedules(normalized.stockSchedules);stockOverdueDays=normalized.stockOverdueDays;publicHolidays=normalizePublicHolidays(normalized.publicHolidays);DAMAGE_RATES=normalizeDamageRates(normalized.damageRates);saturdayMiddayEnabled=normalized.saturdayMiddayEnabled;try{localStorage.setItem('pt_system_settings',JSON.stringify(normalized));}catch(e){}return normalized;}
 function timeTextToMinutes(value){const parts=String(value||'').split(':');const h=Number(parts[0]);const m=Number(parts[1]);if(!Number.isFinite(h)||!Number.isFinite(m)||h<0||h>23||m<0||m>59)return null;return h*60+m;}
@@ -4005,7 +4007,7 @@ function checkedMissedValues(name){return [...document.querySelectorAll(`input[n
 function updateMissedSelectionCounts(){
   const assistantCount=document.getElementById('missedAssistantCount');const ptCount=document.getElementById('missedPTCount');
   if(assistantCount)assistantCount.textContent=`เลือก ${checkedMissedValues('missedAssistant').length} คน`;
-  if(ptCount)ptCount.textContent=`เลือก ${checkedMissedValues('missedPT').length} คน`;
+  if(ptCount){const count=checkedMissedValues('missedPT').length;const rate=ptDamagePerPerson(count);ptCount.textContent=`เลือก ${count} คน${count?` • คนละ ${rate} บาท • รวม ${count*rate} บาท`:''}`;}
 }
 function renderMissedEvalOptions(){
   const staffWrap=document.getElementById('missedAssistantOptions');
@@ -4085,7 +4087,7 @@ async function saveMissedEvaluation(){
   if(ptNames.length>maxPT)return showToast(`⚠️ เวรนี้เลือก PT ได้สูงสุด ${maxPT} คน`,'warning');
   const resolvedAlertKeys=mergedSelection.resolvedAlertKeys;
   const now=new Date();
-  const isStock=shift==='stock';const savedPtNames=isStock?[]:ptNames;const assistantAmount=assistantNames.length*DAMAGE_RATES.assistant;const ptAmount=savedPtNames.length*DAMAGE_RATES.pt;const record={id:old?.id||Date.now(),kind:isStock?'stock':'checklist',date,shift,assistantNames,ptNames:savedPtNames,assistantRate:DAMAGE_RATES.assistant,ptRate:DAMAGE_RATES.pt,assistantAmount,ptAmount,amount:assistantAmount+ptAmount,resolvedAlertKeys,stockScheduleId:isStock?activeMissedStockContext.stockScheduleId:'',stockScheduleName:isStock?activeMissedStockContext.stockScheduleName:'',weekKey:isStock?activeMissedStockContext.weekKey:'',updatedAt:now.toISOString(),updatedAtDisplay:getThaiTimestamp(now)};
+  const isStock=shift==='stock';const savedPtNames=isStock?[]:ptNames;const assistantAmount=assistantNames.length*DAMAGE_RATES.assistant;const ptRate=ptDamagePerPerson(savedPtNames.length);const ptAmount=savedPtNames.length*ptRate;const record={id:old?.id||Date.now(),kind:isStock?'stock':'checklist',date,shift,assistantNames,ptNames:savedPtNames,assistantRate:DAMAGE_RATES.assistant,ptRate,assistantAmount,ptAmount,amount:assistantAmount+ptAmount,resolvedAlertKeys,stockScheduleId:isStock?activeMissedStockContext.stockScheduleId:'',stockScheduleName:isStock?activeMissedStockContext.stockScheduleName:'',weekKey:isStock?activeMissedStockContext.weekKey:'',updatedAt:now.toISOString(),updatedAtDisplay:getThaiTimestamp(now)};
   try{
     if(window.FB)await window.FB.fbSaveMissedEvaluation(record);
     missedEvaluations=missedEvaluations.filter(item=>String(item.id)!==String(record.id));missedEvaluations.push(record);
@@ -4704,6 +4706,7 @@ function fillSystemSettingsForm(settings){
   const overdue=document.getElementById('stockOverdueDays');if(overdue)overdue.value=String(normalized.stockOverdueDays);
   const assistantRate=document.getElementById('damageRateAssistant');if(assistantRate)assistantRate.value=String(normalized.damageRates.assistant);
   const ptRate=document.getElementById('damageRatePt');if(ptRate)ptRate.value=String(normalized.damageRates.pt);
+  const ptSingleRate=document.getElementById('damageRatePtSingle');if(ptSingleRate)ptSingleRate.value=String(normalized.damageRates.ptSingle);
   const saturdayMidday=document.getElementById('saturdayMiddayEnabled');if(saturdayMidday)saturdayMidday.checked=normalized.saturdayMiddayEnabled;
 }
 function resetSystemSettingsForm(){fillSystemSettingsForm({deadlines:DEFAULT_SHIFT_DEADLINES,stockOverdueDays:3,damageRates:DEFAULT_DAMAGE_RATES,saturdayMiddayEnabled:false});}
@@ -4716,14 +4719,16 @@ async function saveSystemSettings(){
   if(Object.values(values.assistant).concat(Object.values(values.pt)).some(v=>v===null))return showToast('⚠️ กรุณากรอกเวลาให้ครบทุกช่อง','warning');
   const overdueDays=Math.round(Number(document.getElementById('stockOverdueDays')?.value));if(!Number.isFinite(overdueDays)||overdueDays<1||overdueDays>30)return showToast('⚠️ จำนวนวันแจ้งงานค้างต้องอยู่ระหว่าง 1–30 วัน','warning');
   const assistantRate=Math.round(Number(document.getElementById('damageRateAssistant')?.value));const ptRate=Math.round(Number(document.getElementById('damageRatePt')?.value));
+  const ptSingleRate=Math.round(Number(document.getElementById('damageRatePtSingle')?.value));
+  if(!Number.isFinite(ptSingleRate)||ptSingleRate<0||ptSingleRate>1000)return showToast('⚠️ ค่าเสียหาย PT 1 คนต้องอยู่ระหว่าง 0–1,000 บาท','warning');
   if(!Number.isFinite(assistantRate)||assistantRate<0||assistantRate>1000||!Number.isFinite(ptRate)||ptRate<0||ptRate>1000)return showToast('⚠️ ค่าเสียหายต่อคนต้องอยู่ระหว่าง 0–1,000 บาท','warning');
   const enableSaturdayMidday=document.getElementById('saturdayMiddayEnabled')?.checked===true;
-  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),stockOverdueDays:overdueDays,publicHolidays:normalizePublicHolidays(publicHolidays),damageRates:{assistant:assistantRate,pt:ptRate},saturdayMiddayEnabled:enableSaturdayMidday,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
+  const settings={deadlines:values,stockSchedules:cloneStockSchedules(stockSchedules),stockOverdueDays:overdueDays,publicHolidays:normalizePublicHolidays(publicHolidays),damageRates:{assistant:assistantRate,pt:ptRate,ptSingle:ptSingleRate},saturdayMiddayEnabled:enableSaturdayMidday,updatedAt:new Date().toISOString(),updatedBy:currentAdminEmail()};
   try{
     applySystemSettings(settings);
     if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
     if(window.FB?.fbSaveSystemSettings)await window.FB.fbSaveSystemSettings(settings);
-    await writeAuditLog('update','settings',`แก้ไขเวลา Cutoff ค่าเสียหายผู้ช่วย ${assistantRate} บาท PT ${ptRate} บาท และ${enableSaturdayMidday?'เปิด':'ปิด'}รอบก่อนบ่ายวันเสาร์`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    await writeAuditLog('update','settings',`แก้ไขเวลา Cutoff ค่าเสียหายผู้ช่วย ${assistantRate} บาท PT 1 คน ${ptSingleRate} บาท / PT 2 คน คนละ ${ptRate} บาท และ${enableSaturdayMidday?'เปิด':'ปิด'}รอบก่อนบ่ายวันเสาร์`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     buildChecklist();refreshWebAlerts(false);loadDashboard();
     showToast('✅ บันทึกเวลาระบบแล้ว — ทุกเครื่องจะใช้เวลานี้หลังโหลดข้อมูลใหม่','success');
   }catch(e){
@@ -4884,7 +4889,11 @@ function updateRetrospectiveAmountFields(){
     assistant.disabled=!['assistant','both'].includes(responsibility);
     assistant.value=assistant.disabled?0:DAMAGE_RATES.assistant;
   }
-  [reviewer,additional].forEach(input=>{if(!input)return;input.disabled=!['pt','both'].includes(responsibility);input.value=input.disabled?0:DAMAGE_RATES.pt;});
+  const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
+  const reviewerName=String(submission?.ptReviewer||'').trim();
+  const additionalName=String(document.getElementById('retroAdditionalPtName')?.value||'').trim();
+  const names=[...new Set([reviewerName,additionalName].filter(Boolean))];const rate=ptDamagePerPerson(names.length);
+  [reviewer,additional].forEach((input,index)=>{if(!input)return;const present=index===0?Boolean(reviewerName):Boolean(additionalName)&&additionalName!==reviewerName;input.disabled=!['pt','both'].includes(responsibility)||!present;input.value=input.disabled?0:rate;});
 }
 function updateRetrospectiveItemOptions(selectedKey){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
@@ -5643,7 +5652,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261005-score-scope-audit-v113';
+const APP_VERSION = 'v20261006-pt-damage-count-v114';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
