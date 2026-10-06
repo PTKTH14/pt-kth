@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261006-pt-damage-count-v114';
+const CACHE_NAME = 'pt-kth-v20261006-pt-damage-settings-v115';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
