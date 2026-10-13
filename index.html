@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261006-pt-damage-settings-v115">
+<meta name="version" content="v20261013-holiday-service-policy-v116">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1112,6 +1112,7 @@ tr:hover td{background:var(--g1)}
     </div>
   </div>
   <div id="checklistGroups"></div>
+  <div id="specialDayScheduleNotice" role="status" style="display:none;margin-top:12px;padding:12px;border-radius:8px;background:#EEF6FC;color:#0F4C81"></div>
   <div class="act-row">
     <button class="btn btn-pri" onclick="openSubmitModal()">📤 ส่งให้ PT ประเมิน</button>
     <button class="btn btn-out" onclick="resetChecklist()">🔄 ล้างทั้งหมด</button>
@@ -1753,7 +1754,7 @@ tr:hover td{background:var(--g1)}
           <div class="fg system-field"><label>ค่าเสียหายผู้ช่วยต่อคน (บาท)</label><input class="system-input" type="number" id="damageRateAssistant" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">ใช้กับผลตรวจย้อนหลังรายการใหม่</div></div>
           <div class="fg system-field"><label>ค่าเสียหายเมื่อเลือก PT 1 คน (บาท)</label><input class="system-input" type="number" id="damageRatePtSingle" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">อัตราสำหรับ PT ผู้รับผิดชอบคนเดียว</div></div>
           <div class="fg system-field"><label>ค่าเสียหาย PT ต่อคน เมื่อเลือก 2 คน (บาท)</label><input class="system-input" type="number" id="damageRatePt" min="0" max="1000" step="1" inputmode="numeric"><div style="font-size:11px;color:var(--g6);margin-top:4px">เลือก 2 คน คิดแยกคนละอัตรานี้</div></div>
-          <div class="fg system-field" style="justify-content:center"><label style="display:flex;align-items:center;gap:9px;min-height:44px;cursor:pointer"><input type="checkbox" id="saturdayMiddayEnabled" style="width:20px;height:20px"> เปิดใช้ Checklist ก่อนบ่ายในวันเสาร์</label><div style="font-size:11px;color:var(--g6);margin-top:4px">ปิดแล้วระบบจะซ่อนรอบนี้ และไม่แจ้งค้างหรือคิดค่าเสียหาย</div></div>
+          <div class="fg system-field" style="justify-content:center"><label style="display:flex;align-items:center;gap:9px;min-height:44px;cursor:pointer"><input type="checkbox" id="saturdayMiddayEnabled" style="width:20px;height:20px"> เปิดใช้ Checklist ก่อนบ่ายในวันเสาร์และวันหยุดราชการ</label><div style="font-size:11px;color:var(--g6);margin-top:4px">วันเสาร์และวันหยุดราชการใช้เงื่อนไขเดียวกัน เปิดบริการ 08:00–16:00 น. • ปิดรอบนี้แล้วไม่แจ้งค้างหรือคิดค่าเสียหาย</div></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="saveSystemSettings()">💾 บันทึกเวลาระบบ</button>
@@ -1769,6 +1770,7 @@ tr:hover td{background:var(--g1)}
           <div class="fg"><label>วันเริ่มต้น</label><input type="date" id="holidayStartDate" aria-label="เลือกวันเริ่มต้นวันหยุด"></div>
           <div class="fg"><label>วันสิ้นสุด</label><input type="date" id="holidayEndDate" aria-label="เลือกวันสิ้นสุดวันหยุด"></div>
           <div class="fg"><label>ชื่อวันหยุด</label><input type="text" id="holidayName" placeholder="เช่น วันเฉลิมพระชนมพรรษา"></div>
+          <div class="fg"><label><input type="checkbox" id="holidayServiceClosed"> ปิดบริการทั้งวัน</label><small>ไม่เลือก = เปิด 08:00–16:00 น. ตามเงื่อนไขวันเสาร์ • เลือกปิดแล้วไม่มีรอบ Checklist ค้าง</small></div>
         </div>
         <div class="act-row" style="margin-top:10px">
           <button class="btn btn-suc" onclick="savePublicHoliday()">＋ เพิ่มวันหยุด</button>
@@ -2723,7 +2725,7 @@ const CHECKLIST_TRACKING_START_DATE='2026-08-10';
 const MIDDAY_TRACKING_START_DATE=CHECKLIST_TRACKING_START_DATE;
 const STOCK_TRACKING_START_DATE=CHECKLIST_TRACKING_START_DATE;
 const CHECKLIST_SHIFT_ORDER={afternoon:0,midday:1,morning:2};
-function isChecklistOperatingDate(date){return new Date(`${date}T12:00:00`).getDay()!==0;}
+function isChecklistOperatingDate(date){return !isClosedServiceDate(date)&&(isPublicHolidayKey(date)||new Date(`${date}T12:00:00`).getDay()!==0);}
 function getMissingChecklistRounds(filters){
   filters=filters||{};
   const start=filters.start||'';const end=filters.end||'';const monthKey=filters.monthKey||'';const today=filters.today||localDateKey(new Date());
@@ -2746,6 +2748,27 @@ function getMissingChecklistRounds(filters){
   return rows.sort((a,b)=>b.date.localeCompare(a.date)||(CHECKLIST_SHIFT_ORDER[a.shift]??9)-(CHECKLIST_SHIFT_ORDER[b.shift]??9));
 }
 function getMissingMiddayRounds(filters){return getMissingChecklistRounds(filters).filter(item=>item.shift==='midday');}
+function getUnconfirmedServiceDates(filters){return [...new Set(getMissingChecklistRounds(filters).map(item=>item.date))].filter(date=>!submissions.some(item=>item.date===date)&&getTimeLockInfo(date,'afternoon','pt').locked&&!isClosedServiceDate(date));}
+function renderServiceConfirmationPanel(filters){
+  if(!isAdminLoggedIn)return '';
+  const dates=getUnconfirmedServiceDates(filters);
+  if(!dates.length)return '';
+  return `<details class="card" style="margin-bottom:14px;border-left:4px solid #F59E0B"><summary style="cursor:pointer;font-weight:700">▸ รอยืนยันว่าเปิดบริการหรือไม่ (${dates.length} วัน)</summary><p style="margin:12px 0;color:var(--g6)">ไม่มี Checklist ทั้งวันหลังหมดเวลาประเมิน ไม่ถือว่าปิดบริการอัตโนมัติ หากเปิดบริการให้ตรวจงานขาดตามเดิม</p><div style="display:grid;gap:8px">${dates.map(date=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${escapeHtml(thaiDate(date))}</strong><button class="btn btn-out" onclick="confirmClosedServiceDate('${date}')">ยืนยันปิดบริการวันนี้</button></div>`).join('')}</div></details>`;
+}
+let savingServiceClosure=false;
+function confirmClosedServiceDate(date){
+  if(!isAdminLoggedIn||savingServiceClosure)return;
+  if(!getUnconfirmedServiceDates({start:date,end:date}).includes(date))return showToast('ข้อมูลเปลี่ยนแล้ว กรุณาตรวจรายการใหม่','warning');
+  showConfirm(`ยืนยันวันที่ ${thaiDate(date)} ปิดบริการจริงใช่หรือไม่? ระบบจะงดแจ้งเตือน Checklist ขาดของวันนี้ ไม่ลบประวัติหรือค่าเสียหายที่บันทึกไว้แล้ว`,async()=>{
+    if(savingServiceClosure)return;
+    if(!getUnconfirmedServiceDates({start:date,end:date}).includes(date))return showToast('พบข้อมูลใหม่ ไม่สามารถยืนยันปิดบริการได้','warning');
+    savingServiceClosure=true;
+    const original=publicHolidays.map(item=>({...item}));
+    const existing=publicHolidays.find(item=>item.date===date);
+    publicHolidays=normalizePublicHolidays([...publicHolidays.filter(item=>item.date!==date),{...existing,date,name:existing?.name||'ปิดบริการตามแอดมินยืนยัน',confirmed:true,closed:true,serviceOnly:existing?.serviceOnly??!existing}]);
+    try{await persistPublicHolidays('update',`ยืนยันปิดบริการ ${thaiDate(date)}`);loadHistory();loadReviewView();showToast('ยืนยันปิดบริการแล้ว งดแจ้งเตือน Checklist ของวันนี้','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('บันทึกไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}finally{savingServiceClosure=false;}
+  });
+}
 function stockScheduleDueDate(weekKey,schedule){const date=new Date(`${weekKey}T12:00:00`);const mondayDay=date.getDay()||7;const target=Number(schedule?.weekday);const targetOffset=(target===0?7:target)-mondayDay;date.setDate(date.getDate()+targetOffset);return localDateKey(date);}
 function stockMissedRecord(weekKey,scheduleId){return (Array.isArray(missedEvaluations)?missedEvaluations:[]).find(item=>item?.kind==='stock'&&item.weekKey===weekKey&&item.stockScheduleId===String(scheduleId));}
 function missedAssistantAmount(record,names){const count=Array.isArray(names)?names.length:(record?.assistantNames||[]).length;if(record&&Number.isFinite(Number(record.assistantAmount)))return Math.round(Number(record.assistantAmount));const storedCount=(record?.assistantNames||[]).length;if(record&&Number.isFinite(Number(record.amount))&&!(record?.ptNames||[]).length&&storedCount)return Math.round(Number(record.amount)*(count/storedCount));return count*DEFAULT_DAMAGE_RATES.assistant;}
@@ -2813,6 +2836,7 @@ function getOverdueStockRecords(now){
 }
 function getActiveWebAlerts(status){
   const alerts=[];
+  if(isAdminLoggedIn&&status.current.getMonth()>=9){const year=status.current.getFullYear()+1;const records=publicHolidays.filter(item=>publicHolidayYear(item)===year&&!item.serviceOnly);alerts.push({key:`holiday-year-${year}`,personType:'calendar',type:'warning',title:`📅 ตรวจและอัปเดตวันหยุดราชการปี ${year+543}`,detail:`เริ่มเตือนทุกปีตั้งแต่เดือนตุลาคม • มีวันหยุดยืนยัน ${records.filter(item=>item.confirmed!==false).length} วัน และแบบร่าง ${records.filter(item=>item.confirmed===false).length} วัน กรุณาตรวจตามประกาศล่าสุดก่อนขึ้นปีใหม่`,names:[]});}
   ['morning','midday','afternoon'].forEach(shift=>{const config=getWebAlertShiftConfig(status,shift);const data=config.data;if(!data.enabled)return;if(data.assistantSubmissionMissing&&!isWebAlertResolved(status,config.assistantKey,shift))alerts.push({key:config.assistantKey,shift,personType:'assistant',count:1,type:'danger',title:`${config.icon} ${config.label} — ยังไม่พบบันทึกของผู้ช่วย`,detail:`เลยเวลา ${config.assistantTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อผู้ช่วยเอง`,names:[]});if(data.pendingPtReviews.length&&!isWebAlertResolved(status,config.ptKey,shift))alerts.push({key:config.ptKey,shift,personType:'pt',count:data.pendingPtReviews.length,type:'warning',title:`${config.icon} ${config.label} — มี Checklist รอ PT ${data.pendingPtReviews.length} รายการ`,detail:`เลยเวลา ${config.ptTime} น. แล้ว ให้แอดมินตรวจเวรและเลือกชื่อ PT เอง`,names:[]});});
   getDueStockSchedules(status).forEach(schedule=>alerts.push({key:`stock-due-${schedule.id}`,shift:'stock',personType:'stock',stockScheduleId:schedule.id,weekKey:mondayKeyFromDate(status.today),date:status.today,count:1,type:'danger',title:`📦 เลยเวลารอบ ${schedule.name}`,detail:`ควรส่งก่อน ${schedule.dueTime} น. แต่ยังไม่พบบันทึกของรอบนี้ กรุณาให้แอดมินเลือกผู้รับผิดชอบ`,names:[]}));
   const stockSource=typeof stockRecords==='undefined'?[]:stockRecords;const pendingStock=stockSource.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review');if(pendingStock.length)alerts.push({key:'stock-review',shift:'stock',personType:'stock',count:pendingStock.length,type:'warning',title:`📦 มีงานเบิกของพร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,detail:'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว PT สามารถเปิดประเมินได้',names:pendingStock.slice(0,5).map(record=>record.responsible)});
@@ -2821,6 +2845,7 @@ function getActiveWebAlerts(status){
   return alerts;
 }
 function webAlertActionButton(personType,alertKey,shift,isDemo,stockScheduleId,weekKey,date){
+  if(personType==='calendar')return '<button class="btn btn-out" style="margin-top:10px" onclick="closeModal(\'webAlertModal\');switchView(\'admin\')">เปิดแอดมินเพื่ออัปเดตวันหยุด</button>';
   const disabled=isDemo?' disabled':'';const action=isDemo?'':` onclick="startMissedEvaluationForDate('${personType}','${alertKey}','${shift}','${date||''}','${stockScheduleId||''}','${weekKey||''}')"`;
   return`<button class="btn btn-out" style="margin-top:10px;min-height:44px;padding:9px 12px;font-size:12px"${disabled}${action}>💰 ${personType==='stock'?'บันทึกผู้ไม่ตรวจสต็อก':'บันทึกผู้ไม่ประเมิน'}</button>`;
 }
@@ -2962,17 +2987,17 @@ const DEFAULT_SAT_EVENING_ITEMS = [
   'ซักผ้าคลุมเตียงทุกผืน / นำส่งโรงซัก (วันเสาร์)',
   'เช็ดทำความสะอาดเครื่องมือกายภาพทุกชิ้นอย่างละเอียด (วันเสาร์)'
 ];
-function isSaturdayDate(date){return date ? new Date(date+'T00:00:00').getDay()===6 : new Date().getDay()===6;}
+function isSaturdayDate(date){return isSaturdayOrHolidayKey(date||localDateKey(new Date()));}
 function updateShiftAvailabilityUI(date){
   const enabled=isShiftEnabledForDate(date,'midday');
-  [document.getElementById('shiftMidday'),document.getElementById('shiftMiddayM')].forEach(button=>{if(!button)return;button.disabled=!enabled;button.style.display=enabled?'':'none';button.title=enabled?'':'ปิดใช้งานรอบก่อนบ่ายวันเสาร์';});
+  [document.getElementById('shiftMidday'),document.getElementById('shiftMiddayM')].forEach(button=>{if(!button)return;button.disabled=!enabled;button.style.display=enabled?'':'none';button.title=enabled?'':'ปิดใช้งานรอบก่อนบ่ายวันเสาร์/วันหยุดราชการ';});
   const desktop=document.querySelector('.desktop-shift-row');if(desktop)desktop.style.gridTemplateColumns=enabled?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
   return enabled;
 }
 function checklistItemsForGroup(groupKey,date){
   const base=[...(CL[groupKey]?.items||[])];
   const saturdayKey=groupKey==='morning'?'saturdayMorning':groupKey==='evening'?'saturdayEvening':'';
-  const includeSaturdayItems=isSaturdayDate(date)&&!!saturdayKey;
+  const includeSaturdayItems=isSaturdayOrHolidayKey(date||localDateKey(new Date()))&&!!saturdayKey;
   const items=includeSaturdayItems?base.concat(getClItems(saturdayKey)):base;
   return items.map(text=>isClItemStarred(groupKey,text)||(includeSaturdayItems&&isClItemStarred(saturdayKey,text))?`${text} ⭐`:text);
 }
@@ -2981,6 +3006,7 @@ function buildChecklist(){
 
   // ตรวจวันเสาร์ — เพิ่มรายการพิเศษอัตโนมัติ
   const activeDate = getActiveDate();
+  const notice=document.getElementById('specialDayScheduleNotice');if(notice){notice.style.display=(isSaturdayOrHolidayKey(activeDate)||isClosedServiceDate(activeDate))?'block':'none';notice.textContent=isClosedServiceDate(activeDate)?'ปิดบริการวันนี้ — ไม่มีรอบ Checklist ที่ต้องส่ง':`${publicHolidayByDate(activeDate)?.name||'วันเสาร์'} • เปิดบริการ 08:00–16:00 น. • ส่งเวรบ่ายภายใน ${minutesToTimeText(getEffectiveDeadline('assistant','afternoon',activeDate))} น. • PT ประเมินภายใน ${minutesToTimeText(getEffectiveDeadline('pt','afternoon',activeDate))} น.`;}
   const isSaturday = isSaturdayDate(activeDate);
   const middayEnabled=updateShiftAvailabilityUI(activeDate);
   if(!middayEnabled&&currentShift==='midday'){currentShift='morning';return setShift('morning');}
@@ -3063,7 +3089,7 @@ function cloneStockSchedules(source){
   if(!alcoholOnly)rows.push(normalizeStockSchedule({id:'alcohol-room',name:'แอลกอฮอล์ (ห้องยา)',weekday:mixedAlcohol?.weekday??1,dueTime:mixedAlcohol?.dueTime||'12:00',receiveWeekday:4,categories:['alcohol'],active:mixedAlcohol?.active!==false}));
   return rows;
 }
-function normalizePublicHolidays(records){const seen=new Set();return(Array.isArray(records)?records:[]).map(record=>({date:String(record?.date||'').slice(0,10),name:String(record?.name||'วันหยุดราชการ').trim()||'วันหยุดราชการ',confirmed:record?.confirmed!==false})).filter(record=>/^\d{4}-\d{2}-\d{2}$/.test(record.date)&&!seen.has(record.date)&&seen.add(record.date)).sort((a,b)=>a.date.localeCompare(b.date));}
+function normalizePublicHolidays(records){const seen=new Set();return(Array.isArray(records)?records:[]).map(record=>({date:String(record?.date||'').slice(0,10),name:String(record?.name||'วันหยุดราชการ').trim()||'วันหยุดราชการ',confirmed:record?.confirmed!==false,closed:record?.closed===true,serviceOnly:record?.serviceOnly===true})).filter(record=>/^\d{4}-\d{2}-\d{2}$/.test(record.date)&&!seen.has(record.date)&&seen.add(record.date)).sort((a,b)=>a.date.localeCompare(b.date));}
 function normalizeDamageRates(rates){const assistant=Math.round(Number(rates?.assistant));const pt=Math.round(Number(rates?.pt));const ptSingle=Math.round(Number(rates?.ptSingle));return{assistant:Number.isFinite(assistant)&&assistant>=0&&assistant<=1000?assistant:DEFAULT_DAMAGE_RATES.assistant,pt:Number.isFinite(pt)&&pt>=0&&pt<=1000?pt:DEFAULT_DAMAGE_RATES.pt,ptSingle:Number.isFinite(ptSingle)&&ptSingle>=0&&ptSingle<=1000?ptSingle:DEFAULT_DAMAGE_RATES.ptSingle};}
 function ptDamagePerPerson(count,rates){const configured=normalizeDamageRates(rates||DAMAGE_RATES);return count===1?configured.ptSingle:count>1?configured.pt:0;}
 function normalizeSystemSettings(settings){const overdue=Math.round(Number(settings?.stockOverdueDays));return{deadlines:cloneShiftDeadlines(settings?.deadlines||settings||DEFAULT_SHIFT_DEADLINES),stockSchedules:cloneStockSchedules(settings?.stockSchedules),stockOverdueDays:Number.isFinite(overdue)&&overdue>=1&&overdue<=30?overdue:3,publicHolidays:normalizePublicHolidays(settings?.publicHolidays),damageRates:normalizeDamageRates(settings?.damageRates),saturdayMiddayEnabled:settings?.saturdayMiddayEnabled===true};}
@@ -3072,14 +3098,16 @@ function timeTextToMinutes(value){const parts=String(value||'').split(':');const
 function minutesToTimeText(minutes){return`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 function isSaturdayKey(date){return Boolean(date)&&new Date(String(date).slice(0,10)+'T00:00:00').getDay()===6;}
 function publicHolidayByDate(date){const key=String(date||'').slice(0,10);return publicHolidays.find(record=>record.date===key&&record.confirmed!==false)||null;}
-function isPublicHolidayKey(date){return Boolean(publicHolidayByDate(date));}
+function isPublicHolidayKey(date){const record=publicHolidayByDate(date);return Boolean(record)&&record.serviceOnly!==true;}
+function isClosedServiceDate(date){return publicHolidayByDate(date)?.closed===true;}
 function isSaturdayOrHolidayKey(date){return isSaturdayKey(date)||isPublicHolidayKey(date);}
-function isShiftEnabledForDate(date,shift){return !(normalizeShift(shift)==='midday'&&isSaturdayKey(date)&&!saturdayMiddayEnabled);}
+function isShiftEnabledForDate(date,shift){return !isClosedServiceDate(date)&&!(normalizeShift(shift)==='midday'&&isSaturdayOrHolidayKey(date)&&!saturdayMiddayEnabled);}
 function getEffectiveDeadline(role,shift,date){const normalizedShift=normalizeShift(shift);if(isSaturdayOrHolidayKey(date)&&normalizedShift==='afternoon')return SHIFT_DEADLINES[role]?.saturday;return SHIFT_DEADLINES[role]?.[normalizedShift];}
 function getTimeLockInfo(date,shift,role){
   if(!date)return{locked:false,message:'',deadlineText:''};
   const normalizedShift=normalizeShift(shift);
-  if(!isShiftEnabledForDate(date,normalizedShift))return{locked:true,disabled:true,deadlineText:'',message:'ℹ️ รอบก่อนบ่ายวันเสาร์ปิดใช้งานตามการตั้งค่าระบบ'};
+  if(isClosedServiceDate(date))return{locked:true,disabled:true,deadlineText:'',message:'ℹ️ ปิดบริการวันนี้ ไม่มีรอบ Checklist ที่ต้องส่งหรือประเมิน'};
+  if(!isShiftEnabledForDate(date,normalizedShift))return{locked:true,disabled:true,deadlineText:'',message:'ℹ️ รอบก่อนบ่ายวันเสาร์/วันหยุดราชการปิดใช้งานตามการตั้งค่าระบบ'};
   const deadline=getEffectiveDeadline(role,normalizedShift,date);
   const deadlineText=minutesToTimeText(deadline||0);
   const today=fmtDate(new Date());
@@ -3593,7 +3621,7 @@ function openSubmitModal(){
   const st=getActiveStaff();const date=getActiveDate();
   if(!st.text||st.text==='— เลือกชื่อ —'||st.text==='— เลือกชื่อผู้ช่วย —')return showToast('⚠️ เลือกชื่อผู้ช่วยก่อน','warning');
   if(!date)return showToast('⚠️ เลือกวันที่ก่อน','warning');
-  if(!isShiftEnabledForDate(date,currentShift))return showToast('ℹ️ รอบก่อนบ่ายวันเสาร์ปิดใช้งานตามการตั้งค่าระบบ','warning');
+  if(!isShiftEnabledForDate(date,currentShift))return showToast('ℹ️ รอบก่อนบ่ายวันเสาร์/วันหยุดราชการปิดใช้งานตามการตั้งค่าระบบ','warning');
 
   const timeLock=getTimeLockInfo(date,currentShift,'assistant');
   if(timeLock.locked)return showToast(timeLock.message,'error');
@@ -3613,7 +3641,7 @@ function openSubmitModal(){
 async function submitChecklist(){
   if(isSavingChecklist)return showToast('⏳ ระบบกำลังบันทึก กรุณารอสักครู่','warning');
   const st=getActiveStaff();const date=localDateKey(new Date());syncLockedOperationDates();const note=document.getElementById('m_note').value.trim();
-  if(!isShiftEnabledForDate(date,currentShift))return showToast('ℹ️ รอบก่อนบ่ายวันเสาร์ปิดใช้งานตามการตั้งค่าระบบ','warning');
+  if(!isShiftEnabledForDate(date,currentShift))return showToast('ℹ️ รอบก่อนบ่ายวันเสาร์/วันหยุดราชการปิดใช้งานตามการตั้งค่าระบบ','warning');
   const duplicate=submissions.find(item=>item&&item.date===date&&normalizeShift(item.shift)===normalizeShift(currentShift)&&String(item.staffName||'')===String(st.text||''));
   if(duplicate)return showToast('⚠️ วันนี้ผู้ช่วยคนนี้ส่ง Checklist รอบนี้แล้ว ระบบไม่บันทึกซ้ำ','warning');
   const snap={};
@@ -3702,7 +3730,7 @@ async function loadReviewView(){
   const stockHtml=pendingStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">📦 งานเบิกของรอ PT กรอกผลและประเมิน ${pendingStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>จำนวนรายการเบิก</th><th>เวลาส่ง</th><th></th></tr></thead><tbody>${pendingStock.map(record=>{const requested=stockRecordItems(record).filter(item=>Number(item.requestQty||0)>0);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><strong style="color:${requested.length?'#9A6700':'var(--g6)'}">${requested.length}</strong></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td><td><button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">📦 กรอกผล/ประเมิน</button></td></tr>`;}).join('')}</tbody></table></div>`:`<div style="background:#fff;border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--sh1);margin-top:18px"><div style="font-size:24px;margin-bottom:5px">✅</div><div style="font-size:13.5px;color:var(--g6)">ไม่มีงานเบิกของที่รอ PT ดำเนินการ</div></div>`;
   const deferredAlcoholHtml=deferredAlcoholStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🧴 Alcohol รอยืนยันผลรับวันพฤหัส ${deferredAlcoholStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่ตรวจ</th><th>ผู้ช่วย</th><th>PT ผู้ประเมิน</th><th>วันรับของ</th><th>สถานะ</th><th></th></tr></thead><tbody>${deferredAlcoholStock.map(record=>{const due=stockExpectedReceiveDate(record);const ready=stockDeferredReceiptDue(record);return`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(record.ptReviewer||'—')}</td><td>${escapeHtml(thaiDate(due)||'วันพฤหัสบดี')}</td><td><span class="tag" style="background:#F3E8FF;color:#6D28D9">${ready?'ถึงวันรับแล้ว':'รอวันรับของ'}</span></td><td>${ready||isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 13px;font-size:12px" onclick="openStockReview(${Number(record.id)})">🧴 ยืนยันผลรับ</button>`:'<span style="font-size:12px;color:var(--g6)">ยังไม่ถึงกำหนด</span>'}</td></tr>`;}).join('')}</tbody></table></div>`:'';
   const inProgressHtml=inProgressStock.length?`<div style="font-size:13.5px;font-weight:700;margin:18px 0 10px">🚚 งานเบิกของที่กำลังดำเนินการ ${inProgressStock.length} รอบ</div><div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>สถานะ</th><th>เวลาส่ง</th></tr></thead><tbody>${inProgressStock.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}</td><td>${escapeHtml(record.responsible||'—')}</td><td><span class="tag tw2">${escapeHtml(stockStageLabel(record))}</span></td><td style="font-size:12px;color:var(--g6)">${escapeHtml(record.timeDisplay||'—')}</td></tr>`).join('')}</tbody></table></div>`:'';
-  pl.innerHTML=missingChecklistHtml+missingStockHtml+checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
+  pl.innerHTML=renderServiceConfirmationPanel({monthKey:selectedMonth})+missingChecklistHtml+missingStockHtml+checklistHtml+expiredHtml+inProgressHtml+stockHtml+deferredAlcoholHtml;if(pending.length===0)document.getElementById('reviewFormWrap').style.display='none';
 }
 
 function openReview(idx){
@@ -4148,7 +4176,7 @@ function loadHistory(){
     let missingStock=getMissingStockRounds({start:fStart||STOCK_TRACKING_START_DATE,end:fEnd||localDateKey(new Date())});if(fStaff)missingStock=missingStock.filter(item=>(item.damage?.assistantNames||[]).includes(fStaff));if(fStatus&&fStatus!=='pending')missingStock=[];
     const stockOpen=localStorage.getItem('ptkth_missing_stock_history_open')!=='0';
     const stockMissingHtml=missingStock.length?`<details class="card" ${stockOpen?'open':''} style="margin-bottom:14px;border-left:4px solid #7C3AED" ontoggle="localStorage.setItem('ptkth_missing_stock_history_open',this.open?'1':'0')"><summary style="display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;list-style:none"><div><h3 style="margin-bottom:3px">📦 ประวัติรอบตรวจสต็อกที่ระบบไม่พบ</h3><p style="font-size:12px;color:var(--g6)">ตรวจตามรอบสัปดาห์ที่แอดมินตั้งไว้</p></div><span class="tag tw2">${missingStock.length} รอบ</span></summary><div class="tw" style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>วันที่กำหนด</th><th>รอบตรวจ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead><tbody>${missingStock.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td>📦 ${escapeHtml(item.scheduleName)}<br><small>ก่อน ${escapeHtml(item.dueTime)} น.</small></td><td>${item.handled?'<span class="tag tp">บันทึกค่าเสียหายแล้ว</span>':'<span class="tag tf">ไม่พบการตรวจ</span>'}</td><td>${item.handled?escapeHtml((item.damage.assistantNames||[]).join(', ')):'รอแอดมินเลือกชื่อ'}</td><td>${!item.handled&&isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('stock','stock-history-${item.scheduleId}-${item.weekKey}','stock','${item.date}','${item.scheduleId}','${item.weekKey}')">บันทึก 10 บาท</button>`:'—'}</td></tr>`).join('')}</tbody></table></div></details>`:'';
-    missingHost.innerHTML=checklistMissingHtml;
+    missingHost.innerHTML=renderServiceConfirmationPanel({start:fStart,end:fEnd})+checklistMissingHtml;
   }
   const tb=document.getElementById('historyBody');if(!tb)return;
   const loadMoreWrap=document.getElementById('historyLoadMoreWrap');const countText=document.getElementById('historyCountText');const loadMoreBtn=document.getElementById('historyLoadMoreBtn');
@@ -4672,17 +4700,18 @@ function renderPublicHolidaysAdmin(){
   const start=document.getElementById('holidayStartDate');const end=document.getElementById('holidayEndDate');if(start&&!start.value){const today=localDateKey(new Date());setThaiDateValue('holidayStartDate',today,false);setThaiDateValue('holidayEndDate',today,false);}
   const visible=publicHolidays.filter(record=>publicHolidayYear(record)>=currentYear-1);
   const notice=!nextCount?`<div style="margin-bottom:10px;padding:9px 11px;border:1px solid #F2D49B;border-radius:8px;background:#FFF9ED;color:#7A5200;font-size:11.5px">ปี ${currentYear+544} ยังไม่มีข้อมูล เมื่อได้รับประกาศราชการให้เพิ่มหรือคัดลอกจากปีก่อนแล้วตรวจแก้ไขก่อนใช้งาน</div>`:'';
-  list.innerHTML=notice+(visible.length?visible.map(record=>{const index=publicHolidays.findIndex(item=>item.date===record.date);const draft=record.confirmed===false;return`<div class="holiday-admin-row"><strong style="color:var(--bd)">${escapeHtml(formatThaiInputDate(record.date))}</strong><span style="font-size:12.5px">${escapeHtml(record.name)} ${draft?'<span class="tag tw2">แบบร่าง — ยังไม่ใช้เวลาเวรวันหยุด</span>':'<span class="tag tp">ใช้งานแล้ว</span>'}</span><div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">${draft?`<button class="btn btn-suc" style="padding:5px 8px;font-size:11px" onclick="confirmPublicHoliday(${index})">ยืนยันใช้</button>`:''}<button class="btn btn-out" style="padding:5px 8px;font-size:11px" onclick="editPublicHoliday(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 8px;font-size:11px;color:var(--r)" onclick="deletePublicHoliday(${index})">ลบ</button></div></div>`;}).join(''):'<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีวันหยุดที่บันทึก</div>');
+list.innerHTML=notice+(visible.length?visible.map(record=>{const index=publicHolidays.findIndex(item=>item.date===record.date);const draft=record.confirmed===false;return`<div class="holiday-admin-row"><strong style="color:var(--bd)">${escapeHtml(formatThaiInputDate(record.date))}</strong><span style="font-size:12.5px">${escapeHtml(record.name)} ${draft?'<span class="tag tw2">แบบร่าง — ยังไม่ใช้เวลาเวรวันหยุด</span>':(record.closed?'<span class="tag tp">ปิดบริการ</span>':'<span class="tag tp">เปิด 08:00–16:00</span>')}</span><div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">${draft?`<button class="btn btn-suc" style="padding:5px 8px;font-size:11px" onclick="confirmPublicHoliday(${index})">ยืนยันใช้</button>`:''}<button class="btn btn-out" style="padding:5px 8px;font-size:11px" onclick="editPublicHoliday(${index})">แก้ไข</button><button class="btn btn-out" style="padding:5px 8px;font-size:11px;color:var(--r)" onclick="deletePublicHoliday(${index})">ลบ</button></div></div>`;}).join(''):'<div style="text-align:center;color:var(--g4);padding:14px">ยังไม่มีวันหยุดที่บันทึก</div>');
 }
-function editPublicHoliday(index){const record=publicHolidays[index];if(!record)return;editingPublicHolidayDate=record.date;setThaiDateValue('holidayStartDate',record.date,false);setThaiDateValue('holidayEndDate',record.date,false);document.getElementById('holidayName').value=record.name;document.getElementById('holidayName').focus();}
+function editPublicHoliday(index){const record=publicHolidays[index];if(!record)return;editingPublicHolidayDate=record.date;setThaiDateValue('holidayStartDate',record.date,false);setThaiDateValue('holidayEndDate',record.date,false);document.getElementById('holidayName').value=record.name;document.getElementById('holidayServiceClosed').checked=record.closed===true;document.getElementById('holidayName').focus();}
 async function persistPublicHolidays(action,detail){const settings=normalizeSystemSettings({deadlines:SHIFT_DEADLINES,stockSchedules,stockOverdueDays,publicHolidays,damageRates:DAMAGE_RATES,saturdayMiddayEnabled});if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');await window.FB.fbSaveSystemSettings(settings);applySystemSettings(settings);renderPublicHolidaysAdmin();buildChecklist();refreshWebAlerts(false);await writeAuditLog(action,'settings',detail,{actor:currentAdminEmail(),actorRole:'แอดมิน'});}
 async function savePublicHoliday(){
   if(!isAdminLoggedIn)return showToast('⛔ เฉพาะแอดมินเท่านั้น','error');const start=document.getElementById('holidayStartDate')?.value||'';const end=document.getElementById('holidayEndDate')?.value||start;const name=(document.getElementById('holidayName')?.value||'').trim();
   if(!start||!end)return showToast('⚠️ กรุณาเลือกวันที่','warning');if(end<start)return showToast('⚠️ วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น','warning');if(!name)return showToast('⚠️ กรุณากรอกชื่อวันหยุด','warning');
   const startDate=parseIsoDate(start);const endDate=parseIsoDate(end);if(!startDate||!endDate||Math.round((endDate-startDate)/86400000)>31)return showToast('⚠️ เพิ่มวันหยุดต่อครั้งได้ไม่เกิน 31 วัน','warning');
   const original=[...publicHolidays];if(editingPublicHolidayDate)publicHolidays=publicHolidays.filter(record=>record.date!==editingPublicHolidayDate);
-  const additions=[];for(let date=new Date(startDate);date<=endDate;date.setDate(date.getDate()+1))additions.push({date:localDateKey(date),name,confirmed:true});const replacing=new Set(additions.map(record=>record.date));publicHolidays=normalizePublicHolidays([...publicHolidays.filter(record=>!replacing.has(record.date)),...additions]);
-  try{await persistPublicHolidays(editingPublicHolidayDate?'update':'add',`${editingPublicHolidayDate?'แก้ไข':'เพิ่ม'}วันหยุดราชการ ${name} ${formatThaiInputDate(start)}${end!==start?' ถึง '+formatThaiInputDate(end):''}`);editingPublicHolidayDate='';document.getElementById('holidayName').value='';showToast('✅ บันทึกวันหยุดแล้ว ทุกอุปกรณ์จะใช้เวลาเวรชุดเดียวกัน','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ บันทึกวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
+  const closed=document.getElementById('holidayServiceClosed')?.checked===true;
+  const additions=[];for(let date=new Date(startDate);date<=endDate;date.setDate(date.getDate()+1)){const key=localDateKey(date);additions.push({date:key,name,confirmed:true,closed,serviceOnly:editingPublicHolidayDate===key&&original.find(record=>record.date===key)?.serviceOnly===true});}const replacing=new Set(additions.map(record=>record.date));publicHolidays=normalizePublicHolidays([...publicHolidays.filter(record=>!replacing.has(record.date)),...additions]);
+  try{await persistPublicHolidays(editingPublicHolidayDate?'update':'add',`${editingPublicHolidayDate?'แก้ไข':'เพิ่ม'}วันหยุดราชการ ${name} ${formatThaiInputDate(start)}${end!==start?' ถึง '+formatThaiInputDate(end):''}`);editingPublicHolidayDate='';document.getElementById('holidayName').value='';document.getElementById('holidayServiceClosed').checked=false;showToast('✅ บันทึกวันหยุดแล้ว ทุกอุปกรณ์จะใช้เวลาเวรชุดเดียวกัน','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ บันทึกวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}
 }
 function deletePublicHoliday(index){const record=publicHolidays[index];if(!record)return;showConfirm(`ลบ ${record.name} วันที่ ${formatThaiInputDate(record.date)} ใช่หรือไม่?`,async()=>{const original=[...publicHolidays];publicHolidays.splice(index,1);try{await persistPublicHolidays('delete',`ลบวันหยุดราชการ ${record.name} ${formatThaiInputDate(record.date)}`);showToast('✅ ลบวันหยุดแล้ว','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ ลบวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});}
 function confirmPublicHoliday(index){const record=publicHolidays[index];if(!record||record.confirmed!==false)return;showConfirm(`ยืนยันใช้ ${record.name} วันที่ ${formatThaiInputDate(record.date)} และใช้เวลาเวรวันเสาร์ใช่หรือไม่?`,async()=>{const original=publicHolidays.map(item=>({...item}));publicHolidays[index]={...record,confirmed:true};try{await persistPublicHolidays('update',`ยืนยันวันหยุดราชการ ${record.name} ${formatThaiInputDate(record.date)}`);showToast('✅ ยืนยันวันหยุดแล้ว ระบบเริ่มใช้เวลาเวรวันหยุด','success');}catch(error){publicHolidays=original;renderPublicHolidaysAdmin();showToast('❌ ยืนยันวันหยุดไม่สำเร็จ: '+friendlyErrorMessage(error),'error');}});}
@@ -4728,7 +4757,7 @@ async function saveSystemSettings(){
     applySystemSettings(settings);
     if(!window.FB?.fbSaveSystemSettings)throw new Error('Firebase ยังไม่พร้อม');
     if(window.FB?.fbSaveSystemSettings)await window.FB.fbSaveSystemSettings(settings);
-    await writeAuditLog('update','settings',`แก้ไขเวลา Cutoff ค่าเสียหายผู้ช่วย ${assistantRate} บาท PT 1 คน ${ptSingleRate} บาท / PT 2 คน คนละ ${ptRate} บาท และ${enableSaturdayMidday?'เปิด':'ปิด'}รอบก่อนบ่ายวันเสาร์`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
+    await writeAuditLog('update','settings',`แก้ไขเวลา Cutoff ค่าเสียหายผู้ช่วย ${assistantRate} บาท PT 1 คน ${ptSingleRate} บาท / PT 2 คน คนละ ${ptRate} บาท และ${enableSaturdayMidday?'เปิด':'ปิด'}รอบก่อนบ่ายวันเสาร์/วันหยุดราชการ`,{actor:currentAdminEmail(),actorRole:'แอดมิน'});
     buildChecklist();refreshWebAlerts(false);loadDashboard();
     showToast('✅ บันทึกเวลาระบบแล้ว — ทุกเครื่องจะใช้เวลานี้หลังโหลดข้อมูลใหม่','success');
   }catch(e){
@@ -5652,7 +5681,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261006-pt-damage-settings-v115';
+const APP_VERSION = 'v20261013-holiday-service-policy-v116';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
