@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261013-holiday-service-policy-v117';
+const CACHE_NAME = 'pt-kth-v20261013-holiday-service-policy-v118';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
