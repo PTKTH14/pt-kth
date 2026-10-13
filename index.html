@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261013-holiday-service-policy-v116">
+<meta name="version" content="v20261013-holiday-service-policy-v117">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1328,7 +1328,7 @@ tr:hover td{background:var(--g1)}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
       <div>
         <h3 style="margin-bottom:4px">⏰ เวลาตรวจประจำวัน</h3>
-        <div style="font-size:13px;color:var(--g6);line-height:1.8"><strong>🌅 เวรเช้า:</strong> ผู้ช่วย 08:30 น. • PT 09:30 น.<br><strong>🌙 เวรบ่าย:</strong> ผู้ช่วย 20:00 น. • PT 20:30 น.</div>
+        <div id="webAlertSchedule" style="font-size:13px;color:var(--g6);line-height:1.8"></div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button class="btn btn-out" style="padding:6px 12px;font-size:12px" onclick="showWebAlertDemo()">👁 ดูตัวอย่างป๊อปอัป</button>
@@ -2861,6 +2861,7 @@ function updateWebAlertBadges(count){
 }
 function renderWebAlertShiftSection(status,shift){
   const config=getWebAlertShiftConfig(status,shift);const data=config.data;const assistantResolved=isWebAlertResolved(status,config.assistantKey,shift);const ptResolved=isWebAlertResolved(status,config.ptKey,shift);
+  if(!data.enabled)return '';
   let html=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">${config.icon} ${config.label}</div>`;
   if(!data.afterAssistantDeadline)html+=webAlertCard('info',`${config.label} — ยังไม่ถึงเวลาตรวจผู้ช่วย`,`ระบบจะเริ่มแจ้งเตือนเมื่อถึง ${config.assistantTime} น.`,[]);
   else if(data.assistantSubmissionMissing&&assistantResolved)html+=webAlertCard('success',`${config.label} — ดำเนินการแจ้งเตือนผู้ช่วยแล้ว`,'แอดมินบันทึกผู้ที่ไม่ได้ประเมินเรียบร้อยแล้ว',[]);
@@ -2875,9 +2876,10 @@ function renderWebAlertShiftSection(status,shift){
 }
 function renderWebAlerts(status,alerts){
   const list=document.getElementById('webAlertList');const now=document.getElementById('webAlertNow');if(!list||!now)return;
+  const schedule=document.getElementById('webAlertSchedule');if(schedule)schedule.innerHTML=isClosedServiceDate(status.today)?'ปิดบริการวันนี้ — ไม่มีรอบ Checklist ที่ต้องส่งหรือประเมิน':['morning','midday','afternoon'].filter(shift=>isShiftEnabledForDate(status.today,shift)).map(shift=>`<strong>${shiftLabel(shift)}:</strong> ผู้ช่วย ${minutesToTimeText(getEffectiveDeadline('assistant',shift,status.today))} น. • PT ${minutesToTimeText(getEffectiveDeadline('pt',shift,status.today))} น.`).join('<br>');
   now.textContent=`ตรวจล่าสุด ${getThaiTimestamp(status.current)} • ข้อมูลวันที่ ${status.today}`;
   const pendingStock=stockRecords.filter(record=>!record.ptVerdict&&stockStage(record)==='ready_for_review');const overdueStock=getOverdueStockRecords(status.current);const dueStock=getDueStockSchedules(status);const openStockButton=`<button class="btn btn-out" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="closeModal('webAlertModal');switchView('stock')">เปิดงานเบิกของ</button>`;const stockHtml=`<div style="font-weight:800;color:var(--bd);margin:14px 0 8px;font-size:14px">📦 งานเบิกของและสต็อก</div>`+dueStock.map(schedule=>webAlertCard('danger',`ยังไม่พบบันทึกรอบ ${escapeHtml(schedule.name)}`,`เลยเวลาที่ควรส่ง ${escapeHtml(schedule.dueTime)} น. กรุณาเลือกผู้รับผิดชอบ`,[],webAlertActionButton('stock',`stock-due-${schedule.id}`,'stock',false,schedule.id,mondayKeyFromDate(status.today),status.today)+openStockButton)).join('')+(overdueStock.length?webAlertCard('danger',`งานกำลังเบิกค้างเกิน ${stockOverdueDays} วัน ${overdueStock.length} รอบ`,'กรุณาติดตามสถานะการรับของ',overdueStock.slice(0,5).map(record=>`${record.responsible||'ไม่ระบุชื่อ'} • ${stockStageAgeDays(record,status.current)} วัน`),openStockButton):'')+(pendingStock.length?webAlertCard('warning',`พร้อมให้ PT ประเมิน ${pendingStock.length} รอบ`,'ผู้ช่วยยืนยันว่ารับของกลับมาแล้ว',pendingStock.slice(0,5).map(record=>record.responsible),openStockButton):webAlertCard('success','ไม่มีงานเบิกของพร้อมประเมิน','รายการที่กำลังเบิกจะแสดงในหน้า PT แต่ยังประเมินไม่ได้',[]));
-  list.innerHTML=renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'midday')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
+  list.innerHTML=alerts.filter(alert=>alert.personType==='calendar').map(alert=>webAlertCard(alert.type,alert.title,alert.detail,[],webAlertActionButton('calendar',alert.key))).join('')+renderWebAlertShiftSection(status,'morning')+renderWebAlertShiftSection(status,'midday')+renderWebAlertShiftSection(status,'afternoon')+stockHtml;
 }
 function maybeShowWebAlertPopup(status,alerts){
   const unseen=alerts.filter(alert=>!localStorage.getItem(`pt_web_alert_seen_${status.today}_${alert.key}`));if(!unseen.length)return;
@@ -5681,7 +5683,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261013-holiday-service-policy-v116';
+const APP_VERSION = 'v20261013-holiday-service-policy-v117';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
