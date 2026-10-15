@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261015-stock-holiday-exemption-v120">
+<meta name="version" content="v20261015-stock-fiscal-details-v121">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -163,6 +163,10 @@
       },
       fbGetStockRequests: async function() {
         const snap = await db.collection('stock_requests').get();
+        return snap.docs.map(function(d) { return d.data(); });
+      },
+      fbGetStockFiscalRange: async function(start,end) {
+        const snap = await db.collection('stock_requests').where('date','>=',start).where('date','<=',end).get();
         return snap.docs.map(function(d) { return d.data(); });
       },
       fbGetRecentStockRequests: async function(limitCount) {
@@ -577,6 +581,14 @@ img,svg,canvas{max-width:100%}
 .stock-performance-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .stock-summary-metric{padding:9px;border:1px solid var(--g2);border-radius:9px;text-align:center;background:#FBFCFD}
 .stock-summary-value{font-size:20px;font-weight:800}.stock-summary-label{font-size:10.5px;color:var(--g6)}
+.stock-summary-metric[type="button"]{width:100%;font:inherit;cursor:pointer;color:inherit;min-height:76px}
+.stock-summary-metric[type="button"]:hover{border-color:var(--bm);background:#EEF6FC}
+.stock-summary-metric[type="button"]:focus-visible{outline:3px solid var(--bm);outline-offset:2px}
+.stock-summary-metric[type="button"] .stock-summary-label{font-size:12px;line-height:1.45}
+.stock-fiscal-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.stock-fiscal-toolbar label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+.stock-fiscal-toolbar select{min-width:0;max-width:100%;padding:8px;border:1px solid var(--g2);border-radius:8px;background:#fff;font:inherit;font-size:16px}
+.stock-fiscal-modal .mb{min-width:0;overflow:auto}.stock-fiscal-modal table{font-size:12px}.stock-fiscal-modal .tw{max-width:100%;overflow-x:auto}
 .admin-shell,.admin-panel{width:100%;max-width:100%;min-width:0}
 .admin-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;max-width:100%;min-width:0;margin-bottom:16px;border:1px solid var(--g2);border-radius:12px;background:#fff;overflow:hidden;box-shadow:var(--sh1)}
 .admin-tab{min-width:0;min-height:48px;padding:9px 7px!important;white-space:normal;overflow-wrap:anywhere;line-height:1.3;margin:0!important;border-bottom-width:3px!important;touch-action:manipulation}
@@ -1147,7 +1159,9 @@ tr:hover td{background:var(--g1)}
     <div class="act-row" style="margin-top:0;padding-top:4px"><button id="stockSaveBtn" class="btn btn-suc" onclick="submitStockRequest()">✅ บันทึกการตรวจและเบิกของ</button><button class="btn btn-out" onclick="resetStockDraft(true)">🔄 ล้างแบบฟอร์ม</button></div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อกล่าสุด</h3><div style="font-size:11.5px;color:var(--g6)">แสดงเพียง 5 รายการล่าสุด ส่วนประวัติทั้งหมดอยู่หน้า “ประวัติบันทึก”</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="openStockHistoryPanel()">ดูประวัติทั้งหมด</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><div><h3 style="margin-bottom:3px">🗂️ ประวัติการตรวจสต็อกล่าสุด</h3><div style="font-size:11.5px;color:var(--g6)">แสดง 5 รอบล่าสุดของปีงบประมาณที่เลือก • กดการ์ดเพื่อดูสรุปและรายละเอียด</div></div><div style="display:flex;gap:7px;align-items:center"><button class="btn btn-out" style="padding:5px 10px;font-size:11px" onclick="openStockHistoryPanel()">ดูประวัติทั้งหมด</button><span class="tag" id="stockHistoryCount">0 รอบ</span></div></div>
+    <div class="stock-fiscal-toolbar"><label for="stockFiscalYear">สรุปตามปีงบประมาณ <select id="stockFiscalYear" onchange="changeStockFiscalYear(this.value)"></select></label><small id="stockFiscalRangeLabel" style="color:var(--g6)"></small></div>
+    <div id="stockFiscalLoadStatus" role="status" style="font-size:12px;color:var(--g6);margin-bottom:8px"></div>
     <div id="stockHistorySummary" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="stockHistoryList" class="stock-history-list"><div style="text-align:center;color:var(--g4);padding:20px">ยังไม่มีประวัติ</div></div>
   </div>
@@ -2024,6 +2038,9 @@ tr:hover td{background:var(--g1)}
   </div>
 </div>
 
+<div class="mo" id="stockFiscalModal" role="dialog" aria-modal="true" aria-labelledby="stockFiscalTitle">
+  <div class="modal wide stock-fiscal-modal"><div class="mh"><h2 id="stockFiscalTitle">สรุปการเบิกตามปีงบประมาณ</h2><button class="mc-btn" aria-label="ปิดสรุปการเบิก" onclick="closeModal('stockFiscalModal')">✕</button></div><div class="mb" id="stockFiscalBody"></div><div class="mf"><button class="btn btn-out" onclick="closeModal('stockFiscalModal')">ปิด</button></div></div>
+</div>
 <div class="mo" id="detailModal">
   <div class="modal wide monthly-report-modal">
     <div class="mh"><h2 id="detailTitle">รายละเอียด</h2><button class="mc-btn" onclick="closeModal('detailModal')">✕</button></div>
@@ -3470,11 +3487,51 @@ async function shareStockToLine(){
   const msg=`${heading}\nรอบ: ${record.scheduleName||'ตรวจสต็อกประจำสัปดาห์'}\nผู้ช่วย: ${record.responsible||'-'}${reviewerText}\nวันที่: ${thaiDate(record.date)}${receiveText}\n${requested||'• ไม่มีรายการที่ต้องเบิก'}\n${action}\nเปิดระบบ: ${stockShareUrl(record)}`;
   await shareTextPreferNative('งานเบิกของ PT KTH',msg);
 }
+function stockFiscalYearForDate(date){if(!/^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(String(date)))return NaN;const year=Number(String(date).slice(0,4));return year+(Number(String(date).slice(5,7))>=10?1:0);}
+function stockFiscalRange(year){return{start:`${year-1}-10-01`,end:`${year}-09-30`};}
+let stockFiscalYear=stockFiscalYearForDate(localDateKey(new Date()));
+let stockFiscalMode='items',stockFiscalItemKey='',stockFiscalSource=null;
+const stockFiscalLoads=new Map();
+function stockFiscalDataKey(){return JSON.stringify(stockRecords.map(record=>[String(record.id||''),record]).sort((first,second)=>first[0].localeCompare(second[0])));}
+function stockFiscalRows(year){const range=stockFiscalRange(year);const unique=new Map();stockRecords.filter(record=>record?.date>=range.start&&record.date<=range.end).forEach((record,index)=>unique.set(String(record.id??`row-${index}`),record));return[...unique.values()].sort((first,second)=>String(second.date).localeCompare(String(first.date))||String(second.createdAt||'').localeCompare(String(first.createdAt||'')));}
+function aggregateStockFiscalItems(records){
+  const groups=new Map();
+  records.forEach((record,recordIndex)=>{stockRecordItems(record).forEach(item=>{const qty=Number(item.requestQty);if(!Number.isFinite(qty)||qty<=0)return;const name=String(item.name||'ไม่ระบุชื่อ').trim();const unit=String(item.unit||'ไม่ระบุหน่วย').trim()||'ไม่ระบุหน่วย';const flow=item.flow==='admin_notice'||record.recordType==='admin_notice'?'admin_notice':'hospital';const identity=item.id&&!String(item.id).startsWith('extra-')?String(item.id):name.replace(/\s+/g,' ').toLowerCase();const key=JSON.stringify([identity,unit,flow]);if(!groups.has(key))groups.set(key,{key,name,unit,flow,quantity:0,rounds:new Set(),entries:[]});const group=groups.get(key);group.quantity+=qty;group.rounds.add(String(record.id??`row-${recordIndex}`));group.entries.push({record,item,quantity:qty});});});
+  return[...groups.values()].map(group=>({...group,roundCount:group.rounds.size})).sort((first,second)=>first.name.localeCompare(second.name,'th')||first.unit.localeCompare(second.unit,'th'));
+}
+function stockFiscalYearOptions(){const current=stockFiscalYearForDate(localDateKey(new Date()));const years=stockRecords.map(record=>stockFiscalYearForDate(record.date)).filter(Number.isFinite);const minimum=Math.min(stockFiscalYearForDate(STOCK_TRACKING_START_DATE),...years,stockFiscalYear);const maximum=Math.max(current,stockFiscalYear);const options=[];for(let year=maximum;year>=Math.max(2000,minimum);year--)options.push(`<option value="${year}"${year===stockFiscalYear?' selected':''}>ปีงบประมาณ ${year+543}</option>`);return options.join('');}
+function retryStockFiscalYear(){stockFiscalLoads.delete(stockFiscalYear);renderStockHistory();if(document.getElementById('stockFiscalModal')?.classList.contains('open'))renderStockFiscalDetail();}
+function ensureStockFiscalYear(year){
+  const dataKey=stockFiscalDataKey();if(stockFiscalSource!==dataKey){stockFiscalSource=dataKey;for(const [key,value] of stockFiscalLoads)if(value.state==='ready')stockFiscalLoads.delete(key);}
+  if(!window.FB?.fbGetStockFiscalRange)return true;
+  const existing=stockFiscalLoads.get(year);if(existing?.state==='ready')return true;if(existing)return false;
+  stockFiscalLoads.set(year,{state:'loading'});const range=stockFiscalRange(year);const startedAt=Date.now();
+  window.FB.fbGetStockFiscalRange(range.start,range.end).then(records=>{if(!Array.isArray(records))throw new Error('ข้อมูลรายปีไม่ถูกต้อง');const recentLocal=stockRecords.filter(record=>record.date>=range.start&&record.date<=range.end&&Date.parse(record.updatedAt||record.createdAt||'')>=startedAt);stockRecords=mergeReportRecords(stockRecords.filter(record=>record.date<range.start||record.date>range.end),mergeReportRecords(records,recentLocal));stockFiscalSource=stockFiscalDataKey();stockFiscalLoads.set(year,{state:'ready'});renderStockHistory();if(document.getElementById('stockFiscalModal')?.classList.contains('open'))renderStockFiscalDetail();}).catch(error=>{stockFiscalLoads.set(year,{state:'error',message:friendlyErrorMessage(error)});renderStockHistory();if(document.getElementById('stockFiscalModal')?.classList.contains('open'))renderStockFiscalDetail();});
+  return false;
+}
+function stockFiscalLoadingMarkup(){const state=stockFiscalLoads.get(stockFiscalYear);return state?.state==='error'?`<p role="alert">โหลดข้อมูลปีงบประมาณไม่สำเร็จ: ${escapeHtml(state.message)}</p><button class="btn btn-out" onclick="retryStockFiscalYear()">ลองใหม่</button>`:'<p role="status">กำลังโหลดประวัติให้ครบปีงบประมาณ…</p>';}
+function changeStockFiscalYear(value){const year=Number(value);if(!Number.isInteger(year)||year<2000||year>2200)return;stockFiscalYear=year;stockFiscalMode='items';stockFiscalItemKey='';renderStockHistory();if(document.getElementById('stockFiscalModal')?.classList.contains('open'))renderStockFiscalDetail();}
+function openStockFiscalDetail(mode){stockFiscalMode=['rounds','pending'].includes(mode)?mode:'items';stockFiscalItemKey='';renderStockFiscalDetail();document.getElementById('stockFiscalModal').classList.add('open');}
+function openStockFiscalItem(index){const group=aggregateStockFiscalItems(stockFiscalRows(stockFiscalYear))[index];if(!group)return;stockFiscalMode='item';stockFiscalItemKey=group.key;renderStockFiscalDetail();}
+function renderStockFiscalDetail(){
+  const body=document.getElementById('stockFiscalBody');if(!body)return;const range=stockFiscalRange(stockFiscalYear);
+  const toolbar=`<div class="stock-fiscal-toolbar"><label for="stockFiscalModalYear">ปีงบประมาณ <select id="stockFiscalModalYear" onchange="changeStockFiscalYear(this.value)">${stockFiscalYearOptions()}</select></label><small>${escapeHtml(thaiDate(range.start))}–${escapeHtml(thaiDate(range.end))}</small></div>`;
+  document.getElementById('stockFiscalTitle').textContent=stockFiscalMode==='pending'?'รายการที่ยังต้องติดตาม':stockFiscalMode==='rounds'?'รอบตรวจสต็อก':'สรุปการเบิกแยกรายวัสดุ';
+  if(!ensureStockFiscalYear(stockFiscalYear)){body.innerHTML=toolbar+stockFiscalLoadingMarkup();return;}
+  const records=stockFiscalRows(stockFiscalYear);const groups=aggregateStockFiscalItems(records);const empty='<p style="color:var(--g6);padding:16px 0">ไม่มีรายการในปีงบประมาณนี้</p>';let content='';
+  if(stockFiscalMode==='items')content=groups.length?`<p style="color:var(--g6);font-size:12px">รวมเฉพาะจำนวนที่ขอเบิก แยกหน่วยและช่องทางจัดซื้อ ไม่ใช่ยอดรับของหรือยอดเงิน • กดชื่อวัสดุเพื่อดูแต่ละครั้ง</p><div class="tw"><table><thead><tr><th>วัสดุ</th><th>จำนวนเบิกรวม</th><th>หน่วย</th><th>ครั้งที่เบิก</th><th>ช่องทาง</th></tr></thead><tbody>${groups.map((group,index)=>`<tr><td><button class="btn btn-out" style="text-align:left;white-space:normal" onclick="openStockFiscalItem(${index})">${escapeHtml(group.name)}</button></td><td>${group.quantity.toLocaleString('th-TH',{maximumFractionDigits:4})}</td><td>${escapeHtml(group.unit)}</td><td>${group.roundCount}</td><td>${group.flow==='admin_notice'?'แจ้งแผนกจัดซื้อเอง':'เบิกจาก รพ.'}</td></tr>`).join('')}</tbody></table></div>`:empty;
+  else if(stockFiscalMode==='item'){const group=groups.find(item=>item.key===stockFiscalItemKey);content=`<button class="btn btn-out" onclick="openStockFiscalDetail('items')">← กลับสรุปวัสดุ</button>`+(group?`<h3 style="margin:14px 0">${escapeHtml(group.name)} — ${group.quantity.toLocaleString('th-TH',{maximumFractionDigits:4})} ${escapeHtml(group.unit)}</h3><div class="tw"><table><thead><tr><th>วันที่</th><th>ผู้เบิก</th><th>จำนวน</th><th>หน่วย</th><th>ผลรับของ</th></tr></thead><tbody>${group.entries.map(entry=>`<tr><td>${escapeHtml(thaiDate(entry.record.date))}</td><td>${escapeHtml(entry.record.responsible||'—')}</td><td>${entry.quantity}</td><td>${escapeHtml(group.unit)}</td><td>${group.flow==='admin_notice'?'แจ้งแอดมินแล้ว':escapeHtml(stockFulfillmentInfo(entry.item).label)}</td></tr>`).join('')}</tbody></table></div>`:empty);}
+  else{const rows=stockFiscalMode==='pending'?records.filter(stockNeedsFollowUp):records;content=rows.length?`<p style="font-size:12px;color:var(--g6)">${rows.length} รอบ • สถานะรับของแยกจากผลประเมินผลงาน</p><div class="tw"><table><thead><tr><th>วันที่</th><th>รอบตรวจ / ผู้รับผิดชอบ</th><th>สถานะ</th><th>รายการค้าง</th></tr></thead><tbody>${rows.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อก')}<br>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockStageLabel(record))}</td><td>${stockOutstandingItems(record).map(item=>`${escapeHtml(item.name)}${Number(item.requestQty)>0?` ${Number(item.requestQty)} ${escapeHtml(item.unit||'')}`:''} — ${escapeHtml(stockFulfillmentInfo(item).label)}`).join('<br>')||(!record.ptVerdict&&!stockRecordIsAdminNotice(record)?'รอ PT ประเมิน':'—')}</td></tr>`).join('')}</tbody></table></div>`:empty;}
+  body.innerHTML=toolbar+(!window.FB?.fbGetStockFiscalRange?'<p role="status" style="color:#8A5A00">แสดงข้อมูลในเครื่อง อาจยังไม่ครบปี กรุณาเชื่อมต่อเพื่อโหลดข้อมูลทั้งหมด</p>':'')+content;
+}
 function renderStockHistory(){
   if(currentHistoryPanel==='stock')renderStockHistoryPanel();
   const list=document.getElementById('stockHistoryList');const count=document.getElementById('stockHistoryCount');const summary=document.getElementById('stockHistorySummary');if(!list)return;
-  const sorted=[...stockRecords].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));const attentionCount=sorted.filter(stockNeedsFollowUp).length;const requestedTotal=sorted.reduce((sum,record)=>sum+(record.items||[]).reduce((itemSum,item)=>itemSum+Number(item.requestQty||0),0),0);
-  if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=stockSummaryMetric('รอบที่บันทึก',sorted.length,'var(--bd)')+stockSummaryMetric('รอติดตาม',attentionCount,'var(--r)')+stockSummaryMetric('รวมจำนวนเบิก',requestedTotal,'#9A6700');
+  const selector=document.getElementById('stockFiscalYear');if(selector)selector.innerHTML=stockFiscalYearOptions();const range=stockFiscalRange(stockFiscalYear);const rangeLabel=document.getElementById('stockFiscalRangeLabel');if(rangeLabel)rangeLabel.textContent=`${thaiDate(range.start)}–${thaiDate(range.end)} • กดการ์ดเพื่อดูรายละเอียด`;const loadStatus=document.getElementById('stockFiscalLoadStatus');if(loadStatus)loadStatus.textContent='';
+  if(!ensureStockFiscalYear(stockFiscalYear)){if(summary)summary.innerHTML='';list.innerHTML=stockFiscalLoadingMarkup();if(count)count.textContent='กำลังโหลด';return;}
+  if(loadStatus&&!window.FB?.fbGetStockFiscalRange)loadStatus.textContent='ข้อมูลในเครื่อง อาจยังไม่ครบปี';
+  const sorted=stockFiscalRows(stockFiscalYear);const attentionCount=sorted.filter(stockNeedsFollowUp).length;const materialCount=aggregateStockFiscalItems(sorted).length;
+  if(count)count.textContent=`${sorted.length} รอบ`;if(summary)summary.innerHTML=[['รอบที่บันทึก',sorted.length,'var(--bd)','rounds'],['รอติดตาม',attentionCount,'var(--r)','pending'],['รายการวัสดุที่เบิก',materialCount,'#9A6700','items']].map(([label,value,color,mode])=>`<button type="button" class="stock-summary-metric" onclick="openStockFiscalDetail('${mode}')" aria-label="ดู${label} ปีงบประมาณ ${stockFiscalYear+543}"><div class="stock-summary-value" style="color:${color}">${value}</div><div class="stock-summary-label">${label}</div><small style="color:var(--bm);font-size:10px">ดูรายละเอียด ›</small></button>`).join('');
   if(!sorted.length){list.innerHTML='<div style="text-align:center;color:var(--g4);padding:22px">ยังไม่มีประวัติการตรวจสต็อก</div>';return;}
   list.innerHTML=sorted.slice(0,5).map(record=>{
     const items=Array.isArray(record.items)?record.items:[];const issues=items.filter(item=>Number(item.requestQty||0)>0||item.issueStatus!=='normal');const stats=stockPerformanceStats(record);const roundName=record.scheduleName||'ตรวจสต็อกประจำสัปดาห์';
@@ -5702,7 +5759,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261015-stock-holiday-exemption-v120';
+const APP_VERSION = 'v20261015-stock-fiscal-details-v121';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 

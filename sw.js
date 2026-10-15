@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261015-stock-holiday-exemption-v120';
+const CACHE_NAME = 'pt-kth-v20261015-stock-fiscal-details-v121';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
