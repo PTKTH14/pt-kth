@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261015-stock-fiscal-details-v121">
+<meta name="version" content="v20261022-retrospective-pair-v122">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1693,7 +1693,7 @@ tr:hover td{background:var(--g1)}
         <div class="fg"><label>หัวข้อที่พบข้อบกพร่อง *</label><select id="retroItemSelect"><option value="">— เลือก Checklist ต้นทางก่อน —</option></select></div>
         <div class="fg"><label>รายละเอียด *</label><textarea id="retroDetails" rows="3" placeholder="อธิบายข้อบกพร่องที่ตรวจพบจริง"></textarea></div>
         <div class="form-grid">
-          <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="pt">PT ทั้งสองคน</option><option value="both">ทั้งสามคน</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
+          <div class="fg"><label>ผู้รับผิดชอบ *</label><select id="retroResponsibility" onchange="updateRetrospectiveAmountFields()"><option value="assistant">ผู้ช่วย</option><option value="assistant_reviewer">ผู้ช่วยและ PT ผู้ประเมิน (1 ต่อ 1)</option><option value="pt">PT ทั้งสองคน</option><option value="both">ทั้งสามคน</option><option value="none">บันทึกข้อมูล ไม่คิดค่าเสียหาย</option></select></div>
           <div class="fg"><label>PT ผู้รับผิดชอบเพิ่มเติม</label><select id="retroAdditionalPtName" onchange="updateRetrospectiveAmountFields()"><option value="">— เลือกชื่อ PT อีกคน —</option></select><small style="display:block;margin-top:5px;color:var(--g5)">แยกจาก PT ผู้ประเมิน Checklist เดิม</small></div>
           <div class="fg"><label>ค่าเสียหายผู้ช่วย (บาท)</label><input type="number" id="retroAssistantAmount" value="10" readonly></div>
           <div class="fg"><label>ค่าเสียหาย PT ผู้ประเมิน (บาท)</label><input type="number" id="retroPtReviewerAmount" value="0" readonly></div>
@@ -4925,7 +4925,7 @@ function rebuildRetrospectiveSubmission(submission,checks){
   });
 }
 function retrospectiveResponsibilityLabel(value){
-  return {assistant:'ผู้ช่วย',pt:'PT ทั้งสองคน',both:'ทั้งสามคน',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
+  return {assistant:'ผู้ช่วย',assistant_reviewer:'ผู้ช่วยและ PT ผู้ประเมิน (1 ต่อ 1)',pt:'PT ทั้งสองคน',both:'ทั้งสามคน',none:'ไม่คิดค่าเสียหาย'}[value]||'—';
 }
 function retrospectiveAmounts(record){
   const assistant=Math.max(0,Number(record?.assistantAmount)||0);
@@ -4983,9 +4983,9 @@ function retrospectiveDraft(){
   const itemKey=document.getElementById('retroItemSelect')?.value||'';
   const item=retrospectiveItems(submission).find(entry=>entry.key===itemKey);
   const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
-  const additionalPtName=String(document.getElementById('retroAdditionalPtName')?.value||'').trim();
-  const assistantAmount=['assistant','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAssistantAmount')?.value)||0):0;
-  const ptReviewerAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroPtReviewerAmount')?.value)||0):0;
+  const additionalPtName=responsibility==='assistant_reviewer'?'':String(document.getElementById('retroAdditionalPtName')?.value||'').trim();
+  const assistantAmount=['assistant','assistant_reviewer','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAssistantAmount')?.value)||0):0;
+  const ptReviewerAmount=['pt','assistant_reviewer','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroPtReviewerAmount')?.value)||0):0;
   const additionalPtAmount=['pt','both'].includes(responsibility)?Math.max(0,Number(document.getElementById('retroAdditionalPtAmount')?.value)||0):0;
   return {submission,itemKey,item,responsibility,additionalPtName,assistantAmount,ptReviewerAmount,additionalPtAmount,ptAmount:ptReviewerAmount+additionalPtAmount,details:String(document.getElementById('retroDetails')?.value||'').trim()};
 }
@@ -4993,14 +4993,16 @@ function updateRetrospectiveAmountFields(){
   const responsibility=document.getElementById('retroResponsibility')?.value||'assistant';
   const assistant=document.getElementById('retroAssistantAmount');const reviewer=document.getElementById('retroPtReviewerAmount');const additional=document.getElementById('retroAdditionalPtAmount');
   if(assistant){
-    assistant.disabled=!['assistant','both'].includes(responsibility);
+    assistant.disabled=!['assistant','assistant_reviewer','both'].includes(responsibility);
     assistant.value=assistant.disabled?0:DAMAGE_RATES.assistant;
   }
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
   const reviewerName=String(submission?.ptReviewer||'').trim();
-  const additionalName=String(document.getElementById('retroAdditionalPtName')?.value||'').trim();
+  const additionalSelect=document.getElementById('retroAdditionalPtName');
+  if(additionalSelect){additionalSelect.disabled=responsibility==='assistant_reviewer';if(additionalSelect.disabled)additionalSelect.value='';}
+  const additionalName=String(additionalSelect?.value||'').trim();
   const names=[...new Set([reviewerName,additionalName].filter(Boolean))];const rate=ptDamagePerPerson(names.length);
-  [reviewer,additional].forEach((input,index)=>{if(!input)return;const present=index===0?Boolean(reviewerName):Boolean(additionalName)&&additionalName!==reviewerName;input.disabled=!['pt','both'].includes(responsibility)||!present;input.value=input.disabled?0:rate;});
+  [reviewer,additional].forEach((input,index)=>{if(!input)return;const present=index===0?Boolean(reviewerName):Boolean(additionalName)&&additionalName!==reviewerName;const enabled=index===0?['pt','assistant_reviewer','both'].includes(responsibility):['pt','both'].includes(responsibility);input.disabled=!enabled||!present;input.value=input.disabled?0:rate;});
 }
 function updateRetrospectiveItemOptions(selectedKey){
   const submission=retrospectiveSubmissionById(document.getElementById('retroSubmissionSelect')?.value);
@@ -5131,6 +5133,7 @@ async function saveRetrospectiveCheck(){
   if(!isAdminLoggedIn)return showToast('🔒 เฉพาะแอดมินเท่านั้น','error');
   const draft=retrospectiveDraft();
   if(!draft.submission||!draft.item||!draft.details)return showToast('⚠️ กรุณาเลือก Checklist หัวข้อ และกรอกรายละเอียด','warning');
+  if(draft.responsibility==='assistant_reviewer'&&!String(draft.submission.ptReviewer||'').trim())return showToast('⚠️ Checklist นี้ยังไม่มีชื่อ PT ผู้ประเมิน ไม่สามารถเลือกแบบ 1 ต่อ 1 ได้','warning');
   if(['pt','both'].includes(draft.responsibility)&&!draft.additionalPtName)return showToast('⚠️ กรุณาเลือก PT ผู้รับผิดชอบเพิ่มเติม','warning');
   const now=new Date();const existing=retrospectiveChecks.find(item=>String(item.id)===String(editingRetrospectiveId));
   const record={
@@ -5759,7 +5762,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261015-stock-fiscal-details-v121';
+const APP_VERSION = 'v20261022-retrospective-pair-v122';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
