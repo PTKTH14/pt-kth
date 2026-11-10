@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-kth-v20261110-stock-round-picker-v123';
+const CACHE_NAME = 'pt-kth-v20261110-stock-receipt-result-v124';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './qrcode.js'];
 
 self.addEventListener('install', event => {
