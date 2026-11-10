@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261110-stock-receipt-result-v124">
+<meta name="version" content="v20261110-dashboard-overview-v125">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1018,6 +1018,32 @@ tr:hover td{background:var(--g1)}
 .stock-round-status[data-state="exempt"],.stock-round-status[data-state="upcoming"]{background:#E8EDF3;color:#34475B}
 #stockRoundPrompt{padding:12px 14px;margin:10px 0;border-left:4px solid var(--p);color:var(--bd);font-weight:700}
 @media(max-width:600px){#view-stock .stock-meta-grid,.stock-round-choices{grid-template-columns:1fr}}
+#view-dashboard [hidden]{display:none!important}
+#view-dashboard h2{font-size:16px;margin:0 0 10px}
+#view-dashboard .dashboard-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px}
+#view-dashboard .dashboard-action-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#view-dashboard .dashboard-subtext{color:var(--g6);font-size:13px;margin-top:4px}
+#view-dashboard .dashboard-action-card:has(#dashboardReviewLink:not([hidden])){border-left:4px solid #8B3908}
+#view-dashboard .dashboard-disclosure>summary{min-height:44px;align-content:center;color:var(--bd);font-weight:700;cursor:pointer}
+#view-dashboard .dashboard-outcomes{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+#view-dashboard .dashboard-exceptions{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+#view-dashboard .dashboard-flag{display:inline-flex;align-items:center;padding:4px 9px;border-radius:6px;font-size:12px;font-weight:700}
+#view-dashboard .dashboard-flag.partial{background:#8B3908;color:#fff}
+#view-dashboard .dashboard-flag.fail{background:#A62639;color:#fff}
+#view-dashboard .dashboard-flag.pass{background:#E1F2E8;color:#176B38}
+#view-dashboard .dashboard-stock-card{border-top:3px solid var(--p)}
+#view-dashboard .dashboard-stock-overview{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;margin-bottom:10px}
+#view-dashboard .dashboard-stock-overview p{margin:0;font-size:13px;color:var(--g6)}
+#view-dashboard .dashboard-stock-list{display:grid;gap:8px;margin:8px 0 4px}
+#view-dashboard .dashboard-stock-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px;border:1px solid var(--g2);border-radius:var(--r8);background:var(--g1)}
+#view-dashboard .dashboard-stock-row>div{min-width:0;overflow-wrap:anywhere}
+#view-dashboard .dashboard-stock-row .dashboard-subtext{margin-top:2px}
+#view-dashboard .dashboard-stock-result{display:grid;gap:4px;margin-top:7px}
+#view-dashboard .dashboard-stock-result>div{border-left:3px solid #8B3908;padding-left:8px;font-size:13px}
+#view-dashboard .dashboard-shift-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+#view-dashboard .dashboard-analysis>summary{margin-bottom:4px}
+@media(max-width:520px){#view-dashboard .dashboard-kpi-grid{grid-template-columns:1fr}#view-dashboard .dashboard-kpi-grid .kc{min-height:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}#view-dashboard .dashboard-kpi-grid .kn{min-width:48px}}
+@media(max-width:520px){#view-dashboard .dashboard-stock-row{grid-template-columns:1fr}#view-dashboard .dashboard-stock-row .btn{justify-self:start}}
 </style>
 </head>
 <body>
@@ -1288,46 +1314,39 @@ tr:hover td{background:var(--g1)}
     </div>
   </div>
 
-  <div class="dashboard-reading-guide"><strong>ลำดับการอ่าน:</strong><span>จำนวนงาน</span><span class="guide-arrow">→</span><span>คะแนนหลัง PT ตรวจ</span><span class="guide-arrow">→</span><span>สถานะผลประเมิน</span></div>
-  <div id="stockPerformanceDashboard"></div>
+  <section class="card dashboard-action-card" aria-labelledby="dashboardActionTitle">
+    <h2 id="dashboardActionTitle">งานที่ทำต่อได้</h2>
+    <div class="dashboard-action-row"><div><strong id="dashboardReadyLabel" role="status">กำลังตรวจคิว Checklist…</strong><div class="dashboard-subtext" id="dashboardExpiredLabel"></div></div><button type="button" class="btn btn-pri" id="dashboardReviewLink" onclick="openDashboardReview(this.dataset.month)" hidden>เปิดคิว PT →</button></div>
+  </section>
 
-  <!-- KPI ROW 1: ภาพรวม -->
-  <div class="dashboard-kpi-grid">
-    <div class="kc"><div class="kn" id="kpiTotal">0</div><div class="kl">📋 Checklist ทั้งหมด</div></div>
-    <div class="kc" style="border-left-color:#9C27B0"><div class="kn" style="color:#9C27B0" id="kpiAvg">0%</div><div class="kl">📈 คะแนนเฉลี่ยผลงาน <button type="button" class="help-tip" aria-label="คำอธิบายคะแนนผลงาน" data-help="เฉลี่ยคะแนนแต่ละรอบที่ PT ตรวจจริง รวมรอบขาดส่งที่แอดมินยืนยันผู้รับผิดชอบเป็น 0 คะแนน ไม่นับรอบยกเว้น N/A ทั้งหมด หรือรอ PT ประเมิน การคิดค่าเสียหายแยกจากคะแนน">i</button></div><div class="kl" id="kpiMissedScore">ขาดส่ง 0 รอบ</div></div>
-    <div class="kc y"><div class="kn" id="kpiPend">0</div><div class="kl">⏳ รอ PT ประเมิน</div></div>
-    <div class="kc g"><div class="kn" id="kpiPass">0</div><div class="kl">✅ ผ่าน/ต้องปรับปรุง</div></div>
-    <div class="kc r"><div class="kn" id="kpiFail">0</div><div class="kl">❌ ไม่ผ่าน</div></div>
-    <div class="kc" style="border-left-color:#00BCD4"><div class="kn" style="color:#00BCD4" id="kpiPassRate">0%</div><div class="kl">🏆 อัตราผ่าน/ปรับปรุง <button type="button" class="help-tip tip-left" aria-label="คำอธิบาย อัตราผ่านหรือต้องปรับปรุง" data-help="จำนวนผล ผ่าน และ ต้องปรับปรุง หารด้วยจำนวน Checklist ที่ PT ประเมินแล้ว โดยไม่นับรายการที่ยังรอ PT ประเมิน ตัวเลขนี้เป็นผลจาก PT ไม่ใช่ความสมบูรณ์ของการกรอก">i</button></div></div>
-  </div>
+  <section aria-labelledby="dashboardOverviewTitle">
+    <h2 id="dashboardOverviewTitle">สรุป Checklist ตามช่วงที่เลือก</h2>
+    <div class="dashboard-kpi-grid">
+      <div class="kc"><div class="kn" id="kpiTotal">—</div><div class="kl">Checklist ที่ส่ง</div></div>
+      <div class="kc"><div class="kn" id="kpiReviewed">—</div><div class="kl">PT ประเมินแล้ว</div></div>
+      <div class="kc"><div class="kn" id="kpiAvg">—</div><div class="kl">คะแนนเฉลี่ยผลงาน <button type="button" class="help-tip" aria-label="คำอธิบายคะแนนผลงาน" data-help="เฉลี่ยคะแนนรอบที่ PT ตรวจจริง รวมรอบขาดส่งที่แอดมินยืนยันเป็น 0 คะแนน ไม่นับรอบยกเว้น N/A ทั้งหมด หรือรอ PT ประเมิน การคิดค่าเสียหายแยกจากคะแนน">i</button></div><div class="kl" id="kpiMissedScore" hidden></div></div>
+    </div>
+    <div class="dashboard-exceptions" id="dashboardExceptions" role="status" hidden></div>
+  </section>
 
-  <!-- ROW: เวรเช้า / ก่อนเริ่มเวรบ่าย / เวรบ่าย -->
-  <div class="shift-summary-grid">
-    <div class="card" style="margin-bottom:0;border-left:4px solid #FF9800">
-      <h3 style="font-size:13px;margin-bottom:10px">🌅 เวรเช้า</h3>
-      <div style="display:flex;justify-content:space-between">
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#E65100" id="shiftMorningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMorningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMorningPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:0;border-left:4px solid #E5A900">
-      <h3 style="font-size:13px;margin-bottom:10px">☀️ ก่อนเริ่มเวรบ่าย</h3>
-      <div style="display:flex;justify-content:space-between">
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#8A6500" id="shiftMiddayCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftMiddayAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftMiddayPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:0;border-left:4px solid #2196F3">
-      <h3 style="font-size:13px;margin-bottom:10px">🌙 เวรบ่าย</h3>
-      <div style="display:flex;justify-content:space-between">
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#1565C0" id="shiftEveningCount">0</div><div style="font-size:11px;color:var(--g6)">ครั้ง</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#9C27B0" id="shiftEveningAvg">0%</div><div style="font-size:11px;color:var(--g6)">สมบูรณ์</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)" id="shiftEveningPass">0%</div><div style="font-size:11px;color:var(--g6)">อัตราผ่าน/ปรับปรุง</div></div>
-      </div>
-    </div>
-  </div>
+  <section class="card dashboard-stock-card" aria-labelledby="dashboardStockTitle">
+    <div class="dashboard-stock-overview"><div><h2 id="dashboardStockTitle">สต็อกและการเบิก</h2><p id="dashboardStockOverview"></p></div><div class="dashboard-outcomes" id="dashboardStockOutcomes" hidden></div></div>
+    <div id="dashboardStockFollowUp"></div>
+    <details class="dashboard-disclosure"><summary>ดูสรุปรอบตรวจสต็อก</summary><div id="stockPerformanceDashboard"></div></details>
+  </section>
+
+  <details class="card dashboard-disclosure">
+    <summary>ดูผลประเมินและรายเวร</summary>
+    <div class="dashboard-outcomes" id="dashboardOutcomes"></div>
+    <div class="tw dashboard-table-scroll"><table><thead><tr><th scope="col">เวร</th><th scope="col">รอบที่ส่ง</th><th scope="col">คะแนนเฉลี่ยผลงาน</th></tr></thead><tbody>
+      <tr><th scope="row">เวรเช้า</th><td id="shiftMorningCount">—</td><td><span id="shiftMorningAvg">—</span><div id="shiftMorningFlags" class="dashboard-shift-flags" hidden></div></td></tr>
+      <tr><th scope="row">ก่อนเริ่มเวรบ่าย</th><td id="shiftMiddayCount">—</td><td><span id="shiftMiddayAvg">—</span><div id="shiftMiddayFlags" class="dashboard-shift-flags" hidden></div></td></tr>
+      <tr><th scope="row">เวรบ่าย</th><td id="shiftEveningCount">—</td><td><span id="shiftEveningAvg">—</span><div id="shiftEveningFlags" class="dashboard-shift-flags" hidden></div></td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details class="card dashboard-disclosure dashboard-analysis">
+    <summary>ดูแนวโน้ม รายการที่ทำไม่ครบบ่อย และ Ranking</summary>
 
   <div class="card trend-card" style="margin-bottom:16px">
     <div class="trend-head">
@@ -1358,6 +1377,7 @@ tr:hover td{background:var(--g1)}
     <h3>📅 สรุปรายเดือน <button type="button" class="help-tip tip-down" aria-label="คำอธิบาย สรุปรายเดือน" data-help="รวมผล Checklist แยกตามเดือนจากช่วงวันที่และชื่อผู้ช่วยที่เลือก โดยแสดงย้อนหลังสูงสุด 6 เดือน">i</button></h3>
     <div id="monthlyTable" class="tw dashboard-table-scroll"></div>
   </div>
+  </details>
 
 </div>
 
@@ -3761,10 +3781,9 @@ function stockAdminManageMarkup(records){
   return`<div class="card" style="margin-bottom:16px;border-left:4px solid var(--r)"><h3 style="margin-bottom:4px">🛠️ จัดการบันทึกสต็อกและเบิกของ</h3><div style="font-size:11.5px;color:var(--g6);margin-bottom:12px">แอดมินแก้ไข เปิดหน้าผลพัสดุและประเมิน หรือลบบันทึกได้จากตารางนี้</div>${sorted.length?`<div class="tw" style="overflow-x:auto"><table><thead><tr><th>วันที่</th><th>รอบตรวจ</th><th>ผู้ช่วย</th><th>ผล PT</th><th>คะแนน</th><th>จัดการ</th></tr></thead><tbody>${sorted.map(record=>`<tr><td>${escapeHtml(thaiDate(record.date))}</td><td>${escapeHtml(record.scheduleName||'ตรวจสต็อกประจำสัปดาห์')}</td><td>${escapeHtml(record.responsible||'—')}</td><td>${escapeHtml(stockVerdictLabel(record))}</td><td>${record.ptVerdict?stockPerformanceStats(record).totalScore+'%':'—'}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="editStockRecord(${Number(record.id)})">แก้ไข</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px" onclick="openStockReview(${Number(record.id)})">ผลพัสดุ/ประเมิน</button><button class="btn btn-out" style="padding:4px 8px;font-size:11px;color:var(--r)" onclick="deleteStockRecord(${Number(record.id)})">ลบ</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div style="text-align:center;color:var(--g4);padding:12px">ยังไม่มีรายการ</div>'}</div>`;
 }
 function renderStockPerformancePanels(){
-  const dashboard=document.getElementById('stockPerformanceDashboard');
   const supervisor=document.getElementById('supervisorStockPerformance');
   const admin=document.getElementById('adminStockPerformance');
-  if(dashboard)dashboard.innerHTML=stockPerformanceSummaryMarkup(stockScoredRecords(stockRecords));
+  if(dashboardAppliedScope)renderDashboardStock(dashboardAppliedScope);
   if(supervisor)supervisor.innerHTML=stockPerformanceMarkup(stockScoredRecords(stockRecords),'ผลงานเบิกของและตรวจสต็อก');
   if(admin)admin.innerHTML=stockAdminManageMarkup(stockRecords);
 }
@@ -3874,9 +3893,7 @@ async function loadReviewView(){
     if(token!==reviewMonthLoadToken)return;
   }
   const safeSubmissions=Array.isArray(submissions)?submissions.filter(item=>item&&typeof item==='object'):[];const safeStockRecords=Array.isArray(stockRecords)?stockRecords.filter(item=>item&&typeof item==='object'):[];
-  const pendingInMonth=safeSubmissions.filter(s=>isChecklistPendingReview(s)&&String(s.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
-  const expired=pendingInMonth.filter(s=>getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
-  const pending=pendingInMonth.filter(s=>!getTimeLockInfo(s.date,s.shift||'morning','pt').locked);
+  const {ready:pending,expired}=partitionChecklistReviewQueue(safeSubmissions.filter(record=>String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst));
   const pendingStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)==='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const deferredAlcoholStock=safeStockRecords.filter(record=>stockStage(record)==='reviewed_waiting_receipt'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);const inProgressStock=safeStockRecords.filter(record=>!stockRecordIsAdminNotice(record)&&!record.ptVerdict&&stockStage(record)!=='ready_for_review'&&String(record.date||'').startsWith(selectedMonth)).sort(newestRecordFirst);
   const missingChecklist=getMissingChecklistRounds({monthKey:selectedMonth}).filter(item=>!item.handled);
   const missingChecklistHtml=missingChecklist.length?`<details class="card" style="margin:18px 0 0;padding:0;border-left:4px solid var(--o)"><summary style="cursor:pointer;list-style:none;padding:14px 16px;font-size:13.5px;font-weight:700;color:#9A6700;display:flex;align-items:center;justify-content:space-between;gap:12px"><span>⚠️ Checklist ที่ระบบตรวจไม่พบ ${missingChecklist.length} รอบ</span><span aria-hidden="true">▼</span></summary><div class="tw" style="overflow-x:auto;margin:0 12px 12px"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ปัญหา</th><th>สถานะ</th><th></th></tr></thead><tbody>${missingChecklist.map(item=>`<tr><td>${escapeHtml(thaiDate(item.date))}</td><td><span class="tag tw2">${shiftLabel(item.shift)}</span></td><td>ไม่มีการส่ง Checklist ${shiftLabel(item.shift)}</td><td><span class="tag tf">รอแอดมินเลือกผู้รับผิดชอบ</span></td><td>${isAdminLoggedIn?`<button class="btn btn-pri" style="padding:5px 12px;font-size:12px" onclick="startMissedEvaluationForDate('assistant','historical-${item.shift}-${item.date}','${item.shift}','${item.date}')">บันทึกย้อนหลัง</button>`:'<span style="font-size:12px;color:var(--g6)">แจ้งแอดมิน</span>'}</td></tr>`).join('')}</tbody></table></div></details>`:'';
@@ -4668,6 +4685,46 @@ function showTrendPoint(index){
   detail.innerHTML=`<div><strong>${escapeHtml(point.record.staffName||'ไม่ระบุชื่อ')}</strong><div>${escapeHtml(thaiDate(point.record.date))} • ${shift}</div></div><div><div class="trend-review-label">${point.record._confirmedMissing?'สถานะการส่ง Checklist':'ผลตรวจจาก PT'} <button type="button" class="help-tip tip-down" aria-label="คำอธิบายเกณฑ์คะแนน" data-help="คะแนน = จำนวนหัวข้อที่ PT ให้ผ่าน ÷ จำนวนหัวข้อที่ PT ตรวจทั้งหมด × 100 โดยไม่นับ N/A • ขาดส่งและแอดมินยืนยันผู้รับผิดชอบ = 0 คะแนน • 80–100% ผ่าน • 60–79% ต้องปรับปรุง • ต่ำกว่า 60% ไม่ผ่าน">i</button></div><div class="trend-review" style="justify-content:flex-start"><span class="tag ${verdictInfo.className}">${verdictInfo.label} · ${point.pct}%</span></div>${comment}</div><div style="text-align:right"><strong class="trend-detail-score" style="color:${point.color}">${point.pct}%</strong><div>${point.record._confirmedMissing?'คะแนนขาดส่ง Checklist':'คะแนนหลัง PT ตรวจ'}</div></div>`;
 }
 
+let dashboardAppliedScope=null;
+function partitionChecklistReviewQueue(records){
+  const ready=[];const expired=[];
+  records.filter(isChecklistPendingReview).forEach(record=>{
+    (getTimeLockInfo(record.date,record.shift||'morning','pt').locked?expired:ready).push(record);
+  });
+  return {ready,expired,handled:expired.filter(missedPtRecordForSubmission).length};
+}
+function openDashboardReview(month){
+  if(!/^\d{4}-\d{2}$/.test(month||''))return;
+  reviewMonthKey=month;
+  openMobileView('review');
+}
+function dashboardVerdictCounts(records){
+  const counts={pass:0,partial:0,fail:0};
+  records.forEach(record=>{
+    const verdict=record.ptVerdict||record.status;
+    if(['pass','partial','fail'].includes(verdict))counts[verdict]++;
+  });
+  return counts;
+}
+function renderDashboardVerdicts(id,counts,includeAll=false){
+  const host=document.getElementById(id);if(!host)return;
+  const entries=[['pass','ผ่าน'],['partial','ต้องปรับปรุง'],['fail','ไม่ผ่าน']].filter(([key])=>includeAll||(key!=='pass'&&counts[key]>0));
+  host.hidden=!entries.length;
+  host.innerHTML=entries.map(([key,label])=>`<span class="dashboard-flag ${key}">${label} ${counts[key]} รอบ</span>`).join('');
+}
+function renderDashboardStock(scope){
+  const records=stockScoredRecords(stockRecords).filter(record=>isDateInRange(record.date,scope.start,scope.end)&&(scope.staff==='all'||record.responsible===scope.staff));
+  const summary=document.getElementById('stockPerformanceDashboard');
+  if(summary)summary.innerHTML=stockPerformanceSummaryMarkup(records);
+  const counts=dashboardVerdictCounts(records);
+  const overview=document.getElementById('dashboardStockOverview');
+  if(overview)overview.textContent=records.length?`บันทึก ${records.length} รอบ · PT ประเมินแล้ว ${counts.pass+counts.partial+counts.fail} รอบ`:'ไม่มีรอบตรวจสต็อกในช่วงที่เลือก';
+  renderDashboardVerdicts('dashboardStockOutcomes',counts);
+  const followUp=document.getElementById('dashboardStockFollowUp');if(!followUp)return;
+  const rows=records.map(record=>({record,items:stockOutstandingItems(record).filter(item=>Number(item.requestQty)>0)})).filter(row=>row.items.length).sort((first,second)=>newestRecordFirst(first.record,second.record));
+  const shown=rows.slice(0,5);
+  followUp.innerHTML=rows.length?`<strong>ผลรับของที่ต้องติดตาม <span class="dashboard-flag partial">${rows.length} รอบ</span></strong><div class="dashboard-stock-list">${shown.map(({record,items})=>`<div class="dashboard-stock-row"><div><strong>${escapeHtml(record.scheduleName||'รอบตรวจสต็อก')}</strong><div class="dashboard-subtext">${escapeHtml(thaiDate(record.date))} · ${record.ptVerdict?'ผลประเมินรอบตรวจ: ':''}${escapeHtml(stockVerdictLabel(record))}</div><div class="dashboard-stock-result">${items.map(item=>`<div><strong>${escapeHtml(item.name)}</strong> — ${stockReceiptResultMarkup(item)}</div>`).join('')}</div></div><button type="button" class="btn btn-out" onclick="showStockHistoryRecord(${Number(record.id)})">ดูรายละเอียด</button></div>`).join('')}</div>${rows.length>shown.length?`<p class="dashboard-subtext">แสดง ${shown.length} รอบล่าสุดจาก ${rows.length} รอบ</p>`:''}`:(records.length?'<div class="dashboard-subtext">ไม่มีรายการเบิกที่ต้องติดตามในช่วงที่เลือก</div>':'');
+}
 function loadDashboard() {
   const startInput=document.getElementById('dashStartDate');
   if(startInput&&!startInput.value)applyDashboardPeriod(false);
@@ -4678,58 +4735,37 @@ function loadDashboard() {
 
   let data = submissions.filter(s => isDateInRange(s.date, fStart, fEnd));
   if(f !== 'all') data = data.filter(s => s.staffName === f);
-  const dashboardStock=stockRecords.filter(record=>isDateInRange(record.date,fStart,fEnd)&&(f==='all'||record.responsible===f));
   const scoreScope={start:fStart,end:fEnd,staff:f};
+  dashboardAppliedScope=scoreScope;
   const scoreRecords=assistantScoreRecords(data,scoreScope);
-  const stockDashboard=document.getElementById('stockPerformanceDashboard');
-  if(stockDashboard)stockDashboard.innerHTML=stockPerformanceSummaryMarkup(dashboardStock);
+  renderDashboardStock(scoreScope);
 
-  // ══ KPI ══
-  const reviewed = data.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
-  const passed   = reviewed.filter(s => s.status === 'pass' || s.status === 'partial');
-  const failed   = reviewed.filter(s => s.status === 'fail');
-  const pending  = data.filter(s => s.status === 'pending');
-  const avgComp  = averagePtScore(data,scoreScope);
-  const passRate = scoreRecords.length > 0 ? Math.round(passed.length / scoreRecords.length * 100) : 0;
-
-  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
-  set('kpiTotal',    data.length);
-  set('kpiPass',     passed.length);
-  set('kpiPend',     pending.length);
-  set('kpiFail',     failed.length);
-  set('kpiAvg',      avgComp + '%');
-  set('kpiMissedScore',`ขาดส่ง ${scoreRecords.filter(record=>record._confirmedMissing).length} รอบ · รอบละ 0 คะแนน`);
-  set('kpiPassRate', passRate + '%');
-
-  // ══ เวรเช้า / ก่อนเริ่มเวรบ่าย / เวรบ่าย ══
-  const morning = data.filter(s => s.shift === 'morning');
-  const midday = data.filter(s => s.shift === 'midday');
-  const evening = data.filter(s => s.shift === 'afternoon');
-  const mReviewed = morning.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
-  const dReviewed = midday.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
-  const eReviewed = evening.filter(s => s.status !== 'pending' && isScoreEligibleSubmission(s));
-  const ePassed   = eReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
-  const dPassed   = dReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
-  const mPassed   = mReviewed.filter(s => s.status === 'pass' || s.status === 'partial');
-  const mAvg = averagePtScore(morning,{...scoreScope,shift:'morning'});
-  const dAvg = averagePtScore(midday,{...scoreScope,shift:'midday'});
-  const eAvg = averagePtScore(evening,{...scoreScope,shift:'afternoon'});
-  const mRounds=scoreRecords.filter(record=>record.shift==='morning').length;
-  const dRounds=scoreRecords.filter(record=>record.shift==='midday').length;
-  const eRounds=scoreRecords.filter(record=>record.shift==='afternoon').length;
-  const mPass = mRounds ? Math.round(mPassed.length/mRounds*100) : 0;
-  const dPass = dRounds ? Math.round(dPassed.length/dRounds*100) : 0;
-  const ePass = eRounds ? Math.round(ePassed.length/eRounds*100) : 0;
-
-  set('shiftMorningCount', morning.length);
-  set('shiftMorningPass',  mPass + '%');
-  set('shiftMorningAvg',   mAvg + '%');
-  set('shiftMiddayCount', midday.length);
-  set('shiftMiddayPass',  dPass + '%');
-  set('shiftMiddayAvg',   dAvg + '%');
-  set('shiftEveningCount', evening.length);
-  set('shiftEveningPass',  ePass + '%');
-  set('shiftEveningAvg',   eAvg + '%');
+  const verdicts=dashboardVerdictCounts(data);
+  const queue=partitionChecklistReviewQueue(data);
+  const set=(id,value)=>{const element=document.getElementById(id);if(element)element.textContent=value;};
+  set('dashboardReadyLabel',queue.ready.length?`Checklist พร้อมให้ PT ประเมิน ${queue.ready.length} รอบ`:'ไม่มี Checklist ที่ยังประเมินได้ในช่วงที่เลือก');
+  set('dashboardExpiredLabel',queue.expired.length?`เลยเวลาประเมิน ${queue.expired.length} รอบ${queue.handled?` · บันทึกค่าเสียหายแล้ว ${queue.handled} รอบ`:''}`:'');
+  const reviewLink=document.getElementById('dashboardReviewLink');
+  if(reviewLink){
+    const month=queue.ready.map(record=>String(record.date).slice(0,7)).sort().at(-1)||'';
+    reviewLink.hidden=!month;
+    reviewLink.dataset.month=month;
+    if(month){const [year,number]=month.split('-').map(Number);reviewLink.textContent=`เปิดคิว PT ทั้งเดือน · ${THAI_MONTHS[number-1]} ${year+543} →`;}
+  }
+  set('kpiTotal',data.length);
+  set('kpiReviewed',verdicts.pass+verdicts.partial+verdicts.fail);
+  set('kpiAvg',scoreRecords.length?averagePtScore(data,scoreScope)+'%':'—');
+  const missed=scoreRecords.filter(record=>record._confirmedMissing).length;
+  const missedLabel=document.getElementById('kpiMissedScore');
+  if(missedLabel){missedLabel.hidden=!missed;missedLabel.textContent=`รวมขาดส่งที่ยืนยันแล้ว ${missed} รอบ · รอบละ 0 คะแนน`;}
+  renderDashboardVerdicts('dashboardExceptions',verdicts);
+  renderDashboardVerdicts('dashboardOutcomes',verdicts,true);
+  [['morning','Morning'],['midday','Midday'],['afternoon','Evening']].forEach(([shift,suffix])=>{
+    const rows=data.filter(record=>record.shift===shift);
+    set('shift'+suffix+'Count',rows.length);
+    set('shift'+suffix+'Avg',scoreRecords.some(record=>record.shift===shift)?averagePtScore(rows,{...scoreScope,shift})+'%':'—');
+    renderDashboardVerdicts('shift'+suffix+'Flags',dashboardVerdictCounts(rows));
+  });
 
   // ══ TREND CHART ══
   const recent = [...scoreRecords].sort((a,b) => a.date > b.date ? 1 : -1).slice(-14);
@@ -4810,13 +4846,13 @@ function loadDashboard() {
 
   // ══ สรุปรายเดือน ══
   const byMonth = {};
-  [...data,...scoreRecords.filter(record=>record._confirmedMissing)].forEach(s => {
-    const m = s.date.slice(0,7);
-    if(!byMonth[m]) byMonth[m] = { total:0, pass:0, pending:0, scored:0, compSum:0 };
-    byMonth[m].total++;
-    if(isScoreEligibleSubmission(s)&&(s.status==='pass'||s.status==='partial')) byMonth[m].pass++;
-    if(s.status==='pending') byMonth[m].pending++;
-    if(s.status!=='pending'&&isScoreEligibleSubmission(s)){byMonth[m].scored++;byMonth[m].compSum += calcCompletion(s);}
+  [...data,...scoreRecords.filter(record=>record._confirmedMissing)].forEach(record=>{
+    const month=record.date.slice(0,7);
+    if(!byMonth[month])byMonth[month]={sent:0,reviewed:0,scored:0,scoreSum:0};
+    const entry=byMonth[month];
+    if(!record._confirmedMissing)entry.sent++;
+    if(!record._confirmedMissing&&['pass','partial','fail'].includes(record.ptVerdict||record.status))entry.reviewed++;
+    if(record.status!=='pending'&&isScoreEligibleSubmission(record)){entry.scored++;entry.scoreSum+=calcCompletion(record);}
   });
   const months = Object.entries(byMonth).sort((a,b) => b[0] > a[0] ? 1 : -1).slice(0,6);
   const mt = document.getElementById('monthlyTable');
@@ -4824,21 +4860,17 @@ function loadDashboard() {
     if(months.length === 0) {
       mt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูล</p>';
     } else {
-      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>ทั้งหมด</th><th>คะแนนหลัง PT ตรวจ</th><th>รอ PT ประเมิน</th><th>ผ่าน/ต้องปรับปรุง</th><th>อัตราผ่าน/ปรับปรุง</th></tr></thead><tbody>
+      mt.innerHTML = `<table><thead><tr><th>เดือน</th><th>รอบที่ส่ง</th><th>PT ประเมินแล้ว</th><th>คะแนนเฉลี่ยผลงาน</th></tr></thead><tbody>
       ${months.map(([m, d]) => {
-        const reviewed = d.scored;
-        const rate = reviewed > 0 ? Math.round(d.pass/reviewed*100) : 0;
-        const avg  = reviewed > 0 ? Math.round(d.compSum/reviewed) : 0;
+        const avg=d.scored?Math.round(d.scoreSum/d.scored)+'%':'—';
         const [y,mo] = m.split('-');
         const thYear = parseInt(y)+543;
         const moNames = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
         return `<tr>
           <td style="font-weight:600">${moNames[parseInt(mo)]} ${thYear}</td>
-          <td>${d.total}</td>
-          <td><span style="color:${avg>=80?'var(--g)':avg>=60?'var(--o)':'var(--r)'};font-weight:700">${avg}%</span></td>
-          <td style="color:#856404">${d.pending}</td>
-          <td style="color:var(--g);font-weight:600">${d.pass}</td>
-          <td><span class="tag ${rate>=80?'tp':rate>=60?'tw2':'tf'}">${rate}%</span></td>
+          <td>${d.sent}</td>
+          <td>${d.reviewed}</td>
+          <td>${avg}</td>
         </tr>`;
       }).join('')}</tbody></table>`;
     }
@@ -5856,7 +5888,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261110-stock-receipt-result-v124';
+const APP_VERSION = 'v20261110-dashboard-overview-v125';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
