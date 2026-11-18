@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-512.svg">
 <link rel="icon" type="image/svg+xml" href="icon-512.svg">
 <meta name="theme-color" content="#0F4C81">
-<meta name="version" content="v20261110-dashboard-overview-v125">
+<meta name="version" content="v20261118-dashboard-v126">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!-- Firebase SDK -->
@@ -1332,10 +1332,10 @@ tr:hover td{background:var(--g1)}
   <section class="card dashboard-stock-card" aria-labelledby="dashboardStockTitle">
     <div class="dashboard-stock-overview"><div><h2 id="dashboardStockTitle">สต็อกและการเบิก</h2><p id="dashboardStockOverview"></p></div><div class="dashboard-outcomes" id="dashboardStockOutcomes" hidden></div></div>
     <div id="dashboardStockFollowUp"></div>
-    <details class="dashboard-disclosure"><summary>ดูสรุปรอบตรวจสต็อก</summary><div id="stockPerformanceDashboard"></div></details>
+    <details open class="dashboard-disclosure"><summary>สรุปรอบตรวจสต็อก</summary><div id="stockPerformanceDashboard"></div></details>
   </section>
 
-  <details class="card dashboard-disclosure">
+  <details open class="card dashboard-disclosure">
     <summary>ดูผลประเมินและรายเวร</summary>
     <div class="dashboard-outcomes" id="dashboardOutcomes"></div>
     <div class="tw dashboard-table-scroll"><table><thead><tr><th scope="col">เวร</th><th scope="col">รอบที่ส่ง</th><th scope="col">คะแนนเฉลี่ยผลงาน</th></tr></thead><tbody>
@@ -1345,7 +1345,7 @@ tr:hover td{background:var(--g1)}
     </tbody></table></div>
   </details>
 
-  <details class="card dashboard-disclosure dashboard-analysis">
+  <details open class="card dashboard-disclosure dashboard-analysis">
     <summary>ดูแนวโน้ม รายการที่ทำไม่ครบบ่อย และ Ranking</summary>
 
   <div class="card trend-card" style="margin-bottom:16px">
@@ -4833,14 +4833,16 @@ function loadDashboard() {
     if(ranked.length === 0) {
       rt.innerHTML = '<p style="color:var(--g4);font-size:13px;padding:8px 0">ยังไม่มีข้อมูลที่ประเมินแล้ว</p>';
     } else {
-      rt.innerHTML = `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ผลการประเมิน</th><th>คะแนนเฉลี่ยผลงาน (รวมขาดส่ง 0)</th></tr></thead><tbody>
-      ${ranked.map((d,i) => `<tr>
+      const renderRankTable = (entries, offset) => `<table><thead><tr><th>#</th><th>ชื่อ</th><th>ประเมินแล้ว</th><th>ผลการประเมิน</th><th>คะแนนเฉลี่ยผลงาน (รวมขาดส่ง 0)</th></tr></thead><tbody>
+      ${entries.map((d,index) => { const i=index+offset; return `<tr>
         <td><strong style="font-size:18px">${d.official?(['🥇','🥈','🥉'][i]||'#'+(i+1)):'—'}</strong></td>
         <td style="font-weight:600">${d.name}</td>
         <td>${d.reviewed}${d.official?'':' <small style="color:var(--o)">(ข้อมูลยังน้อย)</small>'}</td>
         <td><div style="font-size:10.5px;color:var(--g5)">${d.pass} ผ่าน • ${d.partial} ปรับปรุง • ${d.fail} ไม่ผ่าน • ${d.missed} ขาดส่ง (0 คะแนน)</div></td>
         <td><span class="tag ${d.rankScore>=80?'tp':d.rankScore>=60?'tw2':'tf'}">${d.rankScore}%</span></td>
-      </tr>`).join('')}</tbody></table>`;
+      </tr>`}).join('')}</tbody></table>`;
+      rt.innerHTML = renderRankTable(ranked.slice(0,3),0) + (ranked.length>3
+        ? `<details class="dashboard-disclosure"><summary>ดูรายชื่อที่เหลือ (${ranked.length-3} คน)</summary>${renderRankTable(ranked.slice(3),3)}</details>` : '');
     }
   }
 
@@ -5888,7 +5890,7 @@ function loadSupPerson(data,scoreScope) {
 
 // PWA Service Worker - auto update for every device
 if('serviceWorker' in navigator) {
-const APP_VERSION = 'v20261110-dashboard-overview-v125';
+const APP_VERSION = 'v20261118-dashboard-v126';
   let updateReloading = false;
   let updateDeferredNoticeShown = false;
 
